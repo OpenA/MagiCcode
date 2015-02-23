@@ -1,0 +1,2 @@
+# MagiCcode
+UserScripts for Imageboards
