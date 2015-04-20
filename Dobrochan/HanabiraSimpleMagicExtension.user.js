@@ -1,4 +1,4 @@
-﻿// ==UserScript==
+// ==UserScript==
 // @name    		Simple Magic Extension for Dobrochan Imageboard
 // @description 	Включает в себя: Ajax подгрузку постов, Ajax постинг, Превращение рейтингов в спойлеры, Умные кнопки разметки, а так же опции раскрытия текстовых спойлеров, звуковых уведомлений, перетаскиваемых превью и автотаймер.
 // @namespace   	magicode
@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraSimpleMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.0.0
+// @version 		1.1.2
 // @grant   		none
 // ==/UserScript==
 
@@ -76,6 +76,7 @@
 		repl: ["Reply", "Ответ"],
 		edit: ["Edit", "Изменить"],
 		omit: [" omited ", " ответов "],
+		wsec: ['Wait a Second...', 'Секунду...'],
 		updprog: ["Updating...", "Обновление..."],
 		updauto: ["Autoupdate", "Автообновление"],
 		postdel: ["Post is deleted.", "Пост удалён."],
@@ -86,7 +87,8 @@
 		fnd_src_wth: ["Find source with", "Искать оригинал в"],
 		snd_notify_title: ["Add notification sound for new loaded posts", "Оповещать о новых постах звуковым уведомлением"],
 		allw: ["allowed", "раскрытых"],
-		clos: ["Close", " Закрыть"],
+		remv: ["Remove", "Убрать"],
+		clos: ["Close", "Закрыть"],
 		all: [" All", " все"],
 		add: ["Add", "Добавить"],
 		names: {
@@ -102,11 +104,12 @@
 			'ru': ["", "а"]
 		}
 	}
-	HM.Style = $setup('style', {'text': '.hide,.reply_,#postform,#hideinfodiv hr{display:none!important;position:absolute;left:-9999;}.unexpanded{max-width:200px;max-height:200px;}.expanded{max-width:100%;max-height:100%;}#hideinfodiv{margin:5px;}.reply-button,.cpop,.callpop{margin-left:.4em;}\
+	HM.Style = $setup('style', {'text': '.hide,.reply_,#postform,#hideinfodiv hr{display:none!important;position:absolute;left:-9999;}.reply-button,.cpop,.callpop{margin-left:.4em;}\
+.unexpanded{max-width:200px;max-height:200px;}.expanded{max-width:100%;max-height:100%;}#hideinfodiv{margin:5px;}.sp-r.rate{color:darkred;}\
 .search_google{background-image:url(/src/png/1407/google_14_icon.png)!important;}.search_derpibooru{background-image:url(/src/png/1407/derpibooru_reverse_search_14_icon.png);}.search_saucenao{background-image:url(/src/png/1502/saucenao_favicon1.png);}\
 .yuki_clickable,.txt-btn,.wmark-button{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}\
 .replylinks{line-height:2em;font-size:75%;clear:both;}.hideinfo{text-align:center!important;}.post-count,.txt-btn{color:#999;}.mapped,.mapped:hover{cursor:default;color:#666!important;}.dpop{cursor:move;}\
-.postername:after, .userdelete:after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.dpop,.wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}\
+.postername:after, .userdelete:after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.dpop,.sp-r,.wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}\
 @keyframes onReady{50% {opacity:0;}} @-webkit-keyframes onReady{50% {opacity:0;}}'}, null);
 	document.head.appendChild(HM.Style);
 	
@@ -284,7 +287,11 @@
 				if (status !== 200 || json.error) {
 					errorMsg = !json.error ? status +' '+ sText : json.error.message +' '+ json.error.code;
 					HM.Settings['UpdateStatBox'].innerHTML = '<strong style="color:#ff3428">'+ errorMsg +'</strong>';
-					setTimeout(function() { $setup(HM.Settings['UpdateStatBox'], {'html': ''}, null).appendChild(HM.Settings['LoadButton']) }, 5000);
+					setTimeout(function() {
+						$setup(HM.Settings['UpdateStatBox'], {
+							'html': ''
+						}, null).appendChild(HM.Settings['LoadButton'])
+					}, 5000);
 				} else {
 					var i, el = json.result.posts,
 						pCount = json.result.posts_count,
@@ -319,7 +326,8 @@
 			return;
 		if (evt) {
 			clearTimeout(timer_id);
-			timer_id = 0; }
+			timer_id = 0;
+		}
 		timer_id = setTimeout(updateThread, HM.UpdateInterval());
 	}
 	
@@ -355,7 +363,7 @@
 			if (s && (selected.slice(0, 1) === '~' || val.substring(end, end + 1) === '~'))
 				openTag = openTag.slice(0, 1), closeTag = closeTag.slice(0, 1);
 			markedText = cont === null ? (sp || c ? openTag + e + '\n' + getext + '\n' + e + closeTag :
-				selected.replace(typex(gm), '$1'+ openTag +'$2'+ closeTag +'$3')) :
+				selected.replace(typex('gm'), '$1'+ openTag +'$2'+ closeTag +'$3')) :
 				cont[1] + openTag + cont[2] + closeTag + cont[3];
 		}
 		eOfs = markedText.length, sOfs = 0;
@@ -402,8 +410,21 @@
 		}
 	}
 	function RemoveAllRefs(e) {
-		HM.zIndex = 0;
-		$nodeUtil('remove', document.getElementsByClassName('popup'))
+		var popups = document.getElementsByClassName('popup'),
+			i = popups.length - 1;
+		if (popups[0]) {
+			switch (e.type) {
+				case 'keydown':
+					if (i == 0)
+						HM.zIndex = 0;
+					popups[i].remove();
+					break;
+				case 'click':
+					HM.zIndex = 0;
+					$nodeUtil('remove', popups);
+					break;
+			}
+		}
 	}
 	function BindCloseRef(reftab) {
 		var tr = $setup('tbody', {'style': 'line-height:15px;', 'html': '<tr><td>'}, null),
@@ -412,9 +433,9 @@
 					reftab.style['z-index'] = HM.zIndex + 1
 					HM.RefTab = reftab; 
 					return fallback(e) }}),
-			close = $setup('span', {'class': 'cpop txt-btn', 'title': LC.clos[lng], 'text': '✖︎'}, {
+			close = $setup('span', {'class': 'cpop txt-btn', 'title': LC.clos[lng], 'text': '×'}, {
 				'click': function(e) { reftab.remove() }}),
-			closeAll = $setup('span', {'class': 'callpop txt-btn', 'title': LC.clos[lng] + LC.all[lng], 'text': '{✕}'}, {
+			closeAll = $setup('span', {'class': 'callpop txt-btn', 'title': LC.clos[lng] + LC.all[lng], 'text': '⦻'}, {
 				'click': RemoveAllRefs });
 			$setup(reftab, {}, {
 				'click': function(e) {
@@ -424,10 +445,14 @@
 	}
 	function BindRemoveRef(binded, reftab) {
 		var to, timer = function(e) {
-			to = setTimeout(function() {reftab.remove()}, 300) }
+			to = setTimeout(function() {
+				reftab.remove()
+			}, 300) }
 		reftab.onmouseout = timer;
 		reftab.onmouseover = function(e) {
-			clearTimeout(to); to = 0; }
+			clearTimeout(to);
+			to = 0;
+		}
 		binded.onmouseleave = timer;
 	}
 	
@@ -486,7 +511,7 @@
 			binded(true);
 		} else {
 			loading = $setup('td', {'html': '<span class="waiting'+ Math.floor(Math.random() * 3) +
-				' icon"><img src="/images/blank.png"></span>\n<span class="reply-from">Секунду...</span>'}, null);
+				' icon"><img src="/images/blank.png"></span>\n<span class="reply-from">'+ LC.wsec[lng] +'</span>'}, null);
 			reftab.firstChild.firstChild.appendChild(loading);
 			getDataResponse('/api/post/'+ brd +'/'+ tid +'/'+ pid +'.xhtml',
 			function(status, sText, json, xhr) {
@@ -513,14 +538,25 @@
 	
 	function MagicSpoirate(e) {
 		if (this.classList[2]) {
-			var finf = $route(this, '.fileinfo'),
+			var finf = $route(this, '.fileinfo'), iMg = this,
 				href = this.parentNode.href,
 				fid = this.parentNode.parentNode.id.split('_'),
+				btnRate = $setup('a', {'class': 'sp-r txt-btn', 'text': this.alt}, {
+					'click': function(e) {
+						if (this.classList[2]) {
+							this.classList.remove('rate')
+							iMg.src = href
+						} else {
+							this.classList.add('rate')
+							iMg.src = '/images/'+ iMg.alt +'.png'
+						}
+					}
+				}),
 				buttons = Btn['default'].allReplace({'r{Fn}': "edit_", 'r{title}': LC.edit[lng], 'r{alt}': '✎', 
 				'r{Act}': 'href="/utils/image/edit/'+ fid[2] +'/'+ fid[1] +'"'}) +'\n'+
 			Btn['Google'] +'\n'+ Btn['Iqdb'] +'\n'+ Btn['Derpibooru'] +'\n'+ Btn['Saucenao'];
-			finf.lastChild.remove();
-			finf.insertAdjacentHTML('beforeend', buttons.replace(/@img_src/g, href))
+			finf.replaceChild(btnRate, finf.lastChild);
+			finf.insertAdjacentHTML('beforeend', buttons.replace(/@img_src/g, href));
 			this.classList.remove('rated');
 			this.src = href;
 		}
@@ -698,6 +734,7 @@
 	function Yuki(h) {
 		var Yu = this, fileList = [],
 		LCY = {
+			acap: ["Attach Captcha Image", 'Прикрепить капчу'],
 			subj: ["Subject", "Тема"],
 			newt: ["New Thread in", "Новый тред в"],
 			post: ["Post", "Отправить"],
@@ -706,6 +743,16 @@
 			ufrm: ['Unhide form', 'Раскрыть форму'],
 			rmv: ["Remove", "Убирать"],
 			fnm: ["File Name", "имя файла"],
+			wmark: {
+				'~': ['Wakabamark Strike Conversion', 'Перевод символов страйка в нотацию wakabamark'],
+				'ul': ['Unordered List', 'Неупорядоченный список'],
+				's': ['Strike', 'Зачеркнутый'],
+				'i': ['Italic', 'Курсивный'],
+				'b': ['Bold', 'Жирный'],
+				'c': ['Code', 'Код'],
+				'sp': ['Spoiler', 'Спойлер'],
+				'q': ['Quote Selected', 'Цитировать выделенное']
+			},
 			cerr: {
 				'en': ['captcha', 'human.'],
 				'ru': ['капча', 'человек.']
@@ -728,24 +775,24 @@
 			'<tr id="trname"><td><input placeholder="'+ HM.defaultName() +'" name="name" size="30" value="" type="text">'+
 				'<label class="sagearrow'+ (HM.Sage ? '' : ' inactive') +'"><input id="yuki-sage" name="sage" type="checkbox" hidden><img src="/src/png/1411/blank20.png"></label>'+
 				'<label id="yuki-newThread-create" class="yuki_clickable inactive">'+ LCY.newt[lng] +'<span class="t-sec">\n/'+ HM.URL.board +
-				'/</span></label><span>&nbsp;<a id="yuki-close-form" title="Убрать"><img src="/images/delete.png" alt="Remove"></a></span></td></tr>'+
+				'/</span></label><span>&nbsp;<a id="yuki-close-form" title="'+ LC.remv[lng] +'"><img src="/images/delete.png" alt="✖︎"></a></span></td></tr>'+
 			'<tr id="trsubject"><td><input placeholder="'+ LCY.subj[lng] +'" name="subject" size="30" maxlength="64" value="" type="text">'+
 				'<label class="submit-button"><input type="submit" value="'+ LCY.post[lng] +'"></label>\n'+
 				'<span class="wmark-buttons-panel">'+
-					'<a class="wmark-button" id="convert-strike" title="Перевод символов страйка в нотацию wakabamark"><strong>{~}</strong>&nbsp;</a>'+
-					'<a class="wmark-button" id="list-mark" title="Список"><span>◉</span></a>&nbsp;'+
-					'<a class="wmark-button" id="strike-mark" title="Зачеркнутый"><img src="/src/svg/1405/~S-mark.svg" alt="~$"></a>&nbsp;'+
-					'<a class="wmark-button" id="ital-mark" title="Курсивный"><img src="/src/svg/1405/i-mark.svg" alt="i"></a>&nbsp;'+
-					'<a class="wmark-button" id="bold-mark" title="Жирный"><img src="/src/svg/1405/-b-mark.svg" alt="b"></a>&nbsp;'+
-					'<a class="wmark-button" id="code-mark" title="Код"><img src="/src/svg/1405/[c]-mark.svg" alt="[c]"></a>&nbsp;'+
-					'<a class="wmark-button" id="spoiler-mark" title="Спойлер"><span class="spoiler">&middot;<strong>%%</strong>&middot;</span></a>&nbsp;'+
-					'<a class="wmark-button" id="quote-mark" title="Цитировать выделенное"><img src="/src/svg/1405/„q”-mark.svg" alt="&gt;"></a>'+
+					'<a class="wmark-button" id="convert-strike" title="'+ LCY.wmark['~'][lng] +'"><strong>{~}</strong>&nbsp;</a>'+
+					'<a class="wmark-button" id="list-mark" title="'+ LCY.wmark['ul'][lng] +'"><span>◉</span></a>&nbsp;'+
+					'<a class="wmark-button" id="strike-mark" title="'+ LCY.wmark['s'][lng] +'"><img src="/src/svg/1405/~S-mark.svg" alt="~$"></a>&nbsp;'+
+					'<a class="wmark-button" id="ital-mark" title="'+ LCY.wmark['i'][lng] +'"><img src="/src/svg/1405/i-mark.svg" alt="i"></a>&nbsp;'+
+					'<a class="wmark-button" id="bold-mark" title="'+ LCY.wmark['b'][lng] +'"><img src="/src/svg/1405/-b-mark.svg" alt="b"></a>&nbsp;'+
+					'<a class="wmark-button" id="code-mark" title="'+ LCY.wmark['c'][lng] +'"><img src="/src/svg/1405/[c]-mark.svg" alt="[c]"></a>&nbsp;'+
+					'<a class="wmark-button" id="spoiler-mark" title="'+ LCY.wmark['sp'][lng] +'"><span class="spoiler">&middot;<strong>%%</strong>&middot;</span></a>&nbsp;'+
+					'<a class="wmark-button" id="quote-mark" title="'+ LCY.wmark['q'][lng] +'"><img src="/src/svg/1405/„q”-mark.svg" alt="&gt;"></a>'+
 				'</span></td></tr>'+
 			'<tr id="trmessage"><td>'+
 				'<textarea placeholder="'+ LCY.txar[lng] +'" id="yuki-replyText" name="message" cols="80" rows="8" style="resize:both;height:180px;">'+
 			'</textarea></td></tr><tr id="trcaptcha"><td><span>'+
 					'<img alt="Капча" id="yuki-captcha-image" src="">&nbsp;'+
-					'<span id="yuki-attach-captcha-button" class="txt-btn yuki_clickable" title="Прикрепить капчу">[+]</span></span><br>'+
+					'<span id="yuki-attach-captcha-button" class="txt-btn yuki_clickable" title="'+ LCY.acap[lng] +'">[+]</span></span><br>'+
 					'<input id="yuki-captcha" autocomplete="off" name="captcha" type="text" hidden></td></tr>'+
 			'<tr id="trrempass"><td><input id="yuki-pass" name="password" size="35" value="'+ pass +'" type="password" hidden></td></tr>'+
 			'<tr id="trfile"><td id="files_parent"><div id="file_1_div"><label><input id="dumb_file_field" type="file" hidden multiple><input type="button" value="'+
