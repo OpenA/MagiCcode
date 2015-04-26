@@ -6,7 +6,7 @@
 // @updateURL   	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
-// @version 		0.5.3.1
+// @version 		0.6.0-alpha
 // @grant   		none
 // ==/UserScript==
 var rp_arr = "data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMjNweCIgaGVpZ2h0PSIxNHB4IiB2aWV3Qm94PSIwIDAgMjMgMTQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiPjxkZWZzPjxmaWx0ZXIgeD0iLTUwJSIgeT0iLTUwJSIgd2lkdGg9IjIwMCUiIGhlaWdodD0iMjAwJSIgZmlsdGVyVW5pdHM9Im9iamVjdEJvdW5kaW5nQm94IiBpZD0iZmlsdGVyLTEiPjxmZU9mZnNldCBkeD0iMCIgZHk9IjAiIGluPSJTb3VyY2VBbHBoYSIgcmVzdWx0PSJzaGFkb3dPZmZzZXRPdXRlcjEiPjwvZmVPZmZzZXQ+PGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMC41IiBpbj0ic2hhZG93T2Zmc2V0T3V0ZXIxIiByZXN1bHQ9InNoYWRvd0JsdXJPdXRlcjEiPjwvZmVHYXVzc2lhbkJsdXI+PGZlQ29sb3JNYXRyaXggdmFsdWVzPSIwIDAgMCAwIDAgICAwIDAgMCAwIDAgICAwIDAgMCAwIDAgIDAgMCAwIDAuNyAwIiBpbj0ic2hhZG93Qmx1ck91dGVyMSIgdHlwZT0ibWF0cml4IiByZXN1bHQ9InNoYWRvd01hdHJpeE91dGVyMSI+PC9mZUNvbG9yTWF0cml4PjxmZU1lcmdlPjxmZU1lcmdlTm9kZSBpbj0ic2hhZG93TWF0cml4T3V0ZXIxIj48L2ZlTWVyZ2VOb2RlPjxmZU1lcmdlTm9kZSBpbj0iU291cmNlR3JhcGhpYyI+PC9mZU1lcmdlTm9kZT48L2ZlTWVyZ2U+PC9maWx0ZXI+PC9kZWZzPjxnIGlkPSJQYWdlLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHNrZXRjaDp0eXBlPSJNU1BhZ2UiPjxwYXRoIGQ9Ik0xMi42NTg4OTc2LDUuOTkxNjcyMzkgTDExLjQ3MTM5NzYsOC4yOTUxNzk0MyBMMS43MjA3MDMxMiwxMi41OTc5NTY3IEwzLjAxMzc1ODY4LDguODYwMTkwNTkgTDkuMTIyNzg2NDYsNi43ODg0ODMgTDIuMTU2MTE5NzksMy44NDc1Mjc0NyBMNS40NTQ3MzA5LDIuMjUzOTA2MjUgTDEyLjY1ODg5NzYsNS45OTE2NzIzOSBaIE0yMC45MjMwMTc5LDUuOTkxNjcyMzkgTDE5LjczNTUxNzksOC4yOTUxNzk0MyBMOS45ODQ4MjM1LDEyLjU5Nzk1NjcgTDExLjI3Nzg3OTEsOC44NjAxOTA1OSBMMTcuMzg2OTA2OCw2Ljc4ODQ4MyBMMTAuNDIwMjQwMiwzLjg0NzUyNzQ3IEwxMy43MTg4NTEzLDIuMjUzOTA2MjUgTDIwLjkyMzAxNzksNS45OTE2NzIzOSBaIiBpZD0iPj4tY29weSIgZmlsbC1vcGFjaXR5PSIwLjQiIGZpbGw9IiMwMDAiIGZpbHRlcj0idXJsKCNmaWx0ZXItMSkiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiPjwvcGF0aD48cGF0aCBkPSJNMTIuNjU4ODk3Niw0Ljk5MTY3MjM5IEwxMS40NzEzOTc2LDcuMjk1MTc5NDMgTDEuNzIwNzAzMTIsMTEuNTk3OTU2NyBMMy4wMTM3NTg2OCw3Ljg2MDE5MDU5IEw5LjEyMjc4NjQ2LDUuNzg4NDgzIEwyLjE1NjExOTc5LDIuODQ3NTI3NDcgTDUuNDU0NzMwOSwxLjI1MzkwNjI1IEwxMi42NTg4OTc2LDQuOTkxNjcyMzkgWiBNMjAuOTIzMDE3OSw0Ljk5MTY3MjM5IEwxOS43MzU1MTc5LDcuMjk1MTc5NDMgTDkuOTg0ODIzNSwxMS41OTc5NTY3IEwxMS4yNzc4NzkxLDcuODYwMTkwNTkgTDE3LjM4NjkwNjgsNS43ODg0ODMgTDEwLjQyMDI0MDIsMi44NDc1Mjc0NyBMMTMuNzE4ODUxMywxLjI1MzkwNjI1IEwyMC45MjMwMTc5LDQuOTkxNjcyMzkgWiIgaWQ9Ij4+IiBzdHJva2Utb3BhY2l0eT0iMC40IiBzdHJva2U9IiM5OTkiIGZpbGw9IiNGRkYiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiPjwvcGF0aD48L2c+PC9zdmc+",
@@ -15,17 +15,16 @@ artwork = 'data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iNTAwcHgiIGhla
 play = "data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMjRweCIgaGVpZ2h0PSIyNHB4IiB2aWV3Qm94PSIwIDAgMjQgMjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiPjxnIGlkPSJQYWdlLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHNrZXRjaDp0eXBlPSJNU1BhZ2UiPjxwYXRoIGQ9Ik0xNC4wNzQ1ODM0LDIuOTQ4MDc4NyBMMjUuMTQxNDkyLDIwLjk5NDAyOSBMMy4wMDc2NzUwMywyMC45OTQwMjkgTDE0LjA3NDU4MzQsMi45NDgwNzg3IEwxNC4wNzQ1ODM0LDIuOTQ4MDc4NyBaIiBpZD0iUGxheSIgc3Ryb2tlPSIjREREIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgZmlsbD0iI0RERCIgc2tldGNoOnR5cGU9Ik1TU2hhcGVHcm91cCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTQuMDA3Njc1LCAxMS45NDgwNzkpIHJvdGF0ZSg5MC4wMDAwMDApIHRyYW5zbGF0ZSgtMTQuMDA3Njc1LCAtMTEuOTQ4MDc5KSAiPjwvcGF0aD48L2c+PC9zdmc+",
 pause = "data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMjJweCIgaGVpZ2h0PSIyNnB4IiB2aWV3Qm94PSIwIDAgMjIgMjYiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiPjxnIGlkPSJQYWdlLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHNrZXRjaDp0eXBlPSJNU1BhZ2UiPjxwYXRoIGQ9Ik0xLDEgTDEsMjUgTDgsMjUgTDgsMSBMMSwxIEwxLDEgWiBNMTQsMSBMMTQsMjUgTDIxLDI1IEwyMSwxIEwxNCwxIEwxNCwxIFoiIGlkPSJTdG9wIiBzdHJva2U9IiNEREQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBmaWxsPSIjREREIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIj48L3BhdGg+PC9nPjwvc3ZnPg==",
 magicStyle = 'hr{border-style:none none solid!important;border-color:rgba(0,0,0,.3)!important;box-shadow:0 1px 0 #fff!important;}img[src="#transparent"]{opacity:0}\
-.abbrev{clear:both}.doubledash{visibility:hidden}.deleted,.t-sec{opacity:.6}.inactive{opacity:.4}.reflinks{line-height:2em;font-size:12px;clear:both}\
+.abbrev{clear:both}.doubledash,.topformtr #yuki-replyForm #yuki-close-form{visibility:hidden}.deleted,.t-sec{opacity:.6}.inactive{opacity:.4}.reflinks{line-height:2em;font-size:12px;clear:both}\
 .highlight,.reply{padding:2px;padding-right:1em;box-shadow:inset 0 1px 30px -9px #fff,0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1)!important;}\
-.popup,#magic-panel{box-shadow:5px 5px 10px rgba(0,0,0,.4),inset 0 0 30px rgba(0,0,0,.1)!important;z-index:9;}.cpop{margin-left:4px;background-image:url(/src/svg/1411/closepopup.svg)}.cpop.all{background-image:url(/src/svg/1411/closeallpopups.svg)}.dpop{float:right;width:20px;height:20px;background-image:url('+cmove+');cursor:move}\
+.popup,#magic-panel{box-shadow:5px 5px 10px rgba(0,0,0,.4),inset 0 0 30px rgba(0,0,0,.1)!important;z-index:9;}.cpop{margin-left:4px;background-image:url(/src/svg/1411/closepopup.svg)}.cpop.all{background-image:url(/src/svg/1411/closeallpopups.svg)}.dpop{float:right;width:20px;height:20px;background-image:url('+cmove+');cursor:move}#magic-picture{position:absolute}#magic-picture + a > img.thumb{visibility:hidden}#yuki-errorMsg{text-align:center;color:#FFF;background-color:#E04000}\
 .reply,.post-error,.popup,.reply.de-pview{border:0 none transparent!important;}.reply,.reply #reply-trsage,.reply .abbrev{animation:pview .3s normal;-webkit-animation:pview .3s normal}.popup{animation:pview .2s linear;-webkit-animation:pview .2s linear}\
 #reply-captcha-image,#yuki-captcha-image,.banner,.spoiler,.spoiler a,.spoiler blockquote,.spoiler blockquote blockquote,.spoiler blockquote blockquote blockquote{transition:all .1s ease;box-shadow:0 1px 2px -1px rgba(0,0,0,.7)!important;}\
 .spoiler a:hover,.spoiler:hover,.transparent{box-shadow:none!important;}input[name="captcha"]{width:295px}.url-image{padding-bottom:3px;font-size:12px} .url-image a img{padding:0 1px;}\
-.search_google{background-image:url(/src/png/1407/google_14_icon.png)!important} .search_derpibooru{background-image:url(/src/png/1407/derpibooru_reverse_search_14_icon.png)}\
-.error-msg,.theader,.passvalid,input[type="text"],input[type="password"],input[type="number"],textarea,.document-container{box-shadow:inset 0 1px 2px rgba(0,0,0,.3)!important;-webkit-border-radius:5px;border-style:none!important;}\
+#yuki-errorMsg,.theader,.passvalid,input[type="text"],input[type="password"],input[type="number"],textarea,.text-container{box-shadow:inset 0 1px 2px rgba(0,0,0,.3)!important;-webkit-border-radius:5px;border-style:none!important;}\
 input[type="text"],input[type="number"],input[type="password"],textarea{-webkit-border-radius:3px!important;padding:3px 4px!important;}a.reply_.icon{background-image:url('+rp_arr+')}\
 .thumb,.yukiFile,.sc-container,.bc-container,.prosto-pleer,.audio-container video{box-shadow:1px 2px 2px -1px rgba(0,0,0,.4),-1px 0 4px -1px rgba(0,0,0,.2),inset 0 0 30px rgba(0,0,0,.1)!important;}\
-#replyform{margin:2px 1em!important;}#magic-bottom{z-index:9;position:fixed;right:1em;bottom:1em;opacity:.2;filter:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'grayscale\'><feColorMatrix type=\'matrix\' values=\'.3 .3 .3 0 0 .3 .3 .3 0 0 .3 .3 .3 0 0 0 0 0 1 0\'/></filter></svg>#grayscale");-webkit-filter:grayscale(100%)}#magic-bottom:hover,#magic-bottom.active{opacity:1;filter:none;-webkit-filter: grayscale(0%)}#magic-panel{position:fixed;right:5px;bottom:5px;max-width: 450px;height:300px;border-radius:8px;padding:9px;padding-bottom:3em;background-color:#fefefe}\
+#replyform{margin:2px 1em!important;}#magic-panel-button{z-index:9;position:fixed;right:1em;bottom:1em;opacity:.2;filter:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'grayscale\'><feColorMatrix type=\'matrix\' values=\'.3 .3 .3 0 0 .3 .3 .3 0 0 .3 .3 .3 0 0 0 0 0 1 0\'/></filter></svg>#grayscale");-webkit-filter:grayscale(100%)}#magic-panel-button:hover,#magic-panel-button.active{opacity:1;filter:none;-webkit-filter: grayscale(0%)}#magic-panel{position:fixed;right:5px;bottom:5px;max-width: 450px;height:300px;border-radius:8px;padding:9px;padding-bottom:3em;background-color:#fefefe}\
 .postcontent{display:inline-block;margin:5px 10px;}.sc-container,.bc-container,.img-container{display:inline-block;float:left}\
 .video-container{margin:0 9px;display:inline-block!important;background-color:#000;box-shadow:0 0 2px rgba(0,0,0,.2),0 0 4px rgba(0,0,0,.4),0 9px 9px -8px rgba(0,0,0,.8)!important;}\
 a.reply_.icon,.wmark-buttons-panel a.icon img,#trsage a.icon img,input[name="sage"],input[name="subject"],.submit-button{vertical-align:middle}\
@@ -36,25 +35,25 @@ a.reply_.icon,.wmark-buttons-panel a.icon img,#trsage a.icon img,input[name="sag
 pre{white-space:pre-wrap;white-space:-moz-pre-wrap;white-space:-pre-wrap;white-space:-o-pre-wrap;word-wrap:break-word}\
 .yuki_clickable{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:-moz-none;-ms-user-select:none;user-select:none}\
 .yukiFile{text-align:center;font-size:66%;display:inline-block;width:210px;background:#fefefe;-webkit-border-radius:5px;margin:5px;padding:2px}\
-#files_placeholder > *{vertical-align:top}#magic-panel tr{height:3em}.s-sect{text-align:left;padding-left:2em;color:#777}#vsize-textbox{color:#bbb;font-family:Trebuchet}\
+#yuki-files-placeholder > *{vertical-align:top}#magic-panel tr{height:3em}.s-sect{text-align:left;padding-left:2em;color:#777}#vsize-textbox{color:#bbb;font-family:Trebuchet}\
 .yukiFile img{max-width:150px;box-shadow:0 4px 8px 0 rgba(0,0,0,.2);margin:5px 0}.yukiFile span{max-width:200px;word-wrap:break-word}\
 .rating_SFW{background:green}.rating_R15{background:yellow}.rating_R18{background:orange}.rating_R18G{background:red}\
 input[type="text"],input[type="password"],textarea{padding:4px!important} #int-upd{bottom:2px;position:relative}.content-frame.pdf{top:1%;left:17%;right:20%;bottom:1%}\
-.sagearrow{position:relative;right:25px;top:6px}#int-stat{font-size:14px;margin:0}#yukipostform{display:inline-block;text-align:left;padding:4px 8px}.topformtr #yukipostform #close-form{visibility:hidden}#hideinfodiv{margin:9px}#new-thread-create{position:absolute;cursor:pointer;left:23px;font-size:18px}.selected:before{content:"✓ ";color:green}\
-.hidup{top:-9999px!important}.hidout,.add_,.play_,.view_,.edit_[href^="/utils/text/"],#postform,.reply #new-thread-create,.submit-button.process input{display:none!important}.content-frame{background-color:#fefefe}.content-frame.video{background-color:#000}.content-frame.img{background-color:transparent}\
+.sagearrow{position:relative;right:25px;top:6px}#int-stat{font-size:14px;margin:0}#yuki-replyForm{display:inline-block;text-align:left;padding:4px 8px}#hideinfodiv{margin:9px}#yuki-newThread-create{position:absolute;cursor:pointer;left:23px;font-size:18px}.selected:before{content:"✓ ";color:green}\
+.hidup{top:-9999px!important}.hidout,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google,#postform,.reply #yuki-newThread-create,.submit-button.process input{display:none!important}.content-frame{background-color:#fefefe}.content-frame.video{background-color:#000}.content-frame.img{background-color:transparent}\
 .content-window{position:fixed;left:0;top:0;z-index:2999}.content-frame{position:absolute;top:10%;left:12%;right:18%;bottom:20%;box-shadow:5px 5px 10px rgba(0,0,0,.4);z-index:3000}\
 #shadow-box{position:absolute;background-color:rgba(33,33,33,.8);z-index:2999}.artwork{background:url('+artwork+')no-repeat scroll center center / 100% auto}\
 #close-content-window,#show-content-window{transition:.5s ease;opacity:.6;width:29px;height:29px;background-image:url(/src/png/1411/close-29x29.png);cursor:pointer;position:absolute;top:20px;right:20px;z-index:3000}\
 #show-content-window{right:52%;position:fixed;background-image:url(/src/png/1501/show-hidden-29x29.png);border-radius:100%}#close-content-window:hover,#show-content-window:hover{opacity:1}\
-.document-container,.content-frame.document,.document-container > iframe{overflow:auto;resize:both;background-color:#fefefe;} .document-container > iframe, .content-frame.document > iframe, .full-size, #shadow-box, .content-window,.preview_img{width:100%;height:100%}.ma-play{background:url('+play+')no-repeat scroll center} .ma-pause{background:url('+pause+')no-repeat scroll center}\
-.magic-audio{width:200px;height:200px} .ma-controls,.ma-controls a{display:block;width:50px;height:50px}.magic-info{width:190px;background-color:rgba(255,255,255,.8);position:absolute;padding:5px;opacity:.6}.magic-info:hover{z-index:1;opacity:1}\
+.text-container,.content-frame.text,.text-container > iframe{overflow:auto;resize:both;background-color:#fefefe;} .text-container > iframe, .content-frame.text > iframe, .full-size, #shadow-box, .content-window,.preview_img{width:100%;height:100%}.ma-play{background:url('+play+')no-repeat scroll center} .ma-pause{background:url('+pause+')no-repeat scroll center}\
+.magic-audio{width:200px;height:200px} .ma-controls,.ma-controls a{display:block;width:50px;height:50px}.magic-info{width:190px;background-color:rgba(255,255,255,.8);padding:5px;opacity:.6}.magic-info:hover{z-index:1;opacity:1}.magic-info,.magic-info + br{position:absolute}\
 .ma-controls{position:relative;top:37%;left:37%;border:2px solid #ddd;border-radius:100%;background-color:#333;opacity:.8}.yukiFile.artwork{}\
-#yukidropBox{width:7em;height:18em;display:inline-block;border:3px dashed rgba(99,99,99,.3);padding:2px}\
-#yukidropBox tr,.f-sect,.hideinfo{text-align:center!important} .droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em}\
+#yuki-dropBox{width:7em;height:18em;display:inline-block;border:3px dashed rgba(99,99,99,.3);padding:2px}\
+#yuki-dropBox tr,.f-sect,.hideinfo{text-align:center!important} .droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em}\
 @keyframes pview{0%{transform:scale(0,0);opacity:0} 25%{transform:scale(.3,.3);opacity:.1} 50%{transform:scale(.9,.9);opacity:.3} 75%{transform:scale(1.02,1.02);opacity:.7} 100%{transform:scale(1,1);opacity:1}}\
 @-webkit-keyframes pview{0%{-webkit-transform:scale(0,0);opacity:0} 25%{-webkit-transform:scale(.3,.3);opacity:.1} 50%{-webkit-transform:scale(.9,.9);opacity:.3} 75%{-webkit-transform:scale(1.02,1.02);opacity:.7} 100%{-webkit-transform:scale(1,1);opacity:1}}\
 @keyframes process{0%{width:0}100%{width:1em}}@-webkit-keyframes process{0%{width:0}100%{width:1em}}\
-input[type="button"],input[type="submit"]{transition:all .3s ease;box-shadow:0 1px 3px -1px rgba(0,0,0,.5),0 0 2px rgba(0,0,0,.2) inset;padding:2px 6px;color:#999;border:0 none;background-color:#fff}\
+input[type="button"],input[type="submit"]{transition:all .3s ease;box-shadow:0 1px 3px -1px rgba(0,0,0,.5),0 0 2px rgba(0,0,0,.2) inset;padding:2px 6px;color:#999;border:0 none;background-color:#fff}#cm-button{text-decoration:none}\
 input[type="button"]:hover,input[type="submit"]:hover{background-color:rgba(255,255,255,.5)}input[type="button"]:active,input[type="submit"]:active{box-shadow:0 0 2px rgba(255,255,255,.3),0 0 2px rgba(0,0,0,.2) inset;background-color:rgba(255,255,255,.2)}\
 .checkarea{box-shadow:inset 1px 1px 2px rgba(0,0,0,.3),0 0 2px #fff;border-radius:3px;padding:0 4px;background-color:#fff;font-size:14px}.checkarea:before{content:"✗";color:transparent}input[type="checkbox"]:checked + .checkarea:before{color:grey}',
 blobView = '\nvar BlobView=function(){function e(e){throw Error(e)}function t(e,t,n,r,i,s,o){this.blob=e;this.sliceOffset=t;this.sliceLength=n;this.slice=r;this.viewOffset=i;this.viewLength=s;this.littleEndian=o;this.view=new DataView(r,i,s);this.buffer=r;this.byteLength=s;this.byteOffset=i;this.index=0}t.get=function(n,r,i,s,o){if(r<0){e("negative offset")}if(i<0){e("negative length")}if(r>n.size){e("offset larger than blob size")}if(r+i>n.size){i=n.size-r}var u=n.slice(r,r+i);var a=new FileReader;a.readAsArrayBuffer(u);a.onloadend=function(){var e=null;if(a.result){e=new t(n,r,i,a.result,0,i,o||false)}s(e,a.error)}};t.prototype={constructor:t,getMore:function(e,n,r){if(e>=this.sliceOffset&&e+n<=this.sliceOffset+this.sliceLength){r(new t(this.blob,this.sliceOffset,this.sliceLength,this.slice,e-this.sliceOffset,n,this.littleEndian))}else{t.get(this.blob,e,n,r,this.littleEndian)}},littleEndian:function(){this.littleEndian=true},bigEndian:function(){this.littleEndian=false},getUint8:function(e){return this.view.getUint8(e)},getInt8:function(e){return this.view.getInt8(e)},getUint16:function(e,t){return this.view.getUint16(e,t!==undefined?t:this.littleEndian)},getInt16:function(e,t){return this.view.getInt16(e,t!==undefined?t:this.littleEndian)},getUint32:function(e,t){return this.view.getUint32(e,t!==undefined?t:this.littleEndian)},getInt32:function(e,t){return this.view.getInt32(e,t!==undefined?t:this.littleEndian)},getFloat32:function(e,t){return this.view.getFloat32(e,t!==undefined?t:this.littleEndian)},getFloat64:function(e,t){return this.view.getFloat64(e,t!==undefined?t:this.littleEndian)},readByte:function(){return this.view.getInt8(this.index++)},readUnsignedByte:function(){return this.view.getUint8(this.index++)},readShort:function(e){var t=this.view.getInt16(this.index,e!==undefined?e:this.littleEndian);this.index+=2;return t},readUnsignedShort:function(e){var t=this.view.getUint16(this.index,e!==undefined?e:this.littleEndian);this.index+=2;return t},readInt:function(e){var t=this.view.getInt32(this.index,e!==undefined?e:this.littleEndian);this.index+=4;return t},readUnsignedInt:function(e){var t=this.view.getUint32(this.index,e!==undefined?e:this.littleEndian);this.index+=4;return t},readFloat:function(e){var t=this.view.getFloat32(this.index,e!==undefined?e:this.littleEndian);this.index+=4;return t},readDouble:function(e){var t=this.view.getFloat64(this.index,e!==undefined?e:this.littleEndian);this.index+=8;return t},tell:function(){return this.index},remaining:function(){return this.byteLength-this.index},seek:function(t){if(t<0){e("negative index")}if(t>this.byteLength){e("index greater than buffer size")}this.index=t},advance:function(t){var n=this.index+t;if(n<0){e("advance past beginning of buffer")}if(n>this.byteLength){e("advance past end of buffer")}this.index=n},getUnsignedByteArray:function(e,t){return new Uint8Array(this.buffer,e+this.viewOffset,t)},readUnsignedByteArray:function(e){var t=new Uint8Array(this.buffer,this.index+this.viewOffset,e);this.index+=e;return t},getBit:function(e,t){var n=this.view.getUint8(e);return(n&1<<t)!==0},getUint24:function(e,t){var n,r,i;if(t!==undefined?t:this.littleEndian){n=this.view.getUint8(e);r=this.view.getUint8(e+1);i=this.view.getUint8(e+2)}else{i=this.view.getUint8(e);r=this.view.getUint8(e+1);n=this.view.getUint8(e+2)}return(i<<16)+(r<<8)+n},readUint24:function(e){var t=this.getUint24(this.index,e);this.index+=3;return t},getASCIIText:function(e,t){var n=new Uint8Array(this.buffer,e+this.viewOffset,t);return String.fromCharCode.apply(String,n)},readASCIIText:function(e){var t=new Uint8Array(this.buffer,this.index+this.viewOffset,e);this.index+=e;return String.fromCharCode.apply(String,t)},getUTF8Text:function(e,t){function n(){throw new Error("Illegal UTF-8")}var r=e;var i=e+t;var s;var o="";var u,a,f,l;while(r<i){var u=this.view.getUint8(r);if(u<128){o+=String.fromCharCode(u);r+=1}else if(u<194){n()}else if(u<224){if(r+1>=i){n()}a=this.view.getUint8(r+1);if(a<128||a>191){n()}s=((u&31)<<6)+(a&63);o+=String.fromCharCode(s);r+=2}else if(u<240){if(r+2>=i){n()}a=this.view.getUint8(r+1);if(a<128||a>191){n()}f=this.view.getUint8(r+2);if(f<128||f>191){n()}s=((u&15)<<12)+((a&63)<<6)+(f&63);o+=String.fromCharCode(s);r+=3}else if(u<245){if(r+3>=i){n()}a=this.view.getUint8(r+1);if(a<128||a>191){n()}f=this.view.getUint8(r+2);if(f<128||f>191){n()}l=this.view.getUint8(r+3);if(l<128||l>191){n()}s=((u&7)<<18)+((a&63)<<12)+((f&63)<<6)+(l&63);s-=65536;o+=String.fromCharCode(55296+((s&1047552)>>>10));o+=String.fromCharCode(56320+(s&1023));r+=4}else{n()}}return o},readUTF8Text:function(e){try{return this.getUTF8Text(this.index,e)}finally{this.index+=e}},getID3Uint28BE:function(e){var t=this.view.getUint8(e)&127;var n=this.view.getUint8(e+1)&127;var r=this.view.getUint8(e+2)&127;var i=this.view.getUint8(e+3)&127;return t<<21|n<<14|r<<7|i},readID3Uint28BE:function(){var e=this.getID3Uint28BE(this.index);this.index+=4;return e},readNullTerminatedLatin1Text:function(e){var t="";var n=unescape("%u0402%u0403%u201A%u0453%u201E%u2026%u2020%u2021%u20AC%u2030%u0409%u2039%u040A%u040C%u040B%u040F"+"%u0452%u2018%u2019%u201C%u201D%u2022%u2013%u2014%u0000%u2122%u0459%u203A%u045A%u045C%u045B%u045F"+"%u00A0%u040E%u045E%u0408%u00A4%u0490%u00A6%u00A7%u0401%u00A9%u0404%u00AB%u00AC%u00AD%u00AE%u0407"+"%u00B0%u00B1%u0406%u0456%u0491%u00B5%u00B6%u00B7%u0451%u2116%u0454%u00BB%u0458%u0405%u0455%u0457");var r=function(e){if(e>=192&&e<=255)return String.fromCharCode(e-192+1040);if(e>=128&&e<=191)return n.charAt(e-128);return String.fromCharCode(e)};for(var i=0;i<e;i++){var s=this.view.getUint8(this.index+i);if(s===0){i++;break}t+=r(s)}this.index+=i;return t},readNullTerminatedUTF8Text:function(e){for(var t=0;t<e;t++){if(this.view.getUint8(this.index+t)===0){break}}var n=this.readUTF8Text(t);if(t<e){this.advance(1)}return n},readNullTerminatedUTF16Text:function(e,t){if(t==null){var n=this.readUnsignedShort();e-=2;if(n===65279){t=false}else{t=true}}var r="";for(var i=0;i<e;i+=2){var s=this.getUint16(this.index+i,t);if(s===0){i+=2;break}r+=String.fromCharCode(s)}this.index+=i;return r}};return{get:t.get}}()';
@@ -141,10 +140,11 @@ metadataCallback(metadata);},errorCallback);}});}}
 //Copyright (c) 2012 Tom Moor @license MIT Licensed @version 0.6.3
 
 function $each(obj, Fn) {
-	Array.prototype.slice.call(obj, 0).forEach(Fn)
+	var el = typeof obj == 'string' ? document.querySelectorAll(obj) : obj;
+	Array.prototype.slice.call(el, 0).forEach(Fn)
 }
 function $setup(obj, attr, events) {
-	var el = typeof obj == "string" ? document.createElement(obj) : obj;
+	var el = typeof obj == 'string' ? document.createElement(obj) : obj;
 	if (attr) {
 		for (var key in attr) {
 			attr[key] === undefined ? el.removeAttribute(key) :
@@ -188,23 +188,27 @@ $placeNode('append', document.head, [
 	$setup("script", {"src": "/src/js/1501/flac_0.2.1.js"}, null),
 	$setup("script", {"src": "/src/js/1501/alac_0.1.0.js"}, null),
 	$setup("script", {"text": blobView +'\n'+ parse_audio_metadata.toString() +'\n'+ $each.toString() +
-		'\n'+ $setup.toString() +'\n'+ $placeNode.toString() +'\n('+MagicExtension.toString()+')();'}, null),
+		'\n'+ $setup.toString() +'\n'+ $placeNode.toString() +'\n('+MagicApp.toString()+')();'}, null),
 	$setup("style", {"text": magicStyle}, null)
 ]);
 
-function MagicExtension() {
-	var thread_updating,
-		window_focused = false,
+function MagicApp() {
+	var hideinfo = document.getElementById('hideinfodiv');
+	var showinfo = document.getElementById('hideinfotd');
+	var postForm = document.getElementById('postFormDiv');
+	var pfplaceh = document.getElementById('postform_placeholder');
+	var topForm = document.getElementById('postform');
+	var delForm = document.getElementById('delete_form'),
+		deli = delForm.querySelector('input[name="password"]'),
+		pass = deli.value;
+	var window_focused = false,
 		ru = Hanabira.LC_ru,
-		fCont = [0, 0, 0],
 		unread_count = 0,
 		repliesMap = {},
-		fileList = [],
-		timer_id = 0,
 	HM = {
 		MC: ['windowFrame', 'postContent'].indexOf(getlSValue('EmbedIn', 'postContent')),
-		zIndex: 0, RefTab: null, Played: null, VActive: [], 
-		LastKey: null, TextArea: null, LoadedPosts: {},
+		zIndex: 0, DragableObj: null, Played: null, VActive: [],
+		LastKey: null, TextArea: null, LoadedPosts: {}, Sage: false,
 		LinksMap: JSON.parse(getlSValue('LinksCache', '{}')),
 		AlbumArts: JSON.parse(getlSValue('AlbumArts', '{}')),
 		RemoveFileName: getlSValue('RemoveFileName', false),
@@ -219,7 +223,6 @@ function MagicExtension() {
 		AutoUpdate: getlSValue('AutoUpdate', true, true),
 		maXrating: getlSValue('maXrating', 'SFW'),
 		oEmbedAPI: getlSValue('oEmbedAPI', true),
-		Sage: getlSValue('Sage', false, true),
 		Elems: GetElements(),
 		URL: ParseUrl(),
 		defaultName: function(name) {
@@ -286,6 +289,7 @@ function MagicExtension() {
 		update_title: ru ? "Автоматически обновлять тред каждые %s% секунд" : "Automatically update thread every %s% seconds",
 		snd_notify_title: ru ? "Оповещать о новых постах звуковым уведомлением" : "Add notification sound for new loaded posts",
 		maxr: ru ? "Макс. разрешенный рейтинг" : "Max Allowing Rating",
+		pmod: ru ? ' на премодерации' : ' pre-moderation',
 		vsyz: ru ? "Размер видеоплеера" : "Video Size",
 		expd: ru ? " для увеличения" : " to expand",
 		vitf: ru ? " для просмотра" : " to view this file",
@@ -369,7 +373,7 @@ function MagicExtension() {
 			el = el.parentNode;
 		}
 	}
-	setlSValue = function (name, value, sess) {
+	function setlSValue(name, value, sess) {
 		var stor = sess ? sessionStorage : localStorage;
 		if (typeof name === 'object') {
 			for (var key in name) {
@@ -399,17 +403,12 @@ function MagicExtension() {
 			}
 		}
 	}
-	callback = function(e) {
+	function fallback(e) {
 		if (e.preventDefault)
 			e.preventDefault();
 		else
 			e.returnValue = false;
 	}
-	var btnTamplate = '<a class="r{Fn} icon" r{Act}><img src="/images/blank.png" title="r{title}" alt="r{alt}"></a>\n',
-		refTamplate = '<a r{N} href="/r{brd}/res/r{tid}.xhtml#ir{pid}" onmouseover="ShowRefPost(event,\'r{brd}\', r{tid}, r{pid})" onclick="Highlight(event, \'r{pid}\')">&gt;&gt;r{L}r{pid}</a>',
-		btnDerpibooru = btnTamplate.allReplace({'r{Fn}': "search_derpibooru", 'r{Act}': 'onclick="revSearch(\'@img_src\')"', 'r{title}': 'Derpibooru reverse search', 'r{alt}': 'derp'}),
-		btnGoogle = btnTamplate.allReplace({'r{Fn}': "search_google", 'r{Act}': 'href="//www.google.com/searchbyimage?image_url=@img_src" onclick="window.open(this.href,\'_blank\');return false"', 'r{title}': LC.fnd_src_wth +' Google', 'r{alt}': 'ggl'}),
-		btnIqdb = btnTamplate.allReplace({'r{Fn}': "search_iqdb", 'r{Act}': 'href="//iqdb.org/?url=@img_src" onclick="window.open(this.href,\'_blank\');return false"', 'r{title}': LC.fnd_src_wth +' iqdb', 'r{alt}': 'iqdb'});
 	/*** Derpibooru Reverse Search ***/
 	revSearch = function(imgSrc) {
 		var form = $setup('form', {'method': "post", 'action': "https://derpibooru.org/search/reverse", 'target': "_blank", 'enctype': "multipart/form-data", 'hidden': "",
@@ -434,9 +433,11 @@ function MagicExtension() {
 		return m ? {host: m[1], board: m[2], page: m[3], thread: m[4], desk: m[5], pointer: m[6], pid: m[7]} : {};
 	}
 	function GetElements(el) { 
-		var node = (el || document);
+		var node = (el || document),
+			posts = node.getElementsByClassName('post');
 		return {
-			posts: node.getElementsByClassName('post'), 
+			posts: posts,
+			posts_count: posts.length, 
 			links: node.querySelectorAll('.message a:not(.cm-link), .file > a[href$=".webm"]:not(.cm-link), .file > a[href$=".pdf"]:not(.cm-link)') }
 	}
 	function _cid(pid) {
@@ -450,6 +451,7 @@ function MagicExtension() {
 		return (new Date).getTime() - (last ? parseInt(last) : 0);
 	}
 	function _show(el) { el.classList.remove('hidout') }
+	function _shide(el) { el.classList.toggle('hidout') }
 	function _hide(el) { el.classList.add('hidout') }
 	function _bitonum(arr, hex) {
 		var hexNum = "";
@@ -474,16 +476,6 @@ function MagicExtension() {
 		setlSValue(option, val, sess);
 	}
 	
-	/************************************************************************/
-	function getDataTime(jsonDT) {
-		var date = new RegExp(/(\d+)\-(\d+)\-(\d+)\ (\d+\:\d+)(\:\d+)/).exec(jsonDT),
-			year = date[1], month = date[2], day = date[3], hmin = date[4], sec = date[5],
-			uDate = new Date(month +" "+ day +", "+ year +" "+ hmin + " GMT+0300"),
-			Time = uDate.toLocaleTimeString(),
-			Month = LC.Month[month],
-			weekDay = LC.Weekday[uDate.getDay()];
-		return day + Month + year + weekDay + (Time.length === 7 ? "0" + Time.slice(0, 4) : Time.slice(0, 5)) +'<span class="t-sec">'+ sec +'</span>';
-	}
 	function getDataJSON(uri, Fn) {
 		var apiReq = new XMLHttpRequest();
 		apiReq.open('GET', uri, true);
@@ -493,7 +485,7 @@ function MagicExtension() {
 				return;
 			}
 			if (apiReq.status === 304) {
-				alert('304 '+ apiReq.statusText);
+				console.log('304 '+ apiReq.statusText);
 			} else {
 				try {
 					var json = JSON.parse(apiReq.responseText);
@@ -537,193 +529,19 @@ function MagicExtension() {
 				break;
 		}
 	}
-	function getHanabiraFile(file, pid, brd, tId, pId, len) {
-		var name, fileattach, info, filebtns, action = filebtns = '',
-			m = 0.01572,
-			src = file.src,
-			fid = file.file_id,
-			fmd = file.metadata,
-			imgW = fmd.width,
-			imgH = fmd.height,
-			rating = file.rating,
-			size = bytesMagnitude(file.size),
-			type = file.type === 'code' ? 'text' : !file.type ? fmd.type : file.type,
-			maXr = HM.maXrating.toLowerCase(),
-			filename = getPageName(src),
-			ext = filename.fext(),
-			thumb = maXr === rating || maXr.match(/\d+/) >= rating.match(/\d+g?/) || 
-				rating === 'sfw' ? file.thumb : 'images/'+ rating +'.png',
-			thumbW = thumb !== file.thumb ? 200 : file.thumb_width,
-			thumbH = thumb !== file.thumb ? 200 : file.thumb_height;
-		if (brd === 'b' || brd === 'rf')
-			name =  type == "image" ? getPageName(thumb).split('s')[0] +'.'+ ext :
-					type == "video" ? fmd["File Name"] : fid.toString() + pid.toString() +'.'+ ext;
-		else
-			name = len > 1 && filename.length > 17 ? filename.substring(0, 17) + '...' : filename;
-		if (['image', 'vector'].isThere(type)) {
-			info = ext.slice(0, 1).toUpperCase() + ext.slice(1) +', '+ size +', '+ imgW +'×'+ imgH;
-			filebtns = (len === 1 ? LC.clck_img_to + LC.expd : '') +'<br>'+ btnTamplate.allReplace({
-				'r{Fn}': "edit_", 'r{Act}': 'href="/utils/'+ type +'/edit/'+ fid +'/'+ pid +'"', 'r{title}': LC.edit, 'r{alt}': '✎'}) +
-				(btnGoogle + btnIqdb + btnDerpibooru).replace(/@img_src/g, 'http://'+ location.host +'/'+ src);
-			action = 'expand_image(event, '+ imgW +', '+ imgH +')';
-		} else {
-			var meta, metatype = type == 'flash' ? 'Flash' : fmd.type,
-				lines = fmd.lines, pages = fmd.pages, files = fmd.files_count;
-				filebtns = (len === 1 ? LC.clck_img_to + LC.vitf : '') +'<br>';
-			if (type == 'text') {
-				meta = lines + LC.line + (lines === 1 ? LC.few['ru'] : lines < 5 ? LC.few['u-d'] : LC.few['en']),
-				action = 'open_url(\'/utils/'+ type +'/'+ fid +'/'+ pid +'\', \'_blank\')'
+
+	function attachEvents(DOM) {
+		$each(DOM.querySelectorAll('#ma-button, #cm-button, #stb-button'), function(a) {
+			switch (a.id) {
+				case 'ma-button'  : Fn = initMagicAudio
+					break;
+				case 'cm-button'  : Fn = loadMediaContainer
+					break;
+				case 'stb-button' : Fn = fallback
+					break;
 			}
-			if (type == 'pdf') {
-				meta = imgW +'×'+ imgH +', '+ pages + LC.page + (pages === 1 ? LC.few['ru'] : pages < 5 ? LC.few['u-c'] : LC.few['en']);
-			}
-			if (type == 'archive') {
-				thumb = 'src/png/1405/archive-icon.png';
-				meta = files +' '+ LC.file.toLowerCase() + (files === 1 ? '' : files < 5 ? LC.few['u-a'] : LC.few['u-b']),
-				action = 'open_url(\'/utils/'+ type +'/'+ fid +'/'+ pid +'\', \'_blank\')'
-			}
-			if (type == 'video') {
-				metatype = fmd["File Type"] == 'WEBM' ? 'WebM' : fmd["File Type"];
-				size = fmd["File Size"];
-				filebtns = (len === 1 ? LC.clck_img_to + LC.pvid : '');
-				meta = fmd["Image Size"] +' @ '+ fmd["Duration"];
-			}
-			if (type == 'music') {
-				var brate = (fmd.bitrate / 1000).toFixed(0) + ' kbps',
-					srate = (fmd.sample_rate / 1000).toFixed(1) + ' kHz',
-					trlen = (fmd.length * m).toFixed(2).replace('.', ':'),
-					trnam = _unc(fmd.artist) +' — '+ _unc(fmd.album),
-					trnum = _unc(fmd.tracknumber, '0') +'/'+ _unc(fmd.totaltracks, '0');
-				meta = trlen +' @ '+ brate +' / '+ srate +'<br>'+ (len > 1 && trnam.length > 40 ? trnam.substring(0, 40) +'<br>'+ trnam.slice(40) : trnam) +' / '+ _unc(fmd.title) +' ['+ trnum +']';
-				filebtns = '';
-			}
-			info = metatype +', '+ size + (!meta ? '' : ', '+ meta);
-		}
-		filebtns += '</div>';
-		var fileinfo = '<div class="fileinfo">'+ LC.file +': <a href="/'+ src +'" target="_blank" title="'+ filename +'">'+ name +'</a><br><em>'+ info +'</em>';
-		var filethmb = '<a onclick="callback(event)" href="/'+ src +'" target="_blank"><img class="thumb" src="/'+ thumb +'" width="'+ thumbW +'" height="'+ thumbH +
-						'" onclick="'+ action +'" alt="'+ filename +'"></a>\n</div>';
-		var filediv = '<div id="file_'+ pId +'_'+ fid +'" class="file">';
-		return fileattach = (len == 1 ? fileinfo + filebtns + filediv + filethmb : filediv + fileinfo + filebtns + filethmb);
-	}
-	function getHanabiraPost(postJson, arr, hush) {
-		if (window.HTMLAudioElement && HM.SoundNotify)
-			new Audio("/src/mp3/1406/musbox.mp3").play();
-		if (!window_focused && !hush) {
-			unread_count = unread_count + 1;
-			Tinycon.setBubble(unread_count);
-		}
-		var threadId = arr ? arr[1] : Target.tid,
-			postId = postJson.display_id,
-			board = arr ? arr[0] : HM.URL.board,
-			files = postJson.files,
-			len = files.length,
-			op = postJson.op,
-			wrap = $setup((op ? 'div' : 'table'), {'id': 'post_'+ postId, 'class': (op ? 'oppost' : 'replypost') +' post'}, null),
-			delicon = '<a class="delete icon"><input type="checkbox" id="delbox_r{post_id}" class="delete_checkbox" value="'+ postJson.thread_id +
-				'" name="r{post_id}"><img src="/images/blank.png" title="'+ LC.mrk_to_del +'" alt="✕" onclick="this.parentNode.classList.toggle(\'checked\')"></a>\n',
-			html = (op ? '' : '<tbody><tr><td class="doubledash">&gt;&gt;</td><td id="replyr{post_id}" class="reply">') +
-				'<a name="ir{post_id}"></a><label>'+ 
-					(op ? '<a class="hide icon" onclick="hide_thread(event, \'r{board}\',r{post_id});" href="/api/thread/r{board}/r{post_id}/hide.redir"><img src="/images/blank.png" title="'+ LC.hide +'" alt="﹅"></a>\n' +
-						delicon + '<a class="unsigned icon" onclick="sign_thread(event, \'r{board}\',r{post_id});"><img src="/images/blank.png" title="'+ LC.subscrb +'" alt="✩"></a>\n' : delicon) +
-					(board === 'mad' ? '<span class="iphash">' +
-						'<span class="ipmark" style="background:rgba(0,0,0,.5)">&nbsp;</span><span class="ipmark" style="background:rgba(255,255,255,.5)">&nbsp;</span>' +
-						'<span class="ipmark" style="background:rgba(25,25,25,.6)">&nbsp;</span><span class="ipmark" style="background:rgba(99,99,99,.6)">&nbsp;</span>' +
-						'<span class="ipmark" style="background:rgba(175,175,175,.6)">&nbsp;</span></span>\n<img class="geoicon" src="/src/png/1408/polandball_kawaii_16.png" alt="(^ ^)" title="Polandball (^ ^)">\n' : '') +
-					'<span class="replytitle">'+ postJson.subject +'</span>\n<span class="postername">'+ HM.defaultName(postJson.name) +'</span> '+ getDataTime(postJson.date) +
-				' </label><span class="reflink"><a onclick="Highlight(0, r{post_id})" href="/r{board}/res/r{thread_id}.xhtml#ir{post_id}">No.r{post_id}</a></span>\n' +
-				'<span class="cpanel"><a class="reply_ icon" onclick="GetReplyForm(event, \'r{board}\', r{thread_id}, r{post_id})">' +
-				'<img src="/images/blank-double.png" style="vertical-align:sub" title="'+ LC.repl +'" alt=">>"></a></span><br>';
-		for (var i = 0; i < len; i++) {
-			html += getHanabiraFile(files[i], postJson.post_id, board, threadId, postId, len);
-		}
-		wrap.insertAdjacentHTML('afterbegin', html.allReplace({'r{board}': board, 'r{thread_id}': threadId, 'r{post_id}': postId}) + 
-			(len > 1 ? '<br style="clear: both">' : '') +'<div class="postbody">'+ postJson.message_html +'</div><div class="abbrev"></div>' +
-			(op ? '' : '</td></tr></tbody>'));
-		$each(GetElements(wrap).links, parseLinks);
-		$each(wrap.querySelectorAll('img.thumb[src="/thumb/generic/sound.png"]'), makeMagicAudio);
-		if (hush)
-			genReplyMap([wrap]);
-		return [wrap, (op ? wrap.firstChild : wrap.firstChild.firstChild.lastChild)];
-	}
-	function getHanabiraAllPosts() {
-		getDataJSON('/api/thread/'+ HM.URL.board +'/'+ HM.URL.thread +'/all.json?new_format&message_html',
-		function(status, sText, json, xhr) {
-			for (var i = 0, jpid, pnid, jsonPost = json.result.posts; HM.Elems.posts[i]; i++) {
-				pnid = _cid(HM.Elems.posts[i].id);
-				jpid = !jsonPost[i] ? 9999999 : jsonPost[i].display_id;
-				if (pnid != jpid) {
-					if (pnid < jpid)
-						$setup(HM.Elems.posts[i], {'class': "deleted"}).querySelector('.doubledash').setAttribute('style', "display:inline");
-					if (pnid > jpid) {
-						var derefl = refTamplate.allReplace({'r{N}': 'style="text-decoration:none"', 'r{brd}': HM.URL.board, 'r{tid}': HM.URL.thread, 'r{pid}': jpid, 'r{L}': ''}),
-							dealp = document.getElementsByClassName('allowed-posts')[0],
-							apnode = document.getElementById(HM.Elems.posts[i].id),
-							temp = getHanabiraPost(jsonPost[i]);
-						$placeNode('before', apnode, temp[0]);
-						if (!dealp)
-							postCount.insertAdjacentHTML('afterend', '<span class="allowed-posts" style="color:#666;font-size:14px"> | '+ LC.allw +': '+ derefl +'</span>');
-						else
-							dealp.insertAdjacentHTML('beforeend', ', '+ derefl);
-						genReplyMap(HM.Elems.posts);
-					}
-				}
-			}
+			a.addEventListener('click', Fn, false)
 		});
-	}
-	function updateThread(evt) {
-		if (thread_updating)
-			return updateTimer(evt);
-		update.textContent = LC.updprog;
-		thread_updating = true;
-		getDataJSON('/api/thread/'+ HM.URL.board +'/'+ Target.tid +'/new.json?new_format&message_html&last_post='+ _cid(Target.last().id),
-			function parseNewPosts(status, sText, json, xhr) {
-				if (status !== 200 || json.error) {
-					errorMsg = !json.error ? status +' '+ sText : json.error.message +' '+ json.error.code;
-					updater.innerHTML = '<strong style="color:#ff3428">'+ errorMsg +'</strong>';
-					setTimeout(function() { $setup(updater, {'html': ''}, null).appendChild(update) }, 5000);
-				} else {
-					var i, temp, tpcount = HM.Elems.posts.length,
-						pCount = json.result.posts_count,
-						el = json.result.posts,
-						len = el ? el.length : 0;
-					if (len > 0) {
-						for (i = 0; i < len; i++) {
-							temp = getHanabiraPost(el[i]);
-							Target.thread().appendChild(temp[0]);
-						}
-						tpcount = tpcount + len;
-					}
-					if (evt !== null) {
-						if (tpcount != pCount)
-							getHanabiraAllPosts();
-						postCount.textContent = pCount + LC.omit;
-					}
-				}
-				update.textContent = LC.loadnew;
-				thread_updating = false;
-				updateTimer(evt);
-				genReplyMap(HM.Elems.posts);
-			}
-		);
-	}
-	function updateTimer(evt) {
-		if (evt === null) return;
-		if (evt) { clearTimeout(timer_id); timer_id = 0; }
-		timer_id = setTimeout((HM.AutoUpdate ? updateThread : function() {
-			getDataJSON('/api/thread/'+ HM.URL.board +'/'+ HM.URL.thread +'.json?new_format',
-				function(status, sText, json, xhr) {
-					if (json.result) {
-						var i = json.result.posts_count - HM.Elems.posts.length - fCont[2],
-							p = i > 0 ? i : 0, n = i < 0 ? i : 0, postNew;
-							fCont = [fCont[0] + p, fCont[1] + n, fCont[2] + i];
-							postNew = '( '+ (fCont[0] > 0 ? '+'+ fCont[0]+ LC.newp : '') +
-									 ' • '+ (fCont[1] < 0 ? fCont[1] + LC.delp : '') +')';
-						postCount.textContent = HM.Elems.posts.length + LC.omit + postNew;
-					}
-				});
-			updateTimer();
-		}), HM.UpdateInterval().int);
 	}
 	
 	/************************************************************************/
@@ -746,12 +564,12 @@ function MagicExtension() {
 							type = 'bc';
 							break;
 						case 'Google Docs':
-							type = 'document';
+							type = 'text';
 							break;
 					}
 					if (!embed && data.html)
 						embed = data.html;
-					$setup(link, {'href': undefined, 'src': mediaUrl, 'onclick': 'loadMediaContainer(event.target)'}, null);
+					$setup(link, {'href': mediaUrl, 'id': 'cm-button'}, {'click': loadMediaContainer});
 				}
 				$setup(link, {'class': 'cm-link', 'rel': 'nofollow', 'title': descript, 'text': provider + name}, null);
 				HM.LinksMap[mediaUrl] = {Name: provider + name, Title: descript, Embed: embed, Type: type};
@@ -763,12 +581,13 @@ function MagicExtension() {
 		var fileUrl = escapeUrl(el.href),
 			fileName = getPageName(fileUrl),
 			name = fileName.length > 17 ? fileName.substring(0, 17) + '...' : fileName,
-			embed = type === 'img' ? '<div class="url-image">'+ LC.file +': <a target="_blank" href="'+ fileUrl +'" title="'+ fileName +'" download>'+ name +'</a>\n'+
-				(btnGoogle + btnIqdb + btnDerpibooru).replace(/@img_src/g, fileUrl) +'</div><img style="border:medium none;cursor:pointer" src="'+ fileUrl +'" class="thumb" alt="'+
-				fileName +'" width="200" onclick="this.setAttribute(\'width\', this.getAttribute(\'width\') == \'200\' ? \'85%\' : \'200\')" >' : '<video '+
+			embed = type === 'img' ? '<div class="url-image">'+ LC.file +': <a target="_blank" href="'+ fileUrl +'" title="'+ fileName +'" download>'+ name +
+				'</a>\n</div><img class="thumb" contextmenu="image-context" oncontextmenu="$(\'#image-context\').attr({src:this.src, edit:\'\'})" src="'+
+				fileUrl +'"style="border:medium none;cursor:pointer" width="200" alt="'+
+				fileName +'" onclick="this.setAttribute(\'width\', this.getAttribute(\'width\') == \'200\' ? \'85%\' : \'200\')">' : '<video '+
 				(type === 'audio' ? 'width="350" height="80" poster="/src/png/1405/waveform.png"' : 'r{wh}') + ' controls><source src="'+ fileUrl +'"></source></video>',
 			attach = function(e) {
-				$setup(el, {'class': 'cm-link', 'rel': 'nofollow', 'onclick': 'loadMediaContainer(event.target)', 'href': undefined, 'src': fileUrl}, null);
+				$setup(el, {'class': 'cm-link', 'rel': 'nofollow', 'href': fileUrl, 'id': 'cm-button'}, {'click': loadMediaContainer});
 				if (!lR)
 					$setup(el, {'text': (type === 'img' ? 'Image' : type === 'audio' ? 'Audio' : 'Video') + ': ' + fileName}, null);
 				HM.LinksMap[fileUrl] = {Name: fileName, Title: '', Embed: embed, Type: type};
@@ -809,7 +628,7 @@ function MagicExtension() {
 		/********************* PDF JS *********************/
 		if (href.isThere("/pdf/") && href.isThere(".pdf")) {
 			HM.LinksMap[href] = {Embed: iframe +' src="'+ href +'">', Type: 'pdf'};
-			return $setup(link, {'class': 'cm-link', 'rel': 'nofollow', 'onclick': 'loadMediaContainer(event.target)', 'href': undefined, 'src': href}, null);
+			return $setup(link, {'class': 'cm-link', 'rel': 'nofollow', 'href': href, 'id': 'cm-button'}, {'click': loadMediaContainer});
 		}
 		/*************************** Простоплеер **************************/
 		if (href.isThere("pleer.com/tracks/")) {
@@ -871,7 +690,7 @@ function MagicExtension() {
 		if (href.isThere("pastebin.com/")) {
 			regex = /(?:https?:)?\/\/(?:www\.)?(?:pastebin\.com)\/([\w_-]*)/g;
 			embed = '<iframe frameborder="0" src="//pastebin.com/embed_js.php?i=$1">';
-			prov = 'Pastebin: '; type = 'document';
+			prov = 'Pastebin: '; type = 'text';
 		}
 		/************************* Custom iframe ************************/
 		if (href.isThere("/iframe/") || href.isThere("/embed/")) {
@@ -883,19 +702,20 @@ function MagicExtension() {
 		/****************************************************************/
 		if (HM.LinksMap[href]) {
 			if (HM.LinksMap[href].Embed)
-				$setup(link, {'href': undefined, 'src': href, 'onclick': 'loadMediaContainer(event.target)'}, null);
-			$setup(link, {'class': 'cm-link', 'rel': 'nofollow', 'text': HM.LinksMap[href].Name,
+				$setup(link, {'id': 'cm-button'}, {'click': loadMediaContainer});
+			$setup(link, {'href': href, 'class': 'cm-link', 'rel': 'nofollow', 'text': HM.LinksMap[href].Name,
 				'title': HM.LinksMap[href].Title}, null);
 		} else if (!href) return;
 		else oEmbedMedia(link, type, href.replace(regex, embed), prov, endp, (href.match(regex) != null && regex.exec(href)[v] != undefined));
 	}
-	loadMediaContainer = function(el) {
+	function loadMediaContainer(e) {
+		var el = e.target
 		if (el.tagName === 'IMG')
 			el = el.parentNode;
-		var cont, src = el.getAttribute("src"),
+		var cont, src = el.getAttribute('href'),
 			type = HM.LinksMap[src].Type,
 			hash = btoa(getPageName(src, true));
-		if (type === 'pdf'|| HM.MC === 0 && !['img', 'audio', 'bc'].isThere(type)) {
+		if (['text', 'pdf'].isThere(type) || HM.MC === 0 && !['img', 'audio', 'bc'].isThere(type)) {
 			var last = contentFrame.lastChild;
 				cont = $setup('div', {'class': 'content-frame '+ type, 'id': 'content_'+ hash,
 					'html': HM.LinksMap[src].Embed.allReplace({'r{wh}': 'class="full-size"', '(width|height)="\\d+"': '$1="100%"'})
@@ -921,7 +741,7 @@ function MagicExtension() {
 			if (!contEl || contEl.id != idEl) {
 				if (contEl)
 					contEl.remove();
-				if (['document', 'audio'].isThere(type))
+				if (type === 'audio')
 					$placeNode('before', el, cont)
 				else
 					$route(el, jumpCont).appendChild(cont);
@@ -932,6 +752,7 @@ function MagicExtension() {
 		}
 		if (type === 'video')
 			HM.VActive = [el, cont];
+		return fallback(e);
 	}
 	function jumpCont(el) {
 		var pb = el.querySelector('.postbody');
@@ -943,28 +764,6 @@ function MagicExtension() {
 			return node.previousElementSibling;
 		} else return false;
 	}
-	placeMedia = function(e) {
-		var val = e.target.value, cont = HM.VActive[1],
-			vsset = e.target.parentNode.parentNode.parentNode.nextElementSibling;
-		if (val === 'windowFrame') { HM.MC = 0;
-			_hide(vsset);
-			if (cont) {
-				contentFrame.appendChild($setup(cont, {'class': 'content-frame video', 'id': 'content_'+cont.id.split('_')[1]}, null));
-				$setup(cont.firstChild, {'width': '100%', 'height': '100%'}, null);
-				_show(contMarker);
-			}
-		}
-		if (val === 'postContent') { HM.MC = 1;
-			_show(vsset);
-			if (cont) {
-				$placeNode('prepend', $route(HM.VActive[0], jumpCont), $setup(cont, {'class': 'video-container', 'id': 'video_'+cont.id.split('_')[1]}, null));
-				$setup(cont.firstChild, {'class': '', 'width': getVSize('w'), 'height': getVSize('h')}, null);
-				_hide(contMarker);
-				contentFrame.classList.add('hidup');
-			}
-		}
-		setlSValue('EmbedIn', val)
-	}
 	function getVSize(i) {
 		var w = getlSValue('VWidth', 480), h = getlSValue('VHeight', 360),
 			val = w == 360 ? 1 : w == 480 ? 2 : w == 720 ? 3 : w == 854 ? 4 : 0;
@@ -973,20 +772,6 @@ function MagicExtension() {
 		if (i === 'text') return w+'×'+h;
 		return (i == 'w' ? w : i == 'h' ? h : 0);
 	}
-	setVSize = function(slider) {
-		var p = slider.value;
-		function size(w, h) {
-			var vplayed = document.querySelector('.video-container > iframe');
-			var scplayed = document.querySelector('.sc-container > iframe');
-			setlSValue({'VWidth': w, 'VHeight': h});
-			document.getElementById('vsize-textbox').textContent = '('+w+'×'+h+')';
-			if (vplayed) vplayed.width = w, vplayed.height = h;
-			if (scplayed) scplayed.width = h, scplayed.height = h;
-		}
-		p == 1 ? size(360, 270) : p == 2 ? size(480, 360) :
-		p == 3 ? size(720, 480) : p == 4 ? size(854, 576) : size(0, 0);
-	}
-	
 	/****************** MagicAudio Player *********************/
 	function _cover(MAF, artist, album, dataImage) {
 		var aid, baid, aa, ALB = getKeyByValue(HM.AlbumArts, dataImage);
@@ -1070,79 +855,75 @@ function MagicExtension() {
 		afSrc = afSrc.parentNode
 		var afInf = $route(afSrc, 'em'),
 			artalb = (/kHz\s*(.+\s—\s.+)\s\//).exec(afInf.textContent)[1],
-			magicAudio = $setup('div', {'class': 'magic-audio thumb artwork', 'html': '<div class="ma-controls"><a src="'+
-							afSrc.href +'" class="ma-play"></a><a class="ma-pause hidout"></a></div>'}, null);
+			magicAudio = $setup('div', {'class': 'magic-audio thumb artwork', 'html': '<div class="ma-controls"><a href="'+
+						afSrc.href +'" id="ma-button" class="ma-play"></a></div>'}, null);
+		attachEvents(magicAudio)
 		afInf.classList.add('magic-info');
-		if (afInf.nextElementSibling)
-			afInf.nextElementSibling.remove();
 		if (HM.AlbumArts[artalb])
 			_cover(magicAudio, artalb);
-		$setup(magicAudio.querySelector('.ma-play'), {'onclick': 'initMagicAudio(event)'}, null);
-		$setup(magicAudio.querySelector('.ma-pause'), {'onclick': 'initMagicAudio(event)'}, null);
 		$placeNode('replace', afSrc, magicAudio)
 	}
-	initMagicAudio = function(e) {
-		var btn = e.target
-		if (btn.className == 'ma-pause') {
-			_active(btn, btn.previousElementSibling);
-			return HM.Played.pause();
-		}
-		var magicAudio = btn.parentNode.parentNode, AS = btn.getAttribute('src'),
-			prev_p = document.querySelector('.ma-pause:not(.hidout)');
-		if (HM.Played != null) {
-			if (prev_p != null)
-				_active(prev_p, prev_p.previousElementSibling);
-			HM.Played.pause(); 
-		}
-		function _active(el, es) {
-			el.classList.toggle('hidout');
-			es.classList.toggle('hidout');
-		}
-		function _nextTrack(e) {
-			var file = document.getElementById(atob(this.id)), p = file.querySelector('.ma-pause'),
-				nxtf = file.nextElementSibling, nxtfp = nxtf.querySelector('.ma-play');
-			_active(p, p.previousElementSibling);
-			if (nxtfp) nxtfp.click();
-		}
-		_active(btn, btn.nextElementSibling);
-		if (['flac', 'alac'].isThere(AS.fext())) {
-			HM.Played = new AV.Player.fromURL(AS);
-			if (!magicAudio.id) {
-				HM.Played.asset.get('metadata', function(md) {
-					AVMetadata(magicAudio, md)
-				});
+	function initMagicAudio(e) {
+		var btn = e.target, AS = btn.href,
+			magicAudio = btn.parentNode.parentNode;
+			function _stop() {
+				$each(document.getElementsByClassName('ma-pause'),
+					function(a) { a.className = 'ma-play' });
+				HM.Played.pause();
 			}
-			HM.Played.on('end', _nextTrack)
+			function _nextTrack(e) {
+				var file = document.getElementById(atob(this.id)), p = file.querySelector('#ma-button'),
+					nxtf = file.nextElementSibling, nxtfp = nxtf.querySelector('#ma-button');
+				_stop();
+				if (nxtfp)
+					nxtfp.click();
+			}
+		if (btn.className == 'ma-pause') {
+			_stop();
 		} else {
-			HM.Played = $setup(new Audio(AS), {}, {'ended': _nextTrack,
-				'loadedmetadata': function(e) {
-					var moz = typeof mozRTCSessionDescription !== "undefined",
-						mozMdata = moz ? this.mozGetMetadata() : false;
-					if (!magicAudio.id && mozMdata && Object.keys(mozMdata).length > 0) {
-						MDPBlockParser(magicAudio, mozMdata)
-					} else if (!magicAudio.id) {
-						var oReq = new XMLHttpRequest();
-						oReq.open("GET", AS, true);
-						oReq.responseType = "arraybuffer";
-						oReq.send(null);
-						oReq.onload = function() {
-							var blob = new Blob([oReq.response]);
-							if (blob) {
-								MAParser(magicAudio, blob)
+			if (HM.Played != null)
+				_stop();
+			if (['flac', 'alac'].isThere(AS.fext())) {
+				HM.Played = new AV.Player.fromURL(AS);
+				if (!magicAudio.id) {
+					HM.Played.asset.get('metadata', function(md) {
+						AVMetadata(magicAudio, md)
+					});
+				}
+				HM.Played.on('end', _nextTrack)
+			} else {
+				HM.Played = $setup(new Audio(AS), {}, {'ended': _nextTrack,
+					'loadedmetadata': function(e) {
+						var moz = typeof mozRTCSessionDescription !== "undefined",
+							mozMdata = moz ? this.mozGetMetadata() : false;
+						if (!magicAudio.id && mozMdata && Object.keys(mozMdata).length > 0) {
+							MDPBlockParser(magicAudio, mozMdata)
+						} else if (!magicAudio.id) {
+							var oReq = new XMLHttpRequest();
+							oReq.open("GET", AS, true);
+							oReq.responseType = "arraybuffer";
+							oReq.send(null);
+							oReq.onload = function() {
+								var blob = new Blob([oReq.response]);
+								if (blob) {
+									MAParser(magicAudio, blob)
+								}
 							}
 						}
 					}
-				}
-			});
+				});
+			}
+			HM.Played.id = btoa(btn.parentNode.parentNode.parentNode.id);
+			btn.className = 'ma-pause';
+			HM.Played.play();
 		}
-		HM.Played.id = btoa(btn.parentNode.parentNode.parentNode.id)
-		HM.Played.play()
+		return fallback(e);
 	}
 	
 	/*** Wakabamark Buttons Engine ***/
 	wmarkText = function (openTag, closeTag) {
 		if (!HM.TextArea)
-			HM.TextArea = YukiTextArea;
+			HM.TextArea = Nagato['ReplyText'];
 		var	CED = HM.TextArea.id.isThere('code'),
 		 	val = HM.TextArea.value,
 			end = HM.TextArea.selectionEnd,
@@ -1173,18 +954,32 @@ function MagicExtension() {
 			eOfs = sOfs + selected.length;
 		}
 		$setup(HM.TextArea, {'class': 'ta-inact', 'value': val.substring(0, start) + markedText + val.substring(end)}, null).focus();
-		if (!CED) setlSValue('SafeText', JSON.stringify(YukiTextArea.value), true)
+		if (!CED) setlSValue('SafeText', JSON.stringify(Nagato['ReplyText'].value), true)
 		HM.TextArea.setSelectionRange(start + sOfs, start + eOfs);
+	}
+	InsertInto = function(textarea, text, select) {
+		var caretPos = textarea.caretPos,
+			start = textarea.selectionStart,
+			end = textarea.selectionEnd,
+			val = textarea.value;
+		if (textarea.createTextRange && caretPos) {
+			caretPos.text = caretPos.text.charAt(caretPos.text.length - 1) == " " ? text + " " : text;
+		} else if (textarea.setSelectionRange) {
+			$setup(textarea, {'value': val.substring(0, end) + text + val.substring(end)}, null)
+			.setSelectionRange(start + (select ? 0 : text.length), start + text.length);
+		} else {
+			textarea.value += text + " ";
+		}
 	}
 	function keyMarks(e) {
 		if (e.target.tagName === 'TEXTAREA') {
 			HM.TextArea = e.target;
 			TA = true;
 		} else {
-			HM.TextArea = YukiTextArea;
+			HM.TextArea = Nagato['ReplyText'];
 			TA = false;
 		}
-		var YRT = HM.TextArea.id === 'yukireplyText',
+		var YRT = HM.TextArea.id === 'yuki-replyText',
 			CED = HM.TextArea.id === 'code_edit_ta',
 			key = String.fromCharCode(e.charCode),
 			val = HM.TextArea.value,
@@ -1202,13 +997,13 @@ function MagicExtension() {
 			if (HM.LastKey === key || active) {
 				wmarkText(key + (active ? key : ''), key + key)
 				HM.LastKey = null;
-				return callback(e);
+				return fallback(e);
 			}
 		}
 		if (YRT && TA && KeyCodes.symbs.isThere(key)) {
 			if (autoselect()) {
 				wmarkText(key, (key === '(' ? ')' : key))
-				return callback(e);
+				return fallback(e);
 			}
 		}
 		if (CED && TA && KeyCodes.codew.isThere(key)) {
@@ -1218,7 +1013,7 @@ function MagicExtension() {
 					      key === '{' ? '}' :
 					      key === '[' ? ']' :
 					      key === '@' ? '\n\	': key))
-				return callback(e);
+				return fallback(e);
 			}
 		}
 		if (YRT && KeyCodes.quots.isThere(key)) {
@@ -1226,7 +1021,7 @@ function MagicExtension() {
 			if (['\n', ''].isThere(sSp) || selected.isThere('\n')) {
 				key = key === '^' ? '*' : key;
 				wmarkText(key +' ', '\n'+ key +' ');
-				return callback(e);
+				return fallback(e);
 			}
 		}
 		if (TA && e.keyCode != 8) { HM.LastKey = key;
@@ -1241,7 +1036,7 @@ function MagicExtension() {
 	//* @ by 	DesuDesuTalk
 	StrikeConvert = function(e) {
 		var sregex = /(?:\~\~\~(.*?[^\s])\~\~\~)|(?:\~\~(.*?[^\s])\~\~)/g;
-		YukiTextArea.value = YukiTextArea.value.replace(sregex,
+		HM.TextArea.value = HM.TextArea.value.replace(sregex,
 		function(match, str, str2, len, prefix) {
 			var sMarked, sT, lm;
 			if (str) {
@@ -1310,7 +1105,7 @@ function MagicExtension() {
 	/*** Form Serialization ***/
 	//* @ original code 	https://gist.github.com/bullgare/5336154
 	//* @ copyright 		bullgare
-	serializeArray = function(form) {
+	function serializeArray(form) {
 		var i, j, arr = new Array();
 		if (!form || form.nodeName !== "FORM") {
 			return;
@@ -1383,10 +1178,6 @@ function MagicExtension() {
 		return arr;
 	}
 
-	
-	/*** Yuki Reply Form ***/
-	//* @ original code 	https://github.com/tranquility-yuki/yukiscript
-	//* @ copyright 		2013+, You
 	function makeRandId(size) {
 		var text = "", 
 			possible = "0123456789abcdef",
@@ -1503,459 +1294,907 @@ function MagicExtension() {
 			type: dataType
 		});
 	}
-	function yukiAddFile(e) { // FileList object
-		var files = e.dataTransfer ? e.dataTransfer.files : e.target.files;
-		if (fileList.length >= 5) {
-			return alert('Пять файлов это максимум на Доброчане.');
-		} // Loop through the FileList and render image files as thumbnails.
-		for (var i = 0, f; f = files[i++];) {
-			if (fileList.length >= 5) {
-				alert('Пять файлов это максимум на Доброчане.');
-				break;
-			}
-			var f_name = f.name, f_ext = f_name.fext(),
-				renamed = false;
-			if (HM.RemoveFileName) {
-				f_name = (makeRandId(32) + (f.name.match(/\.[^\.]+$/) || [''])[0]).toLowerCase();
-				renamed = true;
-			}
-			fileList.push({
-				file: f,
-				f_name: f_name,
-				renamed: renamed,
-				el: $setup('div', {'class': "yukiFile" +(Files.audio.isThere(f_ext) ? ' artwork' : ''), 'html': filepreview_tamplate.allReplace({
-					'r{img}': Files.arch.isThere(f_ext) ? '/src/png/1405/archive-icon.png' : f_ext === 'webm' ? '/src/svg/1501/webm-file.svg' : '#transparent',
-					'r{fname}': f_name, 'r{size}': bytesMagnitude(f.size)})
-				}, null)
-			});
-			fileList[fileList.length - 1].el.querySelector('.yuki_clickable').onclick = (function(data) {
-				return function(e) {
-					var idx = fileList.indexOf(data);
-					data.el.remove();
-					delete fileList[idx];
-					fileList.splice(idx, 1)
-				}
-			}(fileList[fileList.length - 1]))
-			
-			YukiFiles.appendChild(fileList[fileList.length - 1].el);
-			
-			// Closure to capture the file information.
-			if (Files.audio.isThere(f_ext)) {
-				var front = fileList[fileList.length - 1].el, 
-					moz = typeof mozRTCSessionDescription !== "undefined";
-				if (['ogg', 'opus'].isThere(f_ext) && moz) {
-					var URL = window.URL || window.webkitURL, 
-					HTMLAE = new Audio(URL.createObjectURL(f))
-					HTMLAE.onloadedmetadata = function() {
-						var mozMdata = this.mozGetMetadata();
-						if (Object.keys(mozMdata).length > 0) {
-							MDPBlockParser(front, mozMdata)
-						}
-					}
-					HTMLAE.load()
-				} else {
-					getFileReaderData('arraybuffer', f, function(buffer) {
-						var blob = new Blob([buffer]);
-						if (['flac', 'alac', 'm4a'].isThere(f_ext)) {
-							var AVAsset = new AV.Asset.fromBuffer(buffer);
-							AVAsset.get('metadata', function(md) {
-								AVMetadata(front, md)
-							});
-						} else {
-							MAParser(front, blob)
-						}
-					})
-				}
-			}
-			var reader = new FileReader();
-			reader.onload = (function(theFile) {
-				return function(e) {
-					// Render thumbnail.
-					if (HM.RemoveExif && theFile.file.type.toLowerCase() === 'image/jpeg') {
-						theFile.dataURL = jpegStripExtra(e.target.result);
-						theFile['jpegStripped'] = true;
-					} else {
-						theFile.dataURL = e.target.result;
-						theFile['jpegStripped'] = false;
-					}
-					if (theFile.file.type.match('image.*')) {
-						theFile.el.querySelector('.preview_img').setAttribute('src', theFile.dataURL);
-					}
-				};
-			})(fileList[fileList.length - 1]);
-			// Read in the image file as a data URL.
-			reader.readAsDataURL(f);
-		}
-	}
-	function yukiPleasePost(e) {
-		var formData = serializeArray(e.target),
-			fd = new FormData();
-		for (var i = 0; i < formData.length; i++) {
-			fd.append(formData[i].name, formData[i].value);
-		};
-		for (var i = 0; i < fileList.length; i++) {
-			if (HM.RemoveExif && fileList[i].file.type.toLowerCase() == 'image/jpeg' && !fileList[i].jpegStripped) {
-				fileList[i].dataURL = jpegStripExtra(fileList[i].dataURL);
-			}
-			if (HM.RemoveFileName && !fileList[i].renamed) {
-				fileList[i].f_name = (makeRandId(32) + (fileList[i].f_name.match(/\.[^\.]+$/) || [''])[0]).toLowerCase();
-			}
-			fd.append("file_" + (i + 1), dataURLtoBlob(fileList[i].dataURL, fileList[i].file.type), fileList[i].f_name);
-			fd.append("file_" + (i + 1) + "_rating", fileList[i].el.querySelector("select[name='file_1_rating']").value);
-		};
-		fd.append("post_files_count", fileList.length)
-		submitProcess(true);
-		var ajaxPost = new XMLHttpRequest(), url = e.target.action +'?X-Progress-ID='+ _t() * 10000;
-		ajaxPost.open('POST', url, true);
-		ajaxPost.send(fd);
-		ajaxPost.onreadystatechange = function() {
-			if (ajaxPost.readyState !== 4) {
-				return;
-			}
-			if (ajaxPost.status === 304) {
-				submitProcess(false);
-				alert('Не получилось отправить пост.\nПопробуйте чуть попозже ещё разок или перезагрузить страницу.\n\n-----------------------------\n'+ ajaxPost.statusText);
-			} else {
-				try {
-					var rText = ajaxPost.responseText,
-						errPost = rText.match(/\/error\/post\/\d+/),
-						newThread = rText.match(/\/\w*\/res\/\d+\.xhtml/);
-				} catch(e) {
-					console.log(e);
-				} finally {
-					if (errPost) {
-						getDataJSON(errPost, function(status, sText, err, xhr) {
-							var msg = (/<td colspan='\d+' class='post-error'>(.+)<\/td>/).exec(err);
-							var keys = ru ? ['капча', 'человек.'] : ['captcha', 'human.'];
-							YukiReplyForm.querySelector('.error-msg').textContent = msg[1];
-							if (keys.isThere(msg[1].split(' ').pop()))
-								YukiCaptcha.removeAttribute('hidden');
-							submitProcess(false);
-							YukiReplyForm.previousElementSibling.querySelector('a.reply_.icon').click();
-						});
-					} else if (newThread && YukiThreadFrom.value == 0) {
-						document.location.href = newThread;
-					} else {
-						if (YukiReplyForm.className === 'reply')
-							YukiReplyForm.remove();
-						YukiTextArea.value = '';
-						submitProcess(false);
-						setlSValue('SafeText', JSON.stringify(YukiTextArea.value), true);
-						YukiReplyForm.querySelector('.error-msg').textContent = '';
-						YukiCaptcha.setAttribute('hidden', '');
-						YukiFiles.innerHTML = '';
-						fileList = [];
-						updateThread(null);
-					}
-				}
-			}
-		}
-		return callback(e);
-	}
-	function submitProcess(st) {
-		$setup(YukiSubmit, {'disabled': (st ? "disabled" : undefined)}, null);
-		YukiSubmit.parentNode.classList.toggle('process')
-	}
-	yukiAttachCapcha = function(el) {
-		if (fileList.length >= 5) {
-			alert('Пять файлов это максимум на Доброчане.');
-			return false;
-		}
-		var img = el.previousElementSibling;
-		if (img.nodeName.toLowerCase() === 'img') {
-			var canvas = document.createElement("canvas");
-			canvas.width = img.width;
-			canvas.height = img.height;
-			var ctx = canvas.getContext("2d");
-			ctx.drawImage(img, 0, 0);
-			var dataURL = canvas.toDataURL("image/png");
-			f = {
-				"name": 'talking_captcha.png',
-				"size": dataURL.length * 6 / 8,
-				"type": 'image/png'
-			};
-			fileList.push({
-				file: f,
-				renamed: false,
-				f_name: 'talking_captcha.png',
-				jpegStripped: true,
-				el: $setup('div', {'class': "yukiFile", 'html': filepreview_tamplate.allReplace({
-					'r{img}': dataURL, 'r{fname}': f.name, 'r{size}': bytesMagnitude(f.size)
-				})}, null),
-				dataURL: dataURL
-			});
-			fileList[fileList.length - 1].el.querySelector('.yuki_clickable').onclick = (function(data) {
-				return function(e) {
-					var idx = fileList.indexOf(data);
-					data.el.remove();
-					delete fileList[idx];
-					fileList.splice(idx, 1)
-				}
-			}(fileList[fileList.length - 1]))
-			YukiFiles.appendChild(fileList[fileList.length - 1].el);
-		}
-		return false;
-	}
-	function makeYukiReplyForm(e, brd, tid, pid) {
-		if (Target.thread(tid) && HM.URL.thread != tid)
-			Target.tid = tid;
-		if (Target.board != brd)
-			Target.board = brd;
-		YukiThreadFrom.value = tid;
-		YukiCaptchaImage.src = '/captcha/'+ brd +'/'+ _t() +'.png';
-		$setup(YukiReplyForm, {'class': (!e ? '' : 'reply'), 'action': '/'+ brd +'/post/new.xhtml'}, null);
-		if (topForm.querySelector('#captcha'))
-			YukiCaptcha.removeAttribute('hidden');
-		var post = !e ? topForm : $route(e.target, function(el) {
-				var nodes = el.className.split(' ');
-				return nodes.isThere('post') || nodes.isThere('popup');
-			}), classes = post.className.split(' ');
-			if (classes.isThere('post') || !e) $placeNode('after', post, YukiReplyForm);
-		else
-			if (classes.isThere('popup')) post.firstChild.firstChild.firstChild.appendChild(YukiReplyForm);
-			if (pid && !YukiTextArea.value.isThere('>>'+ pid)) InsertInto(YukiTextArea, '>>'+ pid +'\r\n');
-			if (e) shTopForm(null);
-	}; GetReplyForm = makeYukiReplyForm;
 	
-	/*** Enchanted Hanabira ***/
+	/*** Charming Hanabira ***/
 	//* @ original code 	http://dobrochan.com/js/hanabira-0.5.1311-.js
 	//* @ copyright 		Dobrochan
-	function shTopForm(e, brd) {
-		switch (e) {
-			case null:
-				$each([hideinfo, openbottomForm], _show);
-				_hide(showinfo);
-				break;
-			default:
-				switch (e.target.parentNode.id) {
-					case 'hideinfotd':
-						$each([hideinfo, openbottomForm], _show);
-						_hide(postForm);
-						break;
-					case 'open-bottom-form':
-						$placeNode('after', openbottomForm, postForm)
-						_hide(openbottomForm);
-						break;
+	var Chanabira = new CharmingHanabira();
+	function CharmingHanabira(h) {
+		var Chana = this,
+			thread_updating = false,
+			pMArr = [0, 0, 0, 0], // 0: difference, 1: new, 2: deleted, 3: pre-moderation
+			timer_id = 0,
+			refTamplate = '<a r{N} href="/r{brd}/res/r{tid}.xhtml#ir{pid}" onmouseover="ShowRefPost(event,\'r{brd}\', r{tid}, r{pid})" onclick="Highlight(event, \'r{pid}\')">&gt;&gt;r{L}r{pid}</a>';
+		function updtitle() { return LC.update_title.replace('%s%', HM.UpdateInterval().val) }
+		this.$ = function(child) { return this['NewPostLoader'].querySelector(child) }
+		this['NewPostLoader'] = $setup('span', {'id': 'new-post-loader', 'html': '<div id="update-stat"><a>'+ LC.loadnew +'</a></div><label title="'+
+				LC.snd_notify_title +'"><input id="notif-chbx" type="checkbox" hidden><span class="checkarea"></span>\n'+ LC.snd_notify +'</label><br><label title="'+
+				updtitle() +'"><input id="upd-chbx" type="checkbox" hidden><span class="checkarea"></span>\n'+ LC.updauto +'</label>\n<span id="int-stat" class="t-sec">⟨'+
+				HM.UpdateInterval().val +' '+ LC.tm['s'] +'.⟩</span><input max="180" min="15" id="int-upd" style="width:34px;margin:0 4px" type="number" hidden>'
+			}, null);
+		this['UpdateStat'] = this.$('#update-stat');
+		this['PostsCount'] = $setup('label', {'class': 'post-count', 'text': HM.Elems.posts_count + LC.omit}, null);
+		this['LoadButton'] = $setup(this['UpdateStat'].firstChild, {}, {
+				'click': updateThread
+			});
+		this['SoundNotify'] = $setup(this.$('#notif-chbx'), {'checked': HM.SoundNotify}, {
+				'change': function(e) {
+					setupOptions(this, 'SoundNotify', true);
 				}
-				switch (e.target.parentNode.id) {
-					case 'hideinfodiv':
-						pfplaceh.appendChild(postForm);
-						_show(openbottomForm);
-						_hide(hideinfo);
-					case 'open-bottom-form':
-						$each([showinfo, postForm], _show);
-						makeYukiReplyForm(null, HM.URL.board, (HM.URL.thread || 0));
-						ntCreate.className = YukiThreadFrom.value > 0 ? 'inactive' : 'selected';
-						break;
+			});
+		this['AutoUpdate'] = $setup(this.$('#upd-chbx'), {'checked': HM.AutoUpdate}, {
+				'change': function(e) {
+					setupOptions(this, 'AutoUpdate', true);
+					Chana.updateTimer(e);
 				}
-				return callback(e);
-		}
-	}; hide_info = shTopForm;
-	
-	BindDragRef = function(e) {
-		if (HM.RefTab) {
-			HM.RefTab.style.top = 9 + e.pageY - HM.RefTab.offsetHeight +'px';
-			HM.RefTab.style.left = 9 + e.pageX - HM.RefTab.offsetWidth +'px';
-		}
-	}
-	BindCloseRef = function(reftab) {
-		var tr = $setup('tbody', {'html': '<tr><td>'}, null),
-			drag = $setup('span', {'class': 'dpop'}, {
-				'mousedown': function(e) {
-					reftab.style['z-index'] = HM.zIndex + 1
-					HM.RefTab = reftab; 
-					return callback(e) }}),
-			close = $setup('span', {'class': 'cpop icon', 'html': '<img src="/images/blank.png">'}, {
-				'click': function(e) { reftab.remove() }}),
-			closeAll = $setup('span', {'class': 'cpop all icon', 'html': '<img src="/images/blank.png">'}, {
-				'click': function(e) {
-					HM.zIndex = 0;
-					$placeNode('remove', document.getElementsByClassName('popup'))}});
-			$setup(reftab, {}, {
-				'click': function(e) {
-					HM.zIndex++ //HM.Refs[reftab.style.zIndex = HM.zIndex++] = reftab;
-					reftab.style['z-index'] = HM.zIndex }}).appendChild(tr).click();
-		$placeNode('append', tr.firstChild.firstChild, [close, closeAll, drag]);
-	}
-	BindRemoveRef = function(binded, reftab) {
-		var to, timer = function(e) { to = setTimeout(function() {reftab.remove()}, 300) }
-		$setup(binded, {}, {'mouseout': timer });
-		$setup(reftab, {}, {'mouseout': timer,
-			'mouseover': function(e) { clearTimeout(to); to = 0 }});
-	}
-	InsertInto = function(textarea, text, select) {
-		var caretPos = textarea.caretPos,
-			start = textarea.selectionStart,
-			end = textarea.selectionEnd,
-			val = textarea.value;
-		if (textarea.createTextRange && caretPos) {
-			caretPos.text = caretPos.text.charAt(caretPos.text.length - 1) == " " ? text + " " : text;
-		} else if (textarea.setSelectionRange) {
-			$setup(textarea, {'value': val.substring(0, end) + text + val.substring(end)}, null)
-			.setSelectionRange(start + (select ? 0 : text.length), start + text.length);
-		} else {
-			textarea.value += text + " ";
-		}
-	}
-	
-	function openiFrame(url) {
-		var last = contentFrame.lastChild,
-			Id   = url.slice(7).allReplace({'/': '_'}),
-			type = url.isThere('text') ? 'document' : 'pdf',
-			cont = $setup('div', {'class': 'content-frame '+ type, 'id': Id,
-				'html': '<iframe class="full-size" frameborder="0" src="'+url+'">'}, null);
-		if (last.id != Id) {
-			if (last.classList[0] === 'content-frame') {
-				contentFrame.replaceChild(cont, last);
-				_hide(contMarker);
-			} else
-				contentFrame.appendChild(cont)
-		} else _hide(contMarker);
-		contentFrame.classList.remove('hidup');
-	}; open_url = openiFrame;
-	
-	function MagicPostView(e, brd, tid, pid) {
-		var from, a = e.target, attach = getlSValue('AttachPopups', false),
-			fa = $route(a, '.reflink a').getAttribute('href'),
-			to0 = setTimeout(function() {
-			var load, op = tid === pid,
-				postid = (op ? 'post_' : 'reply') + pid,
-				id = brd +'-'+ postid,
-				set_style = function(r) {
-					var w = window.innerWidth,
-					x = e.pageX, y = e.pageY + 30,
-					wx = w - x, y2 = y - r.offsetHeight - 45;
-					if (y2 > 0)
-						y = y2;
-					if ((wx < 600 || wx < w / 2) && r.offsetWidth > wx) {
-						var mw = w - 400;
-						x = null;
-					}
-					if (from) {
-						from.className = "reply-from";
-						if (attach)
-							from.removeAttribute('onmouseover');
-					}
-					r.setAttribute('style', 'top:'+ y +'px;max-width:'+
-						(mw || wx) +'px;'+ (x == null ? 'right:0' : 'left:'+ x) +'px'+
-						(attach ? ';z-index:'+ HM.zIndex : ''));
+			});
+		this['UpdateInterval'] = $setup(this.$('#int-upd'), {'value': HM.UpdateInterval().val}, {
+				'input': function() {
+					setlSValue('UpdateInterval', this.value, true);
+					Chana['AutoUpdate'].title = updtitle();
 				},
-				binded = function(e) {
-					if (attach && !e)
-						BindCloseRef(reftab);
+				'mouseout': function() {
+					setTimeout(function() {
+						$setup(Chana['UIntTextBox'], {'hidden': undefined, 'text': '⟨'+ HM.UpdateInterval().val +' '+ LC.tm['s'] +'.⟩'}, null);
+						Chana['UpdateInterval'].setAttribute('hidden', '');
+					}, 3000)
+				}
+			});
+		this['UIntTextBox'] = $setup(this.$('#int-stat'), {'value': HM.UpdateInterval().val}, {
+				'click': function(e) {
+					this.setAttribute('hidden', '');
+					Chana['UpdateInterval'].removeAttribute('hidden');
+				}
+			});
+		this.updateThread = updateThread;
+		this.updateTimer = function(evt) {
+			if (evt === null)
+				return;
+			if (evt) {
+				clearTimeout(timer_id);
+				timer_id = 0;
+			}
+			timer_id = setTimeout((HM.AutoUpdate ? updateThread : function() {
+				getDataJSON('/api/thread/'+ HM.URL.board +'/'+ HM.URL.thread +'.json?new_format',
+					function(status, sText, json, xhr) {
+						if (json.result) {
+							var i = (json.result.posts_count + pMArr[3]) - HM.Elems.posts_count - pMArr[0],
+								p = i > 0 ? i : 0, n = i < 0 ? i : 0, postStat;
+								pMArr = [pMArr[0] + i, pMArr[1] + p, pMArr[2] + n, pMArr[3]];
+								postStat = '( '+ (pMArr[1] > 0 ? '+'+ pMArr[1]+ LC.newp : '') +
+									' • '+ (pMArr[2] < 0 ? pMArr[2] + LC.delp : '') +' • '+ (pMArr[3] > 0 ? pMArr[3] + LC.pmod : '') +')';
+							Chana['PostsCount'].textContent = HM.Elems.posts_count + LC.omit + postStat;
+						}
+					});
+				Chana.updateTimer();
+			}), HM.UpdateInterval().int);
+		}
+		this.genReplyMap = function(posts) {
+			$each(posts, function(post) {
+				var cid = _cid(post.id), replies_links = new Array(0);
+				if (repliesMap[cid]) {
+					$each(repliesMap[cid], function(Id) {
+						replies_links.push(refTamplate.allReplace({'r{N}': 'id="reply-link"', 'r{brd}': Id[0], 'r{tid}':
+						(!Id[1] ? Id[2] : Id[1]), 'r{pid}': Id[2], 'r{L}': (Id[3] ? '❪'+ Id[0].toUpperCase() +'❫' : '')}));
+					});
+					var replies_div_arr = post.getElementsByClassName('reflinks'),
+						replies_div = $setup('div', {'class': 'reflinks'}, null);
+					if (replies_div_arr.length == 0)
+						post.getElementsByClassName('abbrev')[0].appendChild(replies_div);
 					else
-						BindRemoveRef(a, reftab);
-					if (e)
-						load = $setup('span', {'class': 'stub', 'text': LC.postdel}, null);
-					reftab.firstChild.firstChild.appendChild(load);
-					from = reftab.querySelector('a[href="'+ fa +'"]');
-					set_style(reftab);
-				},
-				active = document.getElementById('ref-'+ id);
-			if (active) {
-				set_style(active);
-				return active.click();
+						replies_div = replies_div_arr[0];
+					replies_div.innerHTML = LC.repl + LC.few['u-c'] +': '+ replies_links.join(', ');
+				}
+			});
+		}
+		this.MagicPostView = function (e, brd, tid, pid) {
+			var from, a = e.target, attach = getlSValue('AttachPopups', false),
+				fa = $route(a, '.reflink a').getAttribute('href'),
+				//to0 = setTimeout(function() {
+				load, op = tid === pid,
+					postid = (op ? 'post_' : 'reply') + pid,
+					id = brd +'-'+ postid,
+					set_style = function(r) {
+						var w = window.innerWidth,
+						x = e.pageX, y = e.pageY + 30,
+						wx = w - x, y2 = y - r.offsetHeight - 45;
+						if (y2 > 0)
+							y = y2;
+						if ((wx < 600 || wx < w / 2) && r.offsetWidth > wx) {
+							var mw = w - 400;
+							x = null;
+						}
+						if (from) {
+							from.className = "reply-from";
+							if (attach)
+								from.removeAttribute('onmouseover');
+						}
+						r.setAttribute('style', 'top:'+ y +'px;max-width:'+
+							(mw || wx) +'px;'+ (x == null ? 'right:0' : 'left:'+ x) +'px'+
+							(attach ? ';z-index:'+ HM.zIndex : ''));
+					},
+					binded = function(e) {
+						if (attach && !e)
+							BindCloseRef(reftab);
+						else
+							BindRemoveRef(a, reftab);
+						if (e)
+							load = $setup('span', {'class': 'stub', 'text': LC.postdel}, null);
+						reftab.firstChild.firstChild.appendChild(load);
+						from = reftab.querySelector('a[href="'+ fa +'"]');
+						set_style(reftab);
+					},
+					active = document.getElementById('ref-'+ id);
+				if (active) {
+					set_style(active);
+					return active.click();
+				}
+				var reftab = $setup('table', {'class': (op ? 'oppost popup' : 'popup'), 'id': 'ref-'+ id, 'html': '<tbody><tr>'}, null),
+					post = HM.LoadedPosts[id] || document.getElementById(postid);
+				if (post) {
+					load = $setup(post.cloneNode(true), {'id': 'load-' + id, 'class': undefined}, null);
+					attachEvents(load)
+					binded(post.className === 'stub' ? true : false);
+				} else if (HM.URL.thread == tid) {
+					binded(true);
+				} else {
+					loading = $setup('td', {'html': '<span class="waiting'+ Math.floor(Math.random() * 3) +
+						' icon"><img src="/images/blank.png"></span>\n<span class="reply-from">Секунду...</span>'}, null);
+					reftab.firstChild.firstChild.appendChild(loading);
+					getDataJSON('/api/post/'+ brd +'/'+ tid +'/'+ pid +'.json?message_html&new_format',
+					function(status, sText, json, xhr) {
+						if (status !== 200 || json.error) {
+							binded(true); HM.LoadedPosts[id] = load;
+						} else {
+							var temp = getHanabiraPost(json.result, [brd, tid, pid], true),
+								node = op ? temp[0] : temp[1];
+							HM.LoadedPosts[id] = node;
+							load = $setup(node, {'id': 'load-'+ id, 'class': undefined}, null);
+							binded();
+						}
+						loading.remove();
+					});
+				}
+				document.body.appendChild(reftab);
+				set_style(reftab);
+				//}, attach ? 200 : 100);
+			a.onmouseout = function(e) {
+				//clearTimeout(to0); to0 = 0;
+				if (from && !attach)
+					from.removeAttribute('class');
 			}
-			var reftab = $setup('table', {'class': (op ? 'oppost popup' : 'popup'), 'id': 'ref-'+ id, 'html': '<tbody><tr>'}, null),
-				post = HM.LoadedPosts[id] || document.getElementById(postid);
-			if (post) {
-				load = $setup(post.cloneNode(true), {'id': 'load-' + id, 'class': undefined}, null);
-				binded(post.className === 'stub' ? true : false);
-			} else if (HM.URL.thread == tid) {
-				binded(true);
+		}
+		function BindCloseRef(reftab) {
+			var tr = $setup('tbody', {'html': '<tr><td>'}, null),
+				drag = $setup('span', {'class': 'dpop'}, {
+					'mousedown': function(e) {
+						reftab.style['z-index'] = HM.zIndex + 1;
+						HM.DragableObj = { el: reftab, offsetY: 9, offsetX: 9 }
+						return fallback(e) }
+				}),
+				close = $setup('span', {
+					'class': 'cpop icon',
+					'html': '<img src="/images/blank.png">'}, {
+					'click': function(e) { reftab.remove() }
+				}),
+				closeAll = $setup('span', {
+					'class': 'cpop all icon',
+					'html': '<img src="/images/blank.png">'}, {
+					'click': function(e) {
+						HM.zIndex = 0;
+						$placeNode('remove', document.getElementsByClassName('popup'))}
+					});
+				$setup(reftab, {}, {
+					'click': function(e) {
+						HM.zIndex++
+						reftab.style['z-index'] = HM.zIndex }
+					}).appendChild(tr).click();
+			$placeNode('append', tr.firstChild.firstChild, [close, closeAll, drag]);
+		}
+		function BindRemoveRef(binded, reftab) {
+			var to, timer = function(e) {
+				to = setTimeout(function() { reftab.remove() }, 300) }
+			reftab.onmouseout = timer;
+			reftab.onmouseover = function(e) {
+				clearTimeout(to); to = 0; }
+			binded.onmouseleave = timer;
+		}
+		function getDataTime(jsonDT) {
+			var date = new RegExp(/(\d+)\-(\d+)\-(\d+)\ (\d+\:\d+)(\:\d+)/).exec(jsonDT),
+				year = date[1], month = date[2], day = date[3], hmin = date[4], sec = date[5],
+				uDate = new Date(month +" "+ day +", "+ year +" "+ hmin + " GMT+0300"),
+				Time = uDate.toLocaleTimeString(),
+				Month = LC.Month[month],
+				weekDay = LC.Weekday[uDate.getDay()];
+			return day + Month + year + weekDay + (Time.length === 7 ? "0" + Time.slice(0, 4) : Time.slice(0, 5)) +'<span class="t-sec">'+ sec +'</span>';
+		}
+		function getHanabiraFile(file, pid, brd, tId, pId, ONE) {
+			var name, info, edit, action = '',
+				m = 0.01572,
+				src = file.src,
+				fid = file.file_id,
+				fmd = file.metadata,
+				imgW = fmd.width,
+				imgH = fmd.height,
+				rating = file.rating,
+				size = bytesMagnitude(file.size),
+				type = file.type === 'code' ? 'text' : !file.type ? fmd.type : file.type,
+				maXr = HM.maXrating.toLowerCase(),
+				filename = getPageName(src),
+				ext = filename.fext(),
+				thumb = maXr === rating || maXr.match(/\d+/) >= rating.match(/\d+g?/) || 
+					rating === 'sfw' ? file.thumb : 'images/'+ rating +'.png',
+				thumbW = thumb !== file.thumb ? 200 : file.thumb_width,
+				thumbH = thumb !== file.thumb ? 200 : file.thumb_height,
+				isImage = ['image', 'vector'].isThere(type);
+			if (brd === 'b' || brd === 'rf') {
+				name = isImage ? getPageName(thumb).split('s')[0] +'.'+ ext :
+						type == 'video' ? fmd["File Name"] : fid.toString() + pid.toString() +'.'+ ext;
 			} else {
-				loading = $setup('td', {'html': '<span class="waiting'+ Math.floor(Math.random() * 3) +
-					' icon"><img src="/images/blank.png"></span>\n<span class="reply-from">Секунду...</span>'}, null);
-				reftab.firstChild.firstChild.appendChild(loading);
-				getDataJSON('/api/post/'+ brd +'/'+ tid +'/'+ pid +'.json?message_html&new_format',
-				function(status, sText, json, xhr) {
-					if (status !== 200 || json.error) {
-						binded(true); HM.LoadedPosts[id] = load;
-					} else {
-						var temp = getHanabiraPost(json.result, [brd, tid, pid], true),
-							node = op ? temp[0] : temp[1];
-						HM.LoadedPosts[id] = node;
-						load = $setup(node, {'id': 'load-'+ id, 'class': undefined}, null);
-						binded();
+				name = !ONE && filename.length > 17 ? filename.substring(0, 17) + '...' : filename;
+			}
+			if (isImage) {
+				info = ext.slice(0, 1).toUpperCase() + ext.slice(1) +', '+ size +', '+ imgW +'×'+ imgH;
+				edit = '/utils/'+ (type == 'vector' ? 'text/' : type +'/edit/') + fid +'/'+ pid;
+				action = 'contextmenu="image-context" oncontextmenu="$(\'#image-context\').attr({src:this.parentNode.href, edit:\''+ edit +'\'})" onclick="expand_image(event, '+ imgW +', '+ imgH +')"';
+			} else {
+				var meta, metatype = type == 'flash' ? 'Flash' : fmd.type,
+					lines = fmd.lines, pages = fmd.pages, files = fmd.files_count;
+				if (['text', 'archive'].isThere(type)) {
+					src = 'utils/'+ type +'/'+ fid +'/'+ pid +'" id="cm-button'
+				}
+				if (type == 'text') {
+					meta = lines + LC.line + (lines === 1 ? LC.few['ru'] : lines < 5 ? LC.few['u-d'] : LC.few['en']);
+				}
+				if (type == 'pdf') {
+					meta = imgW +'×'+ imgH +', '+ pages + LC.page + (pages === 1 ? LC.few['ru'] : pages < 5 ? LC.few['u-c'] : LC.few['en']);
+				}
+				if (type == 'archive') {
+					thumb = 'src/png/1405/archive-icon.png';
+					meta = files +' '+ LC.file.toLowerCase() + (files === 1 ? '' : files < 5 ? LC.few['u-a'] : LC.few['u-b']);
+				}
+				if (type == 'video') {
+					metatype = fmd["File Type"] == 'WEBM' ? 'WebM' : fmd["File Type"];
+					size = fmd["File Size"];
+					meta = fmd["Image Size"] +' @ '+ fmd["Duration"];
+				}
+				if (type == 'music') {
+					var brate = (fmd.bitrate / 1000).toFixed(0) + ' kbps',
+						srate = (fmd.sample_rate / 1000).toFixed(1) + ' kHz',
+						trlen = (fmd.length * m).toFixed(2).replace('.', ':'),
+						trnam = _unc(fmd.artist) +' — '+ _unc(fmd.album),
+						trnum = _unc(fmd.tracknumber, '0') +'/'+ _unc(fmd.totaltracks, '0');
+					meta = trlen +' @ '+ brate +' / '+ srate +'<br>'+ (!ONE && trnam.length > 40 ? trnam.substring(0, 40) +'<br>'+ trnam.slice(40) : trnam) +' / '+ _unc(fmd.title) +' ['+ trnum +']';
+				}
+				info = metatype +', '+ size + (!meta ? '' : ', '+ meta);
+			}
+			var filebtns = (type != 'music' && ONE ? LC.clck_img_to + (type == 'video' ? LC.pvid : isImage ? LC.expd : LC.vitf) : '') +'<br></div>';
+			var fileinfo = '<div class="fileinfo">'+ LC.file +': <a href="/'+ src +'" target="_blank" title="'+ filename +'">'+ name +'</a><br><em>'+ info +'</em>';
+			var filethmb = '<a href="/'+ src +'" target="_blank"><img class="thumb" src="/'+ thumb +'" width="'+ thumbW +'" height="'+ thumbH +'" '+ action +' alt="'+ filename +'"></a>\n</div>';
+			var filediv = '<div id="file_'+ pId +'_'+ fid +'" class="file">';
+			return (ONE ? fileinfo + filebtns + filediv + filethmb : filediv + fileinfo + filebtns + filethmb);
+		}
+		function getHanabiraPost(postJson, arr, hush) {
+			if (window.HTMLAudioElement && HM.SoundNotify)
+				new Audio("/src/mp3/1406/musbox.mp3").play();
+			if (!window_focused && !hush) {
+				unread_count = unread_count + 1;
+				Tinycon.setBubble(unread_count);
+			}
+			var threadId = arr ? arr[1] : Target.tid,
+				postId = postJson.display_id,
+				board = arr ? arr[0] : HM.URL.board,
+				files = postJson.files,
+				len = files.length,
+				op = postJson.op,
+				wrap = $setup((op ? 'div' : 'table'), {'id': 'post_'+ postId, 'class': (op ? 'oppost' : 'replypost') +' post'}, null),
+				delicon = '<a class="delete icon"><input type="checkbox" id="delbox_r{post_id}" class="delete_checkbox" value="'+ postJson.thread_id +
+					'" name="r{post_id}"><img src="/images/blank.png" title="'+ LC.mrk_to_del +'" alt="✕" onclick="this.parentNode.classList.toggle(\'checked\')"></a>\n',
+				html = (op ? '' : '<tbody><tr><td class="doubledash">&gt;&gt;</td><td id="replyr{post_id}" class="reply">') +
+					'<a name="ir{post_id}"></a><label>'+ 
+						(op ? '<a class="hide icon" onclick="hide_thread(event, \'r{board}\',r{post_id});" href="/api/thread/r{board}/r{post_id}/hide.redir"><img src="/images/blank.png" title="'+ LC.hide +'" alt="﹅"></a>\n' +
+							delicon + '<a class="unsigned icon" onclick="sign_thread(event, \'r{board}\',r{post_id});"><img src="/images/blank.png" title="'+ LC.subscrb +'" alt="✩"></a>\n' : delicon) +
+						(board === 'mad' ? '<span class="iphash">' +
+							'<span class="ipmark" style="background:rgba(0,0,0,.5)">&nbsp;</span><span class="ipmark" style="background:rgba(255,255,255,.5)">&nbsp;</span>' +
+							'<span class="ipmark" style="background:rgba(25,25,25,.6)">&nbsp;</span><span class="ipmark" style="background:rgba(99,99,99,.6)">&nbsp;</span>' +
+							'<span class="ipmark" style="background:rgba(175,175,175,.6)">&nbsp;</span></span>\n<img class="geoicon" src="/src/png/1408/polandball_kawaii_16.png" alt="(^ ^)" title="Polandball (^ ^)">\n' : '') +
+						'<span class="replytitle">'+ postJson.subject +'</span>\n<span class="postername">'+ HM.defaultName(postJson.name) +'</span> '+ getDataTime(postJson.date) +
+					' </label><span class="reflink"><a onclick="Highlight(0, r{post_id})" href="/r{board}/res/r{thread_id}.xhtml#ir{post_id}">No.r{post_id}</a></span>\n' +
+					'<span class="cpanel"><a class="reply_ icon" onclick="GetReplyForm(event, \'r{board}\', r{thread_id}, r{post_id})">' +
+					'<img src="/images/blank-double.png" style="vertical-align:sub" title="'+ LC.repl +'" alt=">>"></a></span><br>';
+			for (var i = 0; i < len; i++) {
+				html += getHanabiraFile(files[i], postJson.post_id, board, threadId, postId, (len === 1));
+			}
+			wrap.insertAdjacentHTML('afterbegin', html.allReplace({'r{board}': board, 'r{thread_id}': threadId, 'r{post_id}': postId}) + 
+				(len > 1 ? '<br style="clear: both">' : '') +'<div class="postbody">'+ postJson.message_html +'</div><div class="abbrev"></div>' +
+				(op ? '' : '</td></tr></tbody>'));
+			$each(GetElements(wrap).links, parseLinks);
+			$each(wrap.querySelectorAll('img.thumb[src="/thumb/generic/sound.png"]'), makeMagicAudio);
+			if (hush)
+				Chana.genReplyMap([wrap]);
+			return [wrap, (op ? wrap.firstChild : wrap.firstChild.firstChild.lastChild)];
+		}
+		function getHanabiraAllPosts() {
+			getDataJSON('/api/thread/'+ HM.URL.board +'/'+ HM.URL.thread +'/all.json?new_format&message_html',
+			function(status, sText, json, xhr) {
+				var i, jpid, pnid, jsonPosts = json.result.posts, pCount = json.result.posts_count;
+				if (jsonPosts.length == HM.Elems.posts_count) {
+					pMArr[3] = HM.Elems.posts_count - pCount;
+					Chana['PostsCount'].textContent = pCount + LC.omit +' ( +'+ pMArr[3] + LC.pmod +' )';
+					return;
+				}
+				for (i = 0; i < HM.Elems.posts_count; i++) {
+					pnid = _cid(HM.Elems.posts[i].id);
+					jpid = !jsonPosts[i] ? 9999999 : jsonPosts[i].display_id;
+					if (pnid != jpid) {
+						if (pnid < jpid)
+							$setup(HM.Elems.posts[i], {'class': "deleted"}).querySelector('.doubledash').setAttribute('style', "display:inline");
+						if (pnid > jpid) {
+							var derefl = refTamplate.allReplace({'r{N}': 'style="text-decoration:none"', 'r{brd}': HM.URL.board, 'r{tid}': HM.URL.thread, 'r{pid}': jpid, 'r{L}': ''}),
+								dealp = document.getElementsByClassName('allowed-posts')[0],
+								temp = getHanabiraPost(jsonPosts[i]);
+							$placeNode('before', HM.Elems.posts[i], temp[0]);
+							if (!dealp)
+								Chana['PostsCount'].insertAdjacentHTML('afterend', '<span class="allowed-posts" style="color:#666;font-size:14px"> | '+ LC.allw +': '+ derefl +'</span>');
+							else
+								dealp.insertAdjacentHTML('beforeend', ', '+ derefl);
+						}
 					}
-					loading.remove();
-				});
+				}
+				HM.Elems = GetElements();
+			});
+		}
+		function updateThread(e) {
+			if (thread_updating)
+				return Chana.updateTimer(e);
+			Chana['LoadButton'].textContent = LC.updprog;
+			thread_updating = true;
+			getDataJSON('/api/thread/'+ HM.URL.board +'/'+ Target.tid +'/new.json?new_format&message_html&last_post='+ _cid(Target.last().id),
+			function parseNewPosts(status, sText, json, xhr) {
+				if (status !== 200 || json.error) {
+					errorMsg = !json.error ? status +' '+ sText : json.error.message +' '+ json.error.code;
+					Chana['UpdateStat'].innerHTML = '<strong style="color:#ff3428">'+ errorMsg +'</strong>';
+					setTimeout(function() {
+						$setup(Chana['UpdateStat'], {
+							'html': ''
+						}, null).appendChild(Chana['LoadButton'])
+					}, 5000);
+				} else {
+					var i, temp, el = json.result.posts,
+						pCount = json.result.posts_count,
+						len = el ? el.length : 0;
+						pMArr = [0, 0, 0, 0];
+					if (len > 0) {
+						for (i = 0; i < len; i++) {
+							temp = getHanabiraPost(el[i]);
+							Target.thread().appendChild(temp[0]);
+						}
+					}
+					if (e !== null) {
+						if (HM.Elems.posts_count != pCount + pMArr[3])
+							getHanabiraAllPosts();
+						else
+							Chana['PostsCount'].textContent = pCount + LC.omit + (pMArr[3] > 0 ? ' ( +'+ pMArr[3] + LC.pmod +' )' : '');
+					}
+				}
+				Chana['LoadButton'].textContent = LC.loadnew;
+				Chana.genReplyMap(HM.Elems.posts);
+				Chana.updateTimer(e);
+				thread_updating = false;
+			});
+		}
+	}; ShowRefPost = Chanabira.MagicPostView;
+
+
+	var SettingsPanel = new MagicSettings();
+	function MagicSettings(h) {
+		var MSs = this;
+		this.$ = function(child) { return this['Panel'].querySelector(child) }
+		this['Panel'] = $setup('div', {'id': 'magic-panel', 'html': '<table><tbody><tr><td class="f-sect"><span id="media-placement"><input '+
+				(HM.MC == 0 ? 'checked' : '') +' value="windowFrame" name="cont_p" type="radio">\n'+ LC.mcw +'\n<input '+
+				(HM.MC == 1 ? 'checked' : '') +' value="postContent" name="cont_p" type="radio">\n'+ LC.mcp +'\n</span></td><td class="s-sect">'+
+				LC.cframe +'</td></tr><tr class="vs-set'+ (HM.MC == 0 ? ' hidout' : '') +'"><td class="f-sect"><input id="video-frame-size" min="1" value="'+
+				getVSize('value') +'" step="1" max="4" type="range" name="v_size"></td><td class="s-sect">'+ LC.vsyz +'\n<span id="vsize-textbox">('+
+				getVSize('text') +')</span></td></tr><tr><td class="f-sect"><select id="max-allowed-rating"><option class="rating_SFW">SFW</option>'+
+				'<option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select></td>'+
+				'<td class="s-sect">'+ LC.maxr +'</td></tr><tr><td class="f-sect"><label><input id="oembedapi" type="checkbox" hidden><span class="checkarea"'+
+				'style="font-size:20px"></span></label></td><td class="s-sect"><a id="exemple-link" title="'+ (HM.oEmbedAPI ? LC.emb['title'] : '') +'">'+
+				(HM.oEmbedAPI ? 'Hint: '+ LC.emb['txt'] : '<u>http://www.magicpanel.div/'+ LC.emb['url'] +'</u>') +'</a></td></tr><tr><td class="f-sect"><label><a class="paperclip'+
+				(HM.AttachPopups ? '' : ' inactive') +'"><input id="attach-popups" type="checkbox" hidden><img src="/src/png/1411/attachpopup.png"></a></label></td><td class="s-sect">'+
+				LC.clipopup +'</td></tr></tbody></table>'
+			}, null);
+		this['MediaPlacement'] = $setup(this.$('#media-placement'), {}, {
+				'change': placeMedia
+			});
+		this['VideoSize'] = $setup(this.$('#video-frame-size'), {}, {
+				'change': setVSize,
+				'click': function(e) {
+					console.log(this)
+				}
+			});
+		this['Rating'] = $setup(this.$('#max-allowed-rating'), {
+				'value': HM.maXrating,
+				'class': 'rating_'+ HM.maXrating.replace('-', '')
+			}, {
+				'change': function(e) {
+					setupOptions(this, 'maXrating');
+					this.className = this.querySelector('option:checked').className;
+				}
+			});
+		this['Popups'] = $setup(this.$('#attach-popups'), {
+				'checked': HM.AttachPopups
+			}, {
+				'change': function(e) {
+					setupOptions(this, 'AttachPopups');
+					this.parentNode.classList.toggle('inactive');
+				}
+			});
+		this['Embeds'] = $setup(this.$('#oembedapi'), {
+				'checked': HM.oEmbedAPI
+			}, {
+				'change': function(e) {
+					setupOptions(this, 'oEmbedAPI');
+					if (this.checked) {
+						$each(HM.Elems.links, parseLinks);
+						$setup(MSs.$('#exemple-link'), {'title': LC.emb['title'], 'text': 'Hint: '+ LC.emb['txt']}, null);
+					} else {
+						$setup(MSs.$('#exemple-link'), {'title': undefined, 'html': '<u>http://www.magicpanel.div/'+ LC.emb['url'] +'</u>'}, null);
+					}
+				}
+			});
+		this['PanelButton'] = $setup('a', {
+				'id': 'magic-panel-button',
+				'html': '<img width="38" height="28" src="/src/png/1409/list4.png">'
+			}, {
+				'click': function(e) {
+					this.classList.toggle('active');
+					if (this.previousElementSibling.id === 'magic-panel') {
+						MSs['Panel'].remove()
+					} else {
+						$placeNode('before', this, MSs['Panel']);
+					}
+				}
+			});
+		function setVSize(slider) {
+			var p = slider.target.value;
+			function size(w, h) {
+				var vplayed = document.getElementsByClassName('video-container')[0];
+				var scplayed = document.getElementsByClassName('sc-container')[0];
+				setlSValue({'VWidth': w, 'VHeight': h});
+				document.getElementById('vsize-textbox').textContent = '('+w+'×'+h+')';
+				if (vplayed) {
+					vplayed.firstElementChild.width = w;
+					vplayed.firstElementChild.height = h;
+				}
+				if (scplayed) {
+					scplayed.firstElementChild.width = w;
+					scplayed.firstElementChild.height = h;
+				}
 			}
-			document.body.appendChild(reftab);
-			set_style(reftab);
-		}, attach ? 200 : 100);
-		$setup(a, {}, {'mouseout': function(e) {
-			clearTimeout(to0); to0 = 0;
-			if (from && !attach)
-				from.removeAttribute('class');
-		}});
-	}; ShowRefPost = MagicPostView;
-	
-	function genReplyMap(posts) {
-		$each(posts, function(post) {
-			var cid = _cid(post.id), replies_links = new Array(0);
-			if (repliesMap[cid]) {
-				$each(repliesMap[cid], function(Id) {
-					replies_links.push(refTamplate.allReplace({'r{N}': 'id="reply-link"', 'r{brd}': Id[0], 'r{tid}':
-					(!Id[1] ? Id[2] : Id[1]), 'r{pid}': Id[2], 'r{L}': (Id[3] ? '❪'+ Id[0].toUpperCase() +'❫' : '')}));
-				});
-				var replies_div_arr = post.getElementsByClassName('reflinks'),
-					replies_div = $setup('div', {'class': 'reflinks'}, null);
-				if (replies_div_arr.length == 0)
-					post.getElementsByClassName('abbrev')[0].appendChild(replies_div);
-				else
-					replies_div = replies_div_arr[0];
-				replies_div.innerHTML = LC.repl + LC.few['u-c'] +': '+ replies_links.join(', ');
+			p == 1 ? size(360, 270) : p == 2 ? size(480, 360) :
+			p == 3 ? size(720, 480) : p == 4 ? size(854, 576) : size(0, 0);
+		}
+		function placeMedia(e) {
+			var val = e.target.value, cont = HM.VActive[1],
+				vsset = MSs.$('.vs-set');
+			if (val === 'windowFrame') { HM.MC = 0;
+				_hide(vsset);
+				if (cont) {
+					contentFrame.appendChild($setup(cont, {'class': 'content-frame video', 'id': 'content_'+cont.id.split('_')[1]}, null));
+					$setup(cont.firstChild, {'width': '100%', 'height': '100%'}, null);
+					_show(contMarker);
+				}
 			}
-		})
+			if (val === 'postContent') { HM.MC = 1;
+				_show(vsset);
+				if (cont) {
+					$placeNode('prepend', $route(HM.VActive[0], jumpCont), $setup(cont, {'class': 'video-container', 'id': 'video_'+cont.id.split('_')[1]}, null));
+					$setup(cont.firstChild, {'class': '', 'width': getVSize('w'), 'height': getVSize('h')}, null);
+					_hide(contMarker);
+					contentFrame.classList.add('hidup');
+				}
+			}
+			setlSValue('EmbedIn', val)
+		}
 	}
+	
+	/*** Yuki ReplyForm ***/
+	//* @ original code 	https://github.com/tranquility-yuki/yukiscript
+	//* @ copyright 		2013+, You
+	var Nagato = new Yuki();
+	function Yuki(h) {
+		var Yu = this, fileList = [],
+		filepreview_tamplate = '[\n<a class="yuki_clickable">убрать</a>\n]<br><img class="preview_img" src="r{img}"><br><span class="file_name">r{fname}</span><br>'+
+			'<span class="file_name">r{size}&nbsp;</span><select name="file_1_rating" class="rating_SFW" onchange="this.setAttribute(\'class\', this.querySelector(\'option:checked\').className)">'+
+			'<option class="rating_SFW">SFW</option><option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select>',
+		replyform_tamplate = '<input id="yuki-targetThread" name="thread_id" value="'+ (HM.URL.thread || 0) +'" type="hidden"><input name="task" value="post" type="hidden">'+
+			'<div id="yuki-errorMsg"></div><label id="yuki-newThread-create" class="inactive">'+ (ru ? 'Новый тред в' : 'New Thread in') + '<span class="t-sec">/'+ HM.URL.board +'/</span></label>'+
+			'<table><tbody id="yuki-dropBox"><tr class="post-count"></tr><tr class="droparrow inactive"></tr></tbody><tbody style="display:inline-block">'+
+			'<tr id="trname"><td><input placeholder="'+ HM.defaultName() +'" name="name" size="30" value="" type="text">'+
+				'<label class="sagearrow'+ (HM.Sage ? '' : ' inactive') +'"><input id="yuki-sage" name="sage" type="checkbox" hidden><img src="/src/svg/1409/Sage.svg"></label>'+
+				'<span style="float:right">&nbsp;<a id="yuki-close-form" title="Убрать"><img src="/images/delete.png" alt="Remove"></a></span></td></tr>'+
+			'<tr id="trsubject"><td><input placeholder="'+ (ru ? 'Тема' : 'Subject') +'" name="subject" size="30" maxlength="64" value="" type="text">\
+				<label class="submit-button"><span>'+ (ru ? 'Отправка' : 'Sending') +'</span>\n<input type="submit" value="'+ (ru ? 'Отправить' : 'Post') +'"></label>\
+				<span class="wmark-buttons-panel" style="float:right;text-align:right">\
+					<a onclick="StrikeConvert()" class="wmark-button" title="Перевод символов страйка в нотацию wakabamark" style="visibility:hidden"><span>{~}</span>&nbsp;</a>\
+					<a onclick="wmarkText(\'* \', \'\\n* \')" class="wmark-button" title="Список"><span>◉</span></a>&nbsp;\
+					<a onclick="wmarkText(\'~~\', \'~~\')" class="wmark-button" title="Зачеркнутый"><img src="/src/svg/1405/~S-mark.svg" alt="~$"></a>&nbsp;\
+					<a onclick="wmarkText(\'_\', \'_\')" class="wmark-button" title="Курсивный"><img src="/src/svg/1405/i-mark.svg" alt="i"></a>&nbsp;\
+					<a onclick="wmarkText(\'**\', \'**\')" class="wmark-button" title="Жирный"><img src="/src/svg/1405/-b-mark.svg" alt="b"></a>&nbsp;\
+					<a onclick="wmarkText(\'`\', \'`\')" class="wmark-button" title="Код"><img src="/src/svg/1405/[c]-mark.svg" alt="[c]"></a>&nbsp;\
+					<a onclick="wmarkText(\'%%\', \'%%\')" class="wmark-button spoiler" title="Спойлер">&middot;<strong>%%</strong>&middot;</a>&nbsp;\
+					<a onclick="wmarkText(\'> \', \'\\n> \')" class="wmark-button" title="Цитировать выделенное"><img src="/src/svg/1405/„q”-mark.svg" alt="&gt;"></a>\
+				</span></td></tr>'+
+			'<tr id="trmessage">'+
+				'<td><textarea placeholder="'+ (ru ? 'Текст сообщения' : 'Message Text') +'" style="resize:both;height:180px" id="yuki-replyText" name="message" cols="80" rows="8"></textarea></td></tr>\
+			<tr id="trcaptcha">\
+				<td><span><img alt="Капча" id="yuki-captcha-image" style="vertical-align:middle;margin:2px" src="">&nbsp;\
+					<span  id="yuki-attach-captcha-button" class="yuki_clickable" title="Прикрепить капчу" style="color:#999">[+]</span></span><br>\
+					<input id="yuki-captcha" autocomplete="off" name="captcha" type="text" hidden></td></tr>\
+			<tr id="trrempass" class="hidout"><td><input name="password" size="35" value="'+ pass +'" type="password"></td></tr>\
+			<tr id="trfile"><td id="files_parent"><div id="file_1_div"><label><input id="dumb_file_field" type="file" hidden multiple><input type="button" value="'+
+			LC.add +' '+ (ru ? LC.file.toLowerCase() : LC.file) + LC.few['u-c'] +'"></label>\n<span style="font-size:66%"><label><input hidden type="checkbox" '+
+			(HM.RemoveExif ? 'checked' : '') +' onchange="setupOptions(this, \'RemoveExif\')"><span class="checkarea"></span>\nУбирать Exif</label>\n<label><input type="checkbox" hidden '+ 
+			(HM.RemoveFileName ? 'checked' : '') +' onchange="setupOptions(this, \'RemoveFileName\')"><span class="checkarea"></span>\nУбирать имя файла</label></span></div></td></tr>'+
+		'</tbody></table><div id="yuki-files-placeholder"></div>';
+		this.$ = function(child) { return this['ReplyForm'].querySelector(child) }
+		this['ReplyForm'] = $setup('form', {
+				'id': "yuki-replyForm",
+				'method': "post",
+				'enctype': "multipart/form-data",
+				'html': replyform_tamplate
+			}, {
+				'submit': yukiPleasePost
+			});
+		this['TargetThread'] = this.$('#yuki-targetThread');
+		this['ErrorMassage'] = this.$('#yuki-errorMsg');
+		this['NewThreadCreate'] = $setup(this.$('#yuki-newThread-create'), {}, {
+			'click': function(e) {
+				if (this.className != 'selected') {
+					this.className = 'selected';
+					Yu['TargetThread'].value = 0;
+				} else {
+					this.className = 'inactive';
+					Yu['TargetThread'].value = HM.URL.thread;
+				}
+			}
+		});
+		this['CloseForm'] = $setup(this.$('#yuki-close-form'), {}, {
+				'click': function(e) { Yu['ReplyForm'].remove() }
+			});
+		this['ReplyText'] = $setup(this.$('#yuki-replyText'), {
+				'value': JSON.parse(getlSValue('SafeText', JSON.stringify(this.$('#yuki-replyText').value), true))
+			}, {
+				'click': function(e) {
+					this.classList.remove('ta-inact');
+				},
+				'keyup': function(e) {
+					var height = _cid(this.style['height']);
+					if (height + 26 < this.scrollHeight)
+						this.style['height'] = this.scrollHeight +'px';
+					setlSValue('SafeText', JSON.stringify(this.value), true);
+				},
+				'keydown': function(e) {
+					if (KeyCodes.specl.isThere(e.keyCode))
+						keyMarks(e);
+				}
+			});
+		this['FilesPlaceholder'] = this.$('#yuki-files-placeholder');
+		this['Captcha'] = $setup(this.$('#yuki-captcha'), {}, {
+				'focus': function(e) {
+					Yu['CaptchaImage'].click()
+				},
+				'keypress': function(e) {
+					CaptchaProcess(e, (ru ? 'ru' : 'en'))
+				}
+			});
+		this['CaptchaImage'] = $setup(this.$('#yuki-captcha-image'), {}, {
+				'click': function(e) {
+					this.src = '/captcha/'+ Target.board +'/'+ _t() +'.png'
+				}
+			});
+		this['DumbFileField'] = $setup(this.$('#dumb_file_field'), {}, {
+				'change': yukiAddFile
+			});
+		this['Submit'] = $setup(this.$('input[type="submit"]'), {}, {
+				'click': StrikeConvert
+			});
+		this['DropBox'] = $setup(this.$("#yuki-dropBox"), {}, {
+				'dragover': fallback,
+				'dragenter': function(e) {
+					var items = e.dataTransfer.mozItemCount || '';
+					if (this.classList[0] != 'thumb') {
+						this.firstChild.textContent = LC.add +' '+ items +' '+ LC.file.toLowerCase() +
+							(items == 1 ? '' : !items ? LC.few['u-c'] : items < 5 ? LC.few['u-a'] : LC.few['u-b']);
+						this.classList.add('thumb');
+					}
+				},
+				'dragleave': function(e) {
+					this.firstChild.textContent = '';
+					this.classList.remove('thumb');
+				},
+				'drop': function(e) {
+					yukiAddFile(e);
+					this.firstChild.textContent = '';
+					this.classList.remove('thumb');
+					return fallback(e);
+				}
+			});
+		this['Sage'] = $setup(this.$('#yuki-sage'), {
+				'checked': HM.Sage
+			}, {
+				'change': function(e) {
+					setupOptions(this, 'Sage', true);
+					this.parentNode.classList.toggle('inactive');
+				}
+			});
+		this['AttachCaptchaButton'] = $setup(this.$('#yuki-attach-captcha-button'), {}, {
+				'click': yukiAttachCapcha
+			});
+		this['OpenBottomForm'] = $setup('div', {'id': 'open-bottom-form', 'class': 'hideinfo', 'html': '[\n<a onclick="hide_info(event, \''+
+			HM.URL.board +'\')">'+ (ru ? 'Раскрыть форму' : 'Unhide form') +'</a>\n]'}, null);
+		function yukiAddFile(e) { // FileList object
+			var files = e.dataTransfer ? e.dataTransfer.files : e.target.files;
+			if (fileList.length >= 5) {
+				return alert('Пять файлов это максимум на Доброчане.');
+			} // Loop through the FileList and render image files as thumbnails.
+			for (var i = 0, f; f = files[i++];) {
+				if (fileList.length >= 5) {
+					alert('Пять файлов это максимум на Доброчане.');
+					break;
+				}
+				var f_name = f.name, f_ext = f_name.fext(),
+					renamed = false;
+				if (HM.RemoveFileName) {
+					f_name = (makeRandId(32) + (f.name.match(/\.[^\.]+$/) || [''])[0]).toLowerCase();
+					renamed = true;
+				}
+				fileList.push({
+					file: f,
+					f_name: f_name,
+					renamed: renamed,
+					el: $setup('div', {'class': "yukiFile" +(Files.audio.isThere(f_ext) ? ' artwork' : ''), 'html': filepreview_tamplate.allReplace({
+						'r{img}': Files.arch.isThere(f_ext) ? '/src/png/1405/archive-icon.png' : f_ext === 'webm' ? '/src/svg/1501/webm-file.svg' : '#transparent',
+						'r{fname}': f_name, 'r{size}': bytesMagnitude(f.size)})
+					}, null)
+				});
+				fileList[fileList.length - 1].el.querySelector('.yuki_clickable').onclick = (function(data) {
+					return function(e) {
+						var idx = fileList.indexOf(data);
+						data.el.remove();
+						delete fileList[idx];
+						fileList.splice(idx, 1)
+					}
+				}(fileList[fileList.length - 1]))
+		
+				Yu['FilesPlaceholder'].appendChild(fileList[fileList.length - 1].el);
+		
+				// Closure to capture the file information.
+				if (Files.audio.isThere(f_ext)) {
+					var front = fileList[fileList.length - 1].el, 
+						moz = typeof mozRTCSessionDescription !== "undefined";
+					if (['ogg', 'opus'].isThere(f_ext) && moz) {
+						var URL = window.URL || window.webkitURL, 
+						HTMLAE = new Audio(URL.createObjectURL(f))
+						HTMLAE.onloadedmetadata = function() {
+							var mozMdata = this.mozGetMetadata();
+							if (Object.keys(mozMdata).length > 0) {
+								MDPBlockParser(front, mozMdata)
+							}
+						}
+						HTMLAE.load()
+					} else {
+						getFileReaderData('arraybuffer', f, function(buffer) {
+							var blob = new Blob([buffer]);
+							if (['flac', 'alac', 'm4a'].isThere(f_ext)) {
+								var AVAsset = new AV.Asset.fromBuffer(buffer);
+								AVAsset.get('metadata', function(md) {
+									AVMetadata(front, md)
+								});
+							} else {
+								MAParser(front, blob)
+							}
+						})
+					}
+				}
+				var reader = new FileReader();
+				reader.onload = (function(theFile) {
+					return function(e) {
+						// Render thumbnail.
+						if (HM.RemoveExif && theFile.file.type.toLowerCase() === 'image/jpeg') {
+							theFile.dataURL = jpegStripExtra(e.target.result);
+							theFile['jpegStripped'] = true;
+						} else {
+							theFile.dataURL = e.target.result;
+							theFile['jpegStripped'] = false;
+						}
+						if (theFile.file.type.match('image.*')) {
+							theFile.el.querySelector('.preview_img').setAttribute('src', theFile.dataURL);
+						}
+					};
+				})(fileList[fileList.length - 1]);
+				// Read in the image file as a data URL.
+				reader.readAsDataURL(f);
+			}
+		}
+		function yukiPleasePost(e) {
+			var formData = serializeArray(e.target),
+				fd = new FormData();
+			function submitProcess(st) {
+				$setup(Yu['Submit'], {'disabled': (st ? "disabled" : undefined)}, null);
+				Yu['Submit'].parentNode.classList.toggle('process');
+			}
+			for (var i = 0; i < formData.length; i++) {
+				fd.append(formData[i].name, formData[i].value);
+			};
+			for (var i = 0; i < fileList.length; i++) {
+				if (HM.RemoveExif && fileList[i].file.type.toLowerCase() == 'image/jpeg' && !fileList[i].jpegStripped) {
+					fileList[i].dataURL = jpegStripExtra(fileList[i].dataURL);
+				}
+				if (HM.RemoveFileName && !fileList[i].renamed) {
+					fileList[i].f_name = (makeRandId(32) + (fileList[i].f_name.match(/\.[^\.]+$/) || [''])[0]).toLowerCase();
+				}
+				fd.append("file_" + (i + 1), dataURLtoBlob(fileList[i].dataURL, fileList[i].file.type), fileList[i].f_name);
+				fd.append("file_" + (i + 1) + "_rating", fileList[i].el.querySelector("select[name='file_1_rating']").value);
+			};
+			fd.append("post_files_count", fileList.length)
+			submitProcess(true);
+			var ajaxPost = new XMLHttpRequest(), url = e.target.action +'?X-Progress-ID='+ _t() * 10000;
+			ajaxPost.open('POST', url, true);
+			ajaxPost.send(fd);
+			ajaxPost.onreadystatechange = function() {
+				if (ajaxPost.readyState !== 4) {
+					return;
+				}
+				if (ajaxPost.status === 304) {
+					submitProcess(false);
+					alert('Не получилось отправить пост.\nПопробуйте чуть попозже ещё разок или перезагрузить страницу.\n\n-----------------------------\n'+ ajaxPost.statusText);
+				} else {
+					try {
+						var rText = ajaxPost.responseText,
+							errPost = rText.match(/\/error\/post\/\d+/),
+							newThread = rText.match(/\/\w*\/res\/\d+\.xhtml/);
+					} catch(e) {
+						console.log(e);
+					} finally {
+						if (errPost) {
+							getDataJSON(errPost, function(status, sText, err, xhr) {
+								var msg = (/<td colspan='\d+' class='post-error'>(.+)<\/td>/).exec(err);
+								var keys = ru ? ['капча', 'человек.'] : ['captcha', 'human.'];
+								Yu['ErrorMassage'].textContent = msg[1];
+								if (keys.isThere(msg[1].split(' ').pop()))
+									Yu['Captcha'].removeAttribute('hidden');
+								submitProcess(false);
+								Yu['ReplyForm'].previousElementSibling.querySelector('a.reply_.icon').click();
+							});
+						} else if (newThread && YukiThreadFrom.value == 0) {
+							document.location.href = newThread;
+						} else {
+							if (Yu['ReplyForm'].className === 'reply')
+								Yu['ReplyForm'].remove();
+							Yu['ReplyText'].value = '';
+							submitProcess(false);
+							setlSValue('SafeText', JSON.stringify(Yu['ReplyText'].value), true);
+							Yu['ErrorMassage'].textContent = '';
+							Yu['Captcha'].setAttribute('hidden', '');
+							Yu['FilesPlaceholder'].innerHTML = '';
+							fileList = [];
+							Chanabira.updateThread(null);
+						}
+					}
+				}
+			}
+			return fallback(e);
+		}
+		function yukiAttachCapcha(e) {
+			var el = e.target;
+			if (fileList.length >= 5) {
+				alert('Пять файлов это максимум на Доброчане.');
+				return false;
+			}
+			var img = el.previousElementSibling;
+			if (img.nodeName.toLowerCase() === 'img') {
+				var canvas = document.createElement("canvas");
+				canvas.width = img.width;
+				canvas.height = img.height;
+				var ctx = canvas.getContext("2d");
+				ctx.drawImage(img, 0, 0);
+				var dataURL = canvas.toDataURL("image/png");
+				f = {
+					"name": 'talking_captcha.png',
+					"size": dataURL.length * 6 / 8,
+					"type": 'image/png'
+				};
+				fileList.push({
+					file: f,
+					renamed: false,
+					f_name: 'talking_captcha.png',
+					jpegStripped: true,
+					el: $setup('div', {'class': "yukiFile", 'html': filepreview_tamplate.allReplace({
+						'r{img}': dataURL, 'r{fname}': f.name, 'r{size}': bytesMagnitude(f.size)
+					})}, null),
+					dataURL: dataURL
+				});
+				fileList[fileList.length - 1].el.querySelector('.yuki_clickable').onclick = (function(data) {
+					return function(e) {
+						var idx = fileList.indexOf(data);
+						data.el.remove();
+						delete fileList[idx];
+						fileList.splice(idx, 1)
+					}
+				}(fileList[fileList.length - 1]))
+				Yu['FilesPlaceholder'].appendChild(fileList[fileList.length - 1].el);
+			}
+		}
+		this.makeReplyForm = function(e, brd, tid, pid) {
+			if (Target.thread(tid) && HM.URL.thread != tid)
+				Target.tid = tid;
+			if (Target.board != brd)
+				Target.board = brd;
+			Yu['TargetThread'].value = tid;
+			Yu['CaptchaImage'].src = '/captcha/'+ brd +'/'+ _t() +'.png';
+			$setup(Yu['ReplyForm'], {'class': (!e ? '' : 'reply'), 'action': '/'+ brd +'/post/new.xhtml'}, null);
+			if (document.getElementById('captcha'))
+				Yu['Captcha'].removeAttribute('hidden');
+			var post = !e ? topForm : $route(e.target, function(el) {
+					var nodes = el.className.split(' ');
+					return nodes.isThere('post') || nodes.isThere('popup');
+				}), classes = post.className.split(' ');
+				if (classes.isThere('post') || !e) $placeNode('after', post, Yu['ReplyForm']);
+			else
+				if (classes.isThere('popup')) post.firstChild.firstChild.firstChild.appendChild(Yu['ReplyForm']);
+				if (pid && !Yu['ReplyText'].value.isThere('>>'+ pid)) InsertInto(Yu['ReplyText'], '>>'+ pid +'\r\n');
+				if (e) Yu.makeGlobalForm(null);
+		}
+		this.makeGlobalForm = function(e, brd) {
+			switch (e) {
+				case null:
+					$each([hideinfo, Yu['OpenBottomForm']], _show);
+					_hide(showinfo);
+					break;
+				default:
+					switch (e.target.parentNode.id) {
+						case 'hideinfotd':
+							$each([hideinfo, Yu['OpenBottomForm']], _show);
+							_hide(postForm);
+							break;
+						case 'open-bottom-form':
+							$placeNode('after', Yu['OpenBottomForm'], postForm)
+							_hide(Yu['OpenBottomForm']);
+							break;
+					}
+					switch (e.target.parentNode.id) {
+						case 'hideinfodiv':
+							pfplaceh.appendChild(postForm);
+							_show(Yu['OpenBottomForm']);
+							_hide(hideinfo);
+						case 'open-bottom-form':
+							$each([showinfo, postForm], _show);
+							Yu.makeReplyForm(null, HM.URL.board, (HM.URL.thread || 0));
+							Yu['NewThreadCreate'].className = Yu['TargetThread'].value > 0 ? 'inactive' : 'selected';
+							break;
+					}
+					return fallback(e);
+			}
+		}
+	}; GetReplyForm = Nagato.makeReplyForm; hide_info = Nagato.makeGlobalForm;
 	
 	/************************************************************************/
-	$setup(window, {}, {'keypress': keyMarks,
-		'mousemove': BindDragRef,
-		'mouseup': function(e) { HM.RefTab = null },
+	$setup(window, {}, {
+		'keypress': keyMarks,
+		'mousemove': function(e) {
+			if (HM.DragableObj) {
+				HM.DragableObj.el.style.top  = HM.DragableObj.offsetY + e.pageY - HM.DragableObj.el.offsetHeight +'px';
+				HM.DragableObj.el.style.left = HM.DragableObj.offsetX + e.pageX - HM.DragableObj.el.offsetWidth  +'px';
+			}},
+		'mouseup': function(e) {
+			HM.DragableObj = null },
 		'focus': function(e) {
 			window_focused = true;
 			Tinycon.setBubble(0);
-			unread_count = unread_count * 0;
-		},
+			unread_count = unread_count * 0 },
 		'blur': function(e) {
 			window_focused = false;
-		}
-	});
-	var updater = $setup('div', {'id': 'updater'}, null),
-		update = $setup('a', {'text': LC.loadnew}, {'click': updateThread});
-	updater.appendChild(update);
-	
-	function updtitle() {
-		return LC.update_title.replace('%s%', HM.UpdateInterval().val)
-	}
-	var SoundNotify = $setup('label', {'title': LC.snd_notify_title, 'html':'<input type="checkbox" hidden><span class="checkarea"></span>\n'+ LC.snd_notify}, null),
-		ckbxNotify = $setup(SoundNotify.querySelector('input'), {'checked': HM.SoundNotify}, {
-		'change': function(e) { setupOptions(this, 'SoundNotify', true) }
-	});
-	var AutoUpdate = $setup('label', {'title': updtitle(), 'html':'<input type="checkbox" hidden><span class="checkarea"></span>\n'+ LC.updauto}, null),
-		ckbxUpdate = $setup(AutoUpdate.querySelector('input'), {'checked': HM.AutoUpdate}, {
-		'change': function(e) { setupOptions(this, 'AutoUpdate', true);
-			updateTimer(e);
-		}
-	});
-	var setUpdInt = $setup('input', {'hidden': '', 'style': 'width:34px;margin:0 4px', 'id': 'int-upd', 'min': '15', 'max': '120', 'type': "number", 'value': HM.UpdateInterval().val}, {
-		'input': function() {
-			setlSValue('UpdateInterval', this.value, true);
-			AutoUpdate.title = updtitle();
-		},
-		'mouseout': function() {
-			setTimeout(function() {
-				$setup(tsec, {'hidden': undefined, 'text': "\n⟨"+ HM.UpdateInterval().val +" "+ LC.tm['s'] +".⟩"}, null);
-				setUpdInt.setAttribute('hidden', '');
-			}, 1000)
-		}
-	});
-	var tsec = $setup('span', {'class': 't-sec', 'id': 'int-stat', 'text': "\n⟨"+ HM.UpdateInterval().val +" "+ LC.tm['s'] +".⟩"}, {
-		'click': function(e) {
-			this.setAttribute('hidden', '');
-			setUpdInt.removeAttribute('hidden');
 		}
 	});
 	
@@ -1979,168 +2218,42 @@ function MagicExtension() {
 		}
 	});
 	
-	var postCount = $setup('label', {'class': 'post-count', 'text': HM.Elems.posts.length + LC.omit}, null);
-	var ntCreate = $setup('label', {'id': 'new-thread-create', 'class': 'inactive', 'html': 'Новый тред в\n<span class="t-sec">/'+ HM.URL.board +'/</span>'}, {
-		'click': function(e) {
-			if (this.className != 'selected') {
-				this.className = 'selected';
-				YukiThreadFrom.value = 0;
-			} else {
-				this.className = 'inactive';
-				YukiThreadFrom.value = HM.URL.thread;
-			}
-		}
-	});
-	var magicPanel = $setup('div', {'id': 'magic-panel', 'html': '<table><tbody><tr><td class="f-sect"><span onchange="placeMedia(event)"><input '+
-		(HM.MC == 0 ? 'checked' : '') +' value="windowFrame" name="cont_p" type="radio">\n'+ LC.mcw +'\n<input '+
-		(HM.MC == 1 ? 'checked' : '') +' value="postContent" name="cont_p" type="radio">\n'+ LC.mcp +'\n</span></td><td class="s-sect">'+
-		LC.cframe +'</td></tr><tr class="vsset'+ (HM.MC == 0 ? ' hidout' : '') +'"><td class="f-sect"><input onclick="" onchange="setVSize(this)" min="1" value="'+
-		getVSize('value') +'" step="1" max="4" type="range" name="v_size"></td><td class="s-sect">'+ LC.vsyz +'\n<span id="vsize-textbox">('+
-		getVSize('text') +')</span></td></tr><tr><td class="f-sect"><select id="max-allowed-rating"><option class="rating_SFW">SFW</option>'+
-		'<option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select></td>'+
-		'<td class="s-sect">'+ LC.maxr +
-		'</td></tr><tr><td class="f-sect"><label><input id="oembedapi" type="checkbox" hidden><span class="checkarea" style="font-size:20px"></span></label></td>'+
-		'<td class="s-sect"><a title="'+ (HM.oEmbedAPI ? LC.emb['title'] : '') +'">'+
-		(HM.oEmbedAPI ? 'Hint: '+ LC.emb['txt'] : '<u>http://www.magicpanel.div/'+ LC.emb['url'] +'</u>') +'</a></td></tr><tr><td class="f-sect"><label><a class="paperclip '+
-		(HM.AttachPopups ? '' : 'inactive') +'"><input id="attach-popups" hidden="" type="checkbox"><img onclick="this.parentNode.classList.toggle(\'inactive\')" src="/src/png/1411/attachpopup.png"></a></label></td><td class="s-sect">'+ LC.clipopup +'</td></tr></tbody></table>'}, null);
-	$setup(magicPanel.querySelector('#max-allowed-rating'), {'value': HM.maXrating, 'class': 'rating_'+ HM.maXrating.replace('-', '')}, {
-		'change': function(e) { setupOptions(this, 'maXrating');
-			this.className = this.querySelector('option:checked').className;
-		}
-	});
-	$setup(magicPanel.querySelector('#attach-popups'), {'checked': HM.AttachPopups}, {
-		'change': function(e) { setupOptions(this, 'AttachPopups') }
-	});
-	$setup(magicPanel.querySelector('#oembedapi'), {'checked': HM.oEmbedAPI}, {
-		'change': function(e) {
-			setupOptions(this, 'oEmbedAPI')
-			var txtBox = this.parentNode.parentNode.nextElementSibling.firstChild;
-			if (this.checked) {
-				$each(HM.Elems.links, parseLinks);
-				$setup(txtBox, {'title': LC.emb['title'], 'text': 'Hint: '+ LC.emb['txt']}, null);
-			} else {
-				$setup(txtBox, {'title': undefined, 'html': '<u>http://www.magicpanel.div/'+ LC.emb['url'] +'</u>'}, null);
-			}
-		}
-	});
+	var imagemenu = $setup('menu', {'type': 'context', 'id': 'image-context', 'src': '', 'edit': '', 'html':
+		'<menuitem icon="/images/edit.gif" label="Edit" onclick="window.open(this.parentNode.getAttribute(\'edit\'), \'_blank\')"></menuitem>'+
+		'<menuitem icon="/src/png/1407/google_14_icon.png" label="'+ LC.fnd_src_wth +' google" onclick="window.open(\'//www.google.com/searchbyimage?image_url=\'+ this.parentNode.getAttribute(\'src\'), \'_blank\')"></menuitem>'+
+		'<menuitem icon="/images/booru.png" label="'+ LC.fnd_src_wth +' iqdb" onclick="window.open(\'//iqdb.org/?url=\'+ this.parentNode.getAttribute(\'src\'), \'_blank\')"></menuitem>'+
+		'<menuitem icon="/src/png/1407/derpibooru_icon.png" label="Derpibooru reverse search" onclick="revSearch(this.parentNode.getAttribute(\'src\'))"></menuitem>'
+	}, null)
 	
-	var magicBottom = $setup('a', {'id': 'magic-bottom', 'html': '<img width="38" height="28" src="/src/png/1409/list4.png">'}, {
-		'click': function(e) {
-			var el = this.parentNode;
-			if (el.previousElementSibling.id === 'magic-panel') {
-				el.removeAttribute('class');
-				magicPanel.remove()
-			} else {
-				el.setAttribute('class', 'active');
-				$placeNode('before', el, magicPanel)
+	var magicPicture = $setup('div', {'id': 'magic-picture'}, {
+		'wheel': function(e) {
+			var Z = (e.deltaX || e.deltaY)
+			if (Z) {
+				this.style['width'] = _cid(this.style['width']) + (Z * 0.8) + '%'
+				this.style['height'] = _cid(this.style['height']) + (Z * 0.8) + '%'
 			}
-		}
-	});
-	
-	var openbottomForm = $setup('div', {'id': 'open-bottom-form', 'class': 'hideinfo', 'html': '[\n<a onclick="hide_info(event, \''+
-		HM.URL.board +'\')">'+ (ru ? 'Раскрыть форму' : 'Unhide form') +'</a>\n]'}, null);
-	var hideinfo = document.getElementById('hideinfodiv');
-	var showinfo = document.getElementById('hideinfotd');
-	var postForm = document.getElementById('postFormDiv');
-	var pfplaceh = document.getElementById('postform_placeholder');
-	var delForm = document.getElementById('delete_form');
-	var topForm = document.getElementById('postform');
-	var deli = delForm.querySelector('input[name="password"]'), pass = deli.value,
-		filepreview_tamplate = '[<a class="yuki_clickable">убрать</a>]<br><img class="preview_img" src="r{img}"><br><span class="file_name">r{fname}</span><br>\
-			<span class="file_name">r{size}&nbsp;</span><select name="file_1_rating" class="rating_SFW" onchange=\'this.setAttribute("class", this.querySelector("option:checked").className)\'>\
-			<option class="rating_SFW">SFW</option><option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select>';
-		replyform_tamplate = '<input name="thread_id" value="'+ (HM.URL.thread || 0) +'" type="hidden"><input name="task" value="post" type="hidden">\
-			<div class="error-msg" style="text-align:center;color:#FFF;background-color:#E04000"></div>\
-			<table><tbody id="yukidropBox"><tr class="post-count"></tr><tr class="droparrow inactive"></tr></tbody><tbody style="display:inline-block">\
-			<tr id="trname"><td><input placeholder="'+ HM.defaultName() +'" name="name" size="30" value="" type="text">\
-				<label class="sagearrow'+ (HM.Sage ? '' : ' inactive') +'"><input name="sage" type="checkbox" hidden><img src="/src/svg/1409/Sage.svg"></label>\
-				<span style="float:right">&nbsp;<a id="close-form" title="Убрать" onclick="YukiReplyForm.remove()"><img src="/images/delete.png" alt="Remove"></a></span>\
-			</td></tr>\
-			<tr id="trsubject"><td><input placeholder="'+ (ru ? 'Тема' : 'Subject') +'" name="subject" size="30" maxlength="64" value="" type="text">\
-				<label class="submit-button"><span>'+ (ru ? 'Отправка' : 'Sending') +'</span>\n<input type="submit" value="'+ (ru ? 'Отправить' : 'Post') +'"></label>\
-				<span class="wmark-buttons-panel" style="float:right;text-align:right">\
-					<a onclick="StrikeConvert()" class="wmark-button" title="Перевод символов страйка в нотацию wakabamark" style="visibility:hidden"><span>{~}</span>&nbsp;</a>\
-					<a onclick="wmarkText(\'* \', \'\\n* \')" class="wmark-button" title="Список"><span>◉</span></a>&nbsp;\
-					<a onclick="wmarkText(\'~~\', \'~~\')" class="wmark-button" title="Зачеркнутый"><img src="/src/svg/1405/~S-mark.svg" alt="~$"></a>&nbsp;\
-					<a onclick="wmarkText(\'_\', \'_\')" class="wmark-button" title="Курсивный"><img src="/src/svg/1405/i-mark.svg" alt="i"></a>&nbsp;\
-					<a onclick="wmarkText(\'**\', \'**\')" class="wmark-button" title="Жирный"><img src="/src/svg/1405/-b-mark.svg" alt="b"></a>&nbsp;\
-					<a onclick="wmarkText(\'`\', \'`\')" class="wmark-button" title="Код"><img src="/src/svg/1405/[c]-mark.svg" alt="[c]"></a>&nbsp;\
-					<a onclick="wmarkText(\'%%\', \'%%\')" class="wmark-button spoiler" title="Спойлер">&middot;<strong>%%</strong>&middot;</a>&nbsp;\
-					<a onclick="wmarkText(\'> \', \'\\n> \')" class="wmark-button" title="Цитировать выделенное"><img src="/src/svg/1405/„q”-mark.svg" alt="&gt;"></a>\
-				</span></td></tr>\
-			<tr id="trmessage"><td><textarea placeholder="'+ (ru ? 'Текст сообщения' : 'Message Text') +'" style="resize:both;height:180px" id="yukireplyText" name="message" cols="80" rows="8"></textarea>\
-				<br><div id="gamePlaceholder"></div></td></tr>\
-			<tr id="trcaptcha">\
-				<td><span><img alt="Капча" id="yuki-captcha-image" style="vertical-align:middle;margin:2px" src="">&nbsp;\
-					<span onclick="yukiAttachCapcha(this)" class="yuki_clickable" title="Прикрепить капчу" style="color:#999">[+]</span></span><br>\
-					<input autocomplete="off" name="captcha" type="text" hidden>\
-				</td></tr>\
-			<tr class="hidout" id="trrempass"><td><input name="password" size="35" value="'+ pass +'" type="password"></td></tr>\
-			<tr id="trfile"><td id="files_parent"><input id="post_files_count" name="post_files_count" value="1" type="hidden">\
-				<div id="file_1_div"><label><input id="dumb_file_field" type="file" hidden multiple><input type="button" value="'+
-			LC.add +' '+ (ru ? LC.file.toLowerCase() : LC.file) + LC.few['u-c'] +'"></label>\n<span style="font-size:66%"><label><input hidden type="checkbox" '+
-			(HM.RemoveExif ? 'checked' : '') +' onchange="setupOptions(this, \'RemoveExif\')"><span class="checkarea"></span>\nУбирать Exif</label>\n<label><input type="checkbox" hidden '+ 
-			(HM.RemoveFileName ? 'checked' : '') +' onchange="setupOptions(this, \'RemoveFileName\')"><span class="checkarea"></span>\nУбирать имя файла</label></span></div></td></tr>\
-			<tr class="hidout" id="trgetback"><td><select name="goto"><option value="board">board</option><option value="thread" selected>thread</option></select></td></tr>\
-		</tbody></table><div id="files_placeholder"></div>';
-		YukiReplyForm = $setup('form', {'id': "yukipostform", 'method': "post", 'enctype': "multipart/form-data", 'html': replyform_tamplate}, {'submit': yukiPleasePost});
-	var YukiTextArea = YukiReplyForm.querySelector("#yukireplyText"),
-		YukiFiles = YukiReplyForm.querySelector('#files_placeholder'),
-		YukiCaptcha = $setup(YukiReplyForm.querySelector('input[name="captcha"]'), {}, {
-			'focus': function(e) { YukiCaptchaImage.click() },
-			'keypress': function(e) { CaptchaProcess(e, (ru ? 'ru' : 'en')) }
-		}),
-		YukiThreadFrom = YukiReplyForm.querySelector('input[name="thread_id"]'),
-		YukiFileDumb = $setup(YukiReplyForm.querySelector('#dumb_file_field'), {}, {'change': yukiAddFile}),
-		YukiSubmit = $setup(YukiReplyForm.querySelector('input[type="submit"]'), {}, {'click': StrikeConvert}),
-		YukiCaptchaImage = $setup(YukiReplyForm.querySelector('#yuki-captcha-image'), {}, {
-			'click': function(e) { this.src = '/captcha/'+ Target.board +'/'+ _t() +'.png' }
-		}),
-		YukidropBox = $setup(YukiReplyForm.querySelector("#yukidropBox"), {}, {
-			'dragover': callback,
-			'dragenter': function(e) {
-				var items = e.dataTransfer.mozItemCount || '';
-				if (this.classList[0] != 'thumb') {
-					this.firstChild.textContent = LC.add +' '+ items +' '+ LC.file.toLowerCase() +
-						(items == 1 ? '' : !items ? LC.few['u-c'] : items < 5 ? LC.few['u-a'] : LC.few['u-b']);
-					this.classList.add('thumb');
-				}
-			},
-			'dragleave': function(e) {
-				this.firstChild.textContent = '';
-				this.classList.remove('thumb');
-			},
-			'drop': function(e) {
-				yukiAddFile(e);
-				this.firstChild.textContent = '';
-				this.classList.remove('thumb');
-				return callback(e);
-			}
-		});
-	$setup(YukiTextArea, {'value': JSON.parse(getlSValue('SafeText', JSON.stringify(YukiTextArea.value), true))}, {
-		'click': function(e) { this.classList.remove('ta-inact') },
-		'keyup': function(e) {
-			var height = _cid(this.style['height']);
-			if (height + 26 < this.scrollHeight)
-				this.style['height'] = this.scrollHeight +'px';
-			setlSValue('SafeText', JSON.stringify(this.value), true);
+			return fallback(e);
 		},
-		'keydown': function(e) {
-			if (KeyCodes.specl.isThere(e.keyCode))
-				keyMarks(e);
+		'mousedown': function(e) {
+			HM.DragableObj = {
+				el: this,
+				offsetX: this.scrollWidth - e.layerX,
+				offsetY: this.scrollHeight - e.layerY
+			}
 		}
 	});
-	$setup(YukiReplyForm.querySelector('input[name="sage"]'), {'checked': HM.Sage}, {
-		'change': function(e) { setupOptions(this, 'Sage', true);
-			this.parentNode.classList.toggle('inactive');
-		}
-	});
+	//expand_image = function(e, w, h){
+	//	var thmb = e.target.parentNode
+	//	//magicPicture.style['background-image'] = 'url('+thmb.href+')';
+	//	$placeNode('before', thmb, $setup(magicPicture, {'style': 'width:80%;height:80%;background:url('+thmb.getAttribute('href')+') no-repeat scroll center center / contain;'}, null))
+	//	return fallback(e);
+	//}
 	
 	deli.nextElementSibling.onclick = function(e) {
 		setTimeout(function(){
 			window.stop();
 			if (Target.thread())
-				setTimeout(updateThread, 1000);
+				setTimeout(Chanabira.updateThread, 1000);
 		}, 200)
 	}
 	
@@ -2148,44 +2261,51 @@ function MagicExtension() {
 	hideinfo.removeAttribute('style');
 	_hide(postForm);
 	
-	$placeNode('append', document.body, [magicBottom, contentFrame, contMarker]);
+	$placeNode('append', document.body, [
+		SettingsPanel['PanelButton'],
+		contentFrame,
+		contMarker,
+		imagemenu
+	]);
 	$each(HM.Elems.links, parseLinks);
-	genReplyMap(HM.Elems.posts);
+	Chanabira.genReplyMap(HM.Elems.posts);
 	if (HM.URL.thread) {
 		$placeNode('append', delForm, [
-			openbottomForm,
-			updater,
-			SoundNotify,
-			document.createElement("br"),
-			AutoUpdate,
-			tsec,
-			setUpdInt
+			Nagato['OpenBottomForm'],
+			Chanabira['NewPostLoader']
 		]);
-		$placeNode('prepend', YukiReplyForm, ntCreate);
-		$placeNode('after', Target.thread(), postCount);
-		updateTimer();
+		$placeNode('after', Target.thread(), Chanabira['PostsCount']);
+		Chanabira.updateTimer();
 	}
 	
-	for (var i = 0, thumbLinks = document.querySelectorAll('.file > a:not(.cm-link)'); tLink = thumbLinks[i++];) {
-		tLink.setAttribute('onclick', 'callback(event)');
-	}
-	for (var i = 0, iqdbIcons = document.querySelectorAll('a.search_iqdb.icon'); lIco = iqdbIcons[i++];) {
-		lIco.insertAdjacentHTML('afterend', '\n'+ btnDerpibooru.replace('@img_src', lIco.href.split('=').pop()))
-	}
-	for (var i = 0, arcImage = document.querySelectorAll('img[src="/thumb/generic/archive.png"], img[src="/thumb/generic/7z.png"]'); aImg = arcImage[i++];) {
-		aImg.src = '/src/png/1405/archive-icon.png';
-	}
-	for (var i = 0, sndImage = document.querySelectorAll('img.thumb[src="/thumb/generic/sound.png"]'); sImg = sndImage[i++];) {
-		makeMagicAudio(sImg)
-	}
-	for (var i = 0, rateImages = document.querySelectorAll('img.thumb[alt="unrated"], img.thumb[alt^="r-1"]'); rImg = rateImages[i++];) {
-		var finf = $route(rImg, '.fileinfo'),
+	$each('.file > a > img[onclick^="open_url"]', function(thmb) {
+		var uri = (/open_url\('([^']+)/).exec(thmb.onclick.toString())[1]
+		HM.LinksMap[uri] = {Embed: '<iframe r{wh} frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen src="'+ uri +'">', Type: (uri.isThere('text') ? 'text' : 'pdf')};
+		$setup(thmb.parentNode, { 'id': 'cm-button', 'href': uri }, { 'click': loadMediaContainer })
+		thmb.removeAttribute('onclick')
+	});
+	$each('.file > a > img[onclick^="expand_image"]', createImgContext);
+	$each('img[src="/thumb/generic/archive.png"], img[src="/thumb/generic/7z.png"]', function(thmb) {
+		thmb.src = '/src/png/1405/archive-icon.png';
+	});
+	$each('img.thumb[src="/thumb/generic/sound.png"]', function(thmb) {
+		makeMagicAudio(thmb)
+	});
+	$each('img.thumb[alt="unrated"], img.thumb[alt^="r-1"]', function(thmb) {
+		var finf = $route(thmb, '.fileinfo'),
 			elSz = new RegExp(/(\d+)(?:×|x)(\d+)/).exec(finf.querySelector('em').textContent),
 			a = $setup('a', {'href': finf.querySelector('a').href, 'target': "_blank"}, null);
-		rImg.parentNode.appendChild(a); a.appendChild(rImg);
-		if (Files.video.isThere(a.href.fext()))
+		thmb.parentNode.appendChild(a); a.appendChild(thmb);
+		if (Files.video.isThere(a.href.fext())) {
 			parseLinks(a);
-		else
-			$setup(rImg, {'width': '200', 'height': '200', 'onclick': 'expand_image(event, '+elSz[1]+', '+elSz[2]+')'}, null);
+		} else {
+			$setup(thmb, {'width': '200', 'height': '200', 'onclick': 'expand_image(event, '+elSz[1]+', '+elSz[2]+')'}, null);
+			createImgContext(thmb);
+		}
+	});
+	function createImgContext(thmb) {
+		var fid = thmb.parentNode.parentNode.id.split('_'),
+		edit = '/utils/image/edit/'+fid[2]+'/'+fid[1];
+		$setup(thmb, {'contextmenu': 'image-context', 'oncontextmenu': '$(\'#image-context\').attr({src:this.parentNode.href, edit:\''+edit+'\'})'}, null);
 	}
 }
