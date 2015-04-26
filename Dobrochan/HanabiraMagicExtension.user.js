@@ -6,7 +6,7 @@
 // @updateURL   	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
-// @version 		1.0.0
+// @version 		1.0.1
 // @grant   		none
 // ==/UserScript==
 initStore();
@@ -2516,6 +2516,13 @@ function MagicExtension() {
 				Chanabira.updateTimer();
 			} else {
 				_z.before(delForm.querySelector('.pages'), Nagato['OpenBottomForm']);
+			}
+			deli.nextElementSibling.onclick = function(e) {
+				setTimeout(function(){
+					window.stop();
+					if (Target.thread())
+						setTimeout(Chanabira.updateThread, 1000);
+				}, 200)
 			}
 		}
 	}
