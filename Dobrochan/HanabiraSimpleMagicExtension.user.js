@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraSimpleMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.1.2
+// @version 		1.1.4
 // @grant   		none
 // ==/UserScript==
 
@@ -448,8 +448,8 @@
 			to = setTimeout(function() {
 				reftab.remove()
 			}, 300) }
-		reftab.onmouseout = timer;
-		reftab.onmouseover = function(e) {
+		reftab.onmouseleave = a.onmouseleave = timer;
+		reftab.onmouseenter = a.onmouseenter = function(e) {
 			clearTimeout(to);
 			to = 0;
 		}
@@ -458,13 +458,30 @@
 	
 	function MagicPostView(e) {
 		var mapp, load, a = e.target, attach = HM.AttachPopups,
-			L = ParseUrl(a.href), brd = L.board,
-			tid = L.thread, pid = L.pid,
-			href = $route(a, '.reflink a').getAttribute('href');
-			op = tid === pid,
+			L = ParseUrl(a.href), brd = L.board, tid = L.thread,
+			pid = L.pid, op = tid === pid,
 			postid = (op ? 'post_' : 'reply') + pid,
 			id = brd +'-'+ postid,
-			active = document.getElementById('ref-'+ id);
+			refl = $route(a, '.reflink a'),
+			href = refl.getAttribute('href'),
+			active = document.getElementById('ref-'+ id),
+			reftab = $setup('table', {'class': (op ? 'oppost popup' : 'popup'), 'id': 'ref-'+ id,
+				'html': '<tbody><tr><td class="loading"><span class="waiting'+ Math.floor(Math.random() * 3) +
+				' icon"><img src="/images/blank.png"></span>\n'+ LC.wsec[lng] +'</td></tr></tbody>'}, null),
+			post = HM.LoadedPosts[id] || document.getElementById(postid);
+		function add_mapping(mapp) {
+			if (!mapp)
+				return;
+			mapp.classList.add('mapped');
+			if (attach) {
+				mapp.classList.add('locked');
+				mapp.removeEventListener('mouseover', MagicPostView, false);
+			} else {
+				a.onmouseout = function(e) {
+					mapp.classList.remove('mapped');
+				}
+			}
+		}
 		function set_style(r) {
 			var w = window.innerWidth,
 			x = e.pageX, y = e.pageY + 30,
@@ -475,65 +492,54 @@
 				var mw = w - 400;
 				x = null;
 			}
-			if (mapp) {
-				mapp.classList.add('mapped');
-				if (attach) {
-					mapp.classList.add('locked');
-					mapp.removeEventListener('mouseover', MagicPostView, false);
-				}
-			}
 			r.setAttribute('style', 'top:'+ y +'px;max-width:'+
 				(mw || wx) +'px;'+ (x == null ? 'right:0' : 'left:'+ x) +'px'+
 				(attach ? ';z-index:'+ HM.zIndex : ''));
 		}
-		function binded(e) {
-			if (attach && !e)
+		function binded(el) {
+			var load = !el ? $setup('td', {'class': 'stub', 'text': LC.postdel[lng]}, null) :
+				$setup(el.cloneNode(true), {'id': 'load-' + id, 'class': undefined}, null);
+			attachEvents(load);
+			if (el && attach) {
 				BindCloseRef(reftab);
-			else
+			} else {
 				BindRemoveRef(a, reftab);
-			if (e)
-				load = $setup('td', {'class': 'stub', 'text': LC.postdel[lng]}, null);
-			reftab.firstChild.firstChild.appendChild(load);
-			mapp = reftab.querySelector('a[href="'+ href +'"]');
+			}
+			$nodeUtil('replace', reftab.querySelector('.loading'), load);
+			add_mapping(reftab.querySelector('a[href="'+ href +'"]'));
 			set_style(reftab);
 		}
 		if (active) {
+			var loc = active.querySelector('.locked');
+			if (loc && loc.hash !== refl.hash) {
+				loc.className = 'reply-link';
+				attachEvents(active);
+			}
+			add_mapping(active.querySelector('a[href="'+ href +'"]'));
 			set_style(active);
 			return active.click();
-		}
-		var reftab = $setup('table', {'class': (op ? 'oppost popup' : 'popup'), 'id': 'ref-'+ id, 'html': '<tbody><tr>'}, null),
-			post = HM.LoadedPosts[id] || document.getElementById(postid);
-		if (post) {
-			load = $setup(post.cloneNode(true), {'id': 'load-' + id, 'class': undefined}, null);
-			binded(post.className === 'stub' ? true : false);
-			attachEvents(load);
+		} else if (post) {
+			binded(post == 'stub' ? null : post);
 		} else if (HM.URL.thread == tid) {
-			binded(true);
+			binded(null);
 		} else {
-			loading = $setup('td', {'html': '<span class="waiting'+ Math.floor(Math.random() * 3) +
-				' icon"><img src="/images/blank.png"></span>\n<span class="reply-from">'+ LC.wsec[lng] +'</span>'}, null);
-			reftab.firstChild.firstChild.appendChild(loading);
 			getDataResponse('/api/post/'+ brd +'/'+ tid +'/'+ pid +'.xhtml',
 			function(status, sText, json, xhr) {
+				var node;
 				if (status !== 200 || json == "Specified element does not exist.") {
-					binded(true);
+					node = 'stub';
 				} else {
-					load = $setup('td', {'id': 'load-'+ id, 'html': json}, null);
-					hooLinksElement(GetElements(load).links);
-					genReplyMap([load]);
-					binded(false);
+					node = $setup('td', {'id': 'load-'+ id, 'html': json}, null);
+					hooLinksElement(GetElements(node).links);
+					genReplyMap([node]);
 				}
-				HM.LoadedPosts[id] = load;
-				loading.remove();
+				HM.LoadedPosts[id] = node;
+				binded(node == 'stub' ? null : node);
+				set_style(reftab);
 			});
 		}
 		document.body.appendChild(reftab);
 		set_style(reftab);
-		a.onmouseout = function(e) {
-			if (mapp && !attach) {
-				mapp.classList.remove('mapped');
-			}
-		}
 	}
 	
 	function MagicSpoirate(e) {
@@ -796,7 +802,7 @@
 					'<input id="yuki-captcha" autocomplete="off" name="captcha" type="text" hidden></td></tr>'+
 			'<tr id="trrempass"><td><input id="yuki-pass" name="password" size="35" value="'+ pass +'" type="password" hidden></td></tr>'+
 			'<tr id="trfile"><td id="files_parent"><div id="file_1_div"><label><input id="dumb_file_field" type="file" hidden multiple><input type="button" value="'+
-			LC.add[lng] +' '+ LC.file[lng] + LC.few['u-c'][lng] +'"></label>\n<span class="yukiFileSets"><label><input id="yuki-removeExif" type="checkbox">\n'+
+			LC.add[lng] +' '+ LC.file[lng] + LC.few['u-c'][lng] +'" id="yuki-add-files"></label>\n<span class="yukiFileSets"><label><input id="yuki-removeExif" type="checkbox">\n'+
 			LCY.rmv[lng] +' Exif</label>\n<label><input id="yuki-removeFilename" type="checkbox">\n'+ LCY.rmv[lng] +' '+ LCY.fnm[lng] +
 		'</label></span></div></td></tr></tbody></table><div id="yuki-files-placeholder"></div><style>'+style+'</style>';
 		this.$ = function(child) { return this['ReplyForm'].querySelector(child) }
@@ -870,6 +876,11 @@
 					setupOptions(this, 'RemoveFileName');
 				}
 			});
+			$setup(this.$('#yuki-add-files'), {}, {
+				'click': function(e) {
+					this.previousElementSibling.click();
+				}
+			});
 		this['Submit'] = $setup(this.$('input[type="submit"]'), {}, {
 				'click': function(e) {
 					StrikeConvert(Yu['ReplyText']) }
@@ -932,7 +943,8 @@
 			}, false);
 		});
 		function yukiAddFile(e) { // FileList object
-			var files = e.dataTransfer.files || e.target.files;
+			var data = e.dataTransfer || e.target,
+				files = data.files;
 			if (fileList.length >= 5) {
 				return alert('Пять файлов это максимум на Доброчане.');
 			} // Loop through the FileList and render image files as thumbnails.
