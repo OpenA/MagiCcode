@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.1.4
+// @version 		1.1.5
 // @grant   		none
 // ==/UserScript==
 initStore();
@@ -208,7 +208,7 @@ metadataCallback(metadata);},errorCallback);}});}}
 
 function MagicExtension() {
 	var hideinfo, showinfo, postForm, pfplaceh, topForm, delForm, deli, pass, lng, mEl, Chanabira, Nagato,
-		window_focused = false, unread_count = 0, lceche = {}, 
+		unread_count = 0, lceche = {}, 
 	HM = {
 		MC: ['windowFrame', 'postContent'].indexOf(_z.getlSVal('EmbedIn', 'postContent')),
 		Sage: false, zIndex: 0, DragableObj: null, Played: null, LastKey: null,
@@ -549,6 +549,13 @@ function MagicExtension() {
 		}
 	}
 	
+	function markAsRead(e) {
+		unread_count--;
+		this.removeEventListener('click', markAsRead, false);
+		this.classList.remove('new');
+		Tinycon.setBubble(unread_count);
+	}
+	
 	/*** Charming Hanabira ***/
 	//* @ original code 	http://dobrochan.com/js/hanabira-0.5.1311-.js
 	//* @ copyright 		Dobrochan
@@ -577,8 +584,8 @@ function MagicExtension() {
 				HM.UpdateInterval().val +' '+ LC.tm['s'][lng] +'.⟩</span><input max="180" min="15" id="int-upd" style="width:34px;margin:0 4px" type="number" hidden>'
 			}, null);
 		this['UpdateStat'] = this.$('#update-stat');
-		this['PostsCount'] = _z.setup('label', {'class': 'post-count', 'text': HM.Elems.posts.length + LC.omit[lng]}, null);
-		this['AllowedPosts'] = _z.setup('span', {'class': 'allowed-posts', 'text': ' | '+ LC.allw[lng]}, null);
+		this['PostsCount'] = _z.setup('label', {'id': 'post-count', 'class': 'etch-text', 'text': HM.Elems.posts.length + LC.omit[lng]}, null);
+		this['AllowedPosts'] = _z.setup('span', {'id': 'allowed-posts', 'class': 'etch-text', 'text': ' | '+ LC.allw[lng]}, null);
 		this['LoadButton'] = _z.setup(this['UpdateStat'].firstChild, {}, {
 				'click': updateThread
 			});
@@ -641,7 +648,7 @@ function MagicExtension() {
 						function(status, sText, json, xhr) {
 							if (json.result) {
 								updateCount(json.result.posts_count)
-								postStat = '( '+ (Count.new > 0 ? '+'+ Count.new + LC.newp[lng] : '') +
+								var postStat = '( '+ (Count.new > 0 ? '+'+ Count.new + LC.newp[lng] : '') +
 									' • '+ (Count.del < 0 ? Count.del + LC.delp[lng] : '') +' • '+ (Count.mod > 0 ? Count.mod + LC.pmod[lng] : '') +')';
 								Chana['PostsCount'].textContent = HM.Elems.posts.length + LC.omit[lng] + postStat;
 							}
@@ -652,7 +659,7 @@ function MagicExtension() {
 		}
 		function updateCount(jPC) {
 			var i = (jPC + Count.mod) - HM.Elems.posts.length - Count.dif,
-				n = i > 0 ? i : 0, d = i < 0 ? i : 0, postStat;
+				n = i > 0 ? i : 0, d = i < 0 ? i : 0;
 				Count.dif += i; Count.new += n; Count.del += d;
 		}
 		function updateThread(e) {
@@ -684,6 +691,7 @@ function MagicExtension() {
 							temp = getHanabiraPost(el[i]);
 							Target.thread().appendChild(temp[0]);
 						}
+						Tinycon.setBubble(unread_count);
 					}
 				}
 				if (e && !errorMsg) {
@@ -730,6 +738,7 @@ function MagicExtension() {
 							.querySelector('.doubledash').setAttribute('style', 'display:inline-block;');
 						}
 					}
+					Tinycon.setBubble(unread_count);
 					Count = { dif: 0, new: 0, del: 0, mod: 0 }
 					if (pCount !== HM.Elems.posts.length && jsonPosts.length === HM.Elems.posts.length) {
 						Count.mod = HM.Elems.posts.length - pCount;
@@ -739,12 +748,6 @@ function MagicExtension() {
 			});
 		}
 		function getHanabiraPost(postJson, gen, btp) {
-			if (HM.SoundNotify && !play_notify && !btp)
-				Notif.play();
-			if (!window_focused && !btp) {
-				unread_count += 1;
-				Tinycon.setBubble(unread_count);
-			}
 			var threadId = btp ? btp[1] : Target.tid,
 				postId = postJson.display_id,
 				board = btp ? btp[0] : HM.URL.board,
@@ -770,12 +773,15 @@ function MagicExtension() {
 			wrap.insertAdjacentHTML('afterbegin', html.allReplace({'r{board}': board, 'r{thread_id}': threadId, 'r{post_id}': postId}) + 
 				(len > 1 ? '<br style="clear: both">' : '') +'<div class="postbody">'+ postJson.message_html +'</div><div class="abbrev"></div>' +
 				(op ? '' : '</td></tr></tbody>'));
+			if (!btp) {
+				unread_count++;
+				if (!op)
+					wrap.querySelector('.reply.new').addEventListener('click', markAsRead, false);
+				if (HM.SoundNotify && !play_notify)
+					Notif.play();
+			}
 			if (gen)
 				Chana.genReplyMap([wrap]);
-			function markAsRead(e) {
-				this.removeEventListener('click', markAsRead, false);
-				this.classList.remove('new'); }
-			wrap.querySelector('.reply.new').addEventListener('click', markAsRead, false);
 			attachEvents(wrap);
 			var wels = GetElements(wrap);
 				hooElements(wels.elements);
@@ -1667,7 +1673,7 @@ function MagicExtension() {
 			'<option class="rating_SFW">SFW</option><option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select>',
 		replyform_tamplate = '<input id="yuki-targetThread" name="thread_id" value="'+ (HM.URL.thread || 0) +'" type="hidden"><input name="task" value="post" type="hidden">'+
 			'<div id="yuki-errorMsg"></div>'+
-			'<table><tbody id="yuki-dropBox" class="line-sect"><tr class="post-count"></tr><tr class="droparrow inactive"></tr></tbody><tbody class="line-sect">'+
+			'<table><tbody id="yuki-dropBox" class="line-sect"><tr class="etch-text"></tr><tr class="droparrow inactive"></tr></tbody><tbody class="line-sect">'+
 			'<tr id="trname"><td><input placeholder="'+ getDefaultName() +'" name="name" size="30" value="" type="text">'+
 				'<label class="sagearrow'+ (HM.Sage ? '' : ' inactive') +'"><input id="yuki-sage" name="sage" type="checkbox" hidden><span class="line-sect txt-btn"></label>'+
 				'<label id="yuki-newThread-create" class="yuki_clickable inactive">'+ LCY.newt[lng] +'<span class="t-sec">\n/'+ HM.URL.board +
@@ -2037,9 +2043,9 @@ function MagicExtension() {
 							delForm.appendChild(_z.setup(mEl['WarningMsg'], {'text': msg[1], 'style': 'float:right;'}, null));
 							mEl.funct = _rmMsg;
 						} else {
-							var chek = document.querySelectorAll('a.delete.icon.checked');
+							var chek = document.querySelectorAll('.post a.delete.icon.checked > .delete_checkbox');
 							if (chek.length === 1) {
-								_z.setup(document.getElementById('post_'+ chek[0].firstChild.name), {'class': "deleted"}, null)
+								_z.setup(document.getElementById('post_'+ chek[0].name), {'class': "deleted"}, null)
 								.querySelector('.doubledash').setAttribute('style', 'display:inline-block;');
 							} else if (Target.thread()) {
 								setTimeout(function() {
@@ -2543,59 +2549,69 @@ function MagicExtension() {
 		spDisclosing();
 	}
 	
+	function insertListenerS(event) {
+		switch (event.animationName) {
+			case 'onReady': _z.append(document.head, [
+				_z.setup("script", {"src": "/src/js/1501/alac_0.1.0.js"}, null),
+				_z.setup("script", {"src": "/src/js/1501/flac_0.2.1.js"}, null)
+			]);
+		}
+	}
 	function insertListenerI(event) {
-		if (event.animationName == "blinker") {
-			mEl['iteration']++;
-			mEl.funct(event)
+		switch (event.animationName) {
+			case 'blinker':
+				mEl['iteration']++;
+				mEl.funct(event)
 		}
 	}
 	function insertListenerE(event) {
-		var target = event.target;
-		if (event.animationName == "onReady") {
-			lng = Hanabira.LC_ru;
-			hideinfo = document.getElementById('hideinfodiv');
-			showinfo = document.getElementById('hideinfotd');
-			postForm = document.getElementById('postFormDiv');
-			pfplaceh = document.getElementById('postform_placeholder');
-			topForm = document.getElementById('postform');
-			delForm = document.getElementById('delete_form'),
-			deli = delForm.querySelector('input[name="password"]'),
-			pass = deli.value, mEl = new MagicElements(), HM.Elems = GetElements(), Nagato = new Yuki(), HM.Settings = new MagicSettings();
-			Chanabira = new CharmingHanabira();
-			
-			_z.each(document.getElementsByClassName('postername'), function(pname) {
-				if (!lng)
-					pname.textContent = getDefaultName(pname.textContent);
-				var oldate = pname.parentNode.lastChild;
-				oldate.previousElementSibling.insertAdjacentHTML('afterend', getDateTime(oldate.textContent))
-				oldate.remove();
-			});
-			_hide(postForm);
-			_z.each([showinfo.firstElementChild, hideinfo.firstElementChild], function(el) {
-				_z.setup(el, {'onclick': undefined, 'href': undefined}, {'click': Nagato.getForm});
-			});
-			hideinfo.removeAttribute('style');
-			hooElements(HM.Elems.elements);
-			hooLinks(HM.Elems.links);
-			Chanabira.genReplyMap(HM.Elems.posts);
-			_z.each(HM.Elems.images, createImgContext);
-			_z.append(document.body, [
-				mEl['ContentWindow'], mEl['ContentMarker'],
-				mEl['ReverseSearch'], mEl['ImageMenu'],
-				HM.Settings['PanelButton']
-			]);
-			if (HM.URL.thread) {
-				_z.append(delForm, [Nagato['OpenBottomForm'], Chanabira['NewPostLoader']]);
-				_z.after(Target.thread(), Chanabira['PostsCount']);
-				Chanabira.updateTimer();
-			} else {
-				_z.before(delForm.querySelector('.pages'), Nagato['OpenBottomForm']);
-			}
-			delForm.addEventListener('submit', Nagato.submitForm, false)
+		switch (event.animationName) {
+			case 'onReady':
+				lng = Hanabira.LC_ru;
+				hideinfo = document.getElementById('hideinfodiv');
+				showinfo = document.getElementById('hideinfotd');
+				postForm = document.getElementById('postFormDiv');
+				pfplaceh = document.getElementById('postform_placeholder');
+				topForm = document.getElementById('postform');
+				delForm = document.getElementById('delete_form'),
+				deli = delForm.querySelector('input[name="password"]'),
+				pass = deli.value, mEl = new MagicElements(), HM.Elems = GetElements(), Nagato = new Yuki(), HM.Settings = new MagicSettings();
+				Chanabira = new CharmingHanabira();
+				
+				_z.each(document.getElementsByClassName('postername'), function(pname) {
+					if (!lng)
+						pname.textContent = getDefaultName(pname.textContent);
+					var oldate = pname.parentNode.lastChild;
+					oldate.previousElementSibling.insertAdjacentHTML('afterend', getDateTime(oldate.textContent))
+					oldate.remove();
+				});
+				_hide(postForm);
+				_z.each([showinfo.firstElementChild, hideinfo.firstElementChild], function(el) {
+					_z.setup(el, {'onclick': undefined, 'href': undefined}, {'click': Nagato.getForm});
+				});
+				hideinfo.removeAttribute('style');
+				hooElements(HM.Elems.elements);
+				hooLinks(HM.Elems.links);
+				Chanabira.genReplyMap(HM.Elems.posts);
+				_z.each(HM.Elems.images, createImgContext);
+				_z.append(document.body, [
+					mEl['ContentWindow'], mEl['ContentMarker'],
+					mEl['ReverseSearch'], mEl['ImageMenu'],
+					HM.Settings['PanelButton']
+				]);
+				if (HM.URL.thread) {
+					_z.append(delForm, [Nagato['OpenBottomForm'], Chanabira['NewPostLoader']]);
+					_z.after(Target.thread(), Chanabira['PostsCount']);
+					Chanabira.updateTimer();
+				} else {
+					_z.before(delForm.querySelector('.pages'), Nagato['OpenBottomForm']);
+				}
+				delForm.addEventListener('submit', Nagato.submitForm, false)
 		}
 	}
 	
 	_z.setup(window, {}, {
+		'keypress': keyMarks,
 		'mouseup': function(e) {
 			HM.DragableObj = null },
 		'keydown': function(e) {
@@ -2603,8 +2619,15 @@ function MagicExtension() {
 				wmarkText(e.target, '\	', '\n\	');
 				return fallback(e);
 			}
+			if (e.keyCode === 82 && !['TEXTAREA', 'INPUT'].isThere(e.target.tagName)) {
+				_z.each('.reply.new', function(masRp) {
+					masRp.classList.remove('new')
+					masRp.removeEventListener('click', markAsRead, false)
+				});
+				Tinycon.setBubble(0);
+				unread_count = 0;
+			}
 			if (e.keyCode === 27) {
-				_z.each('.reply.new', function(lp){ lp.classList.remove('new') })
 				Chanabira.closeLastPopup(e);
 			}
 		},
@@ -2612,19 +2635,12 @@ function MagicExtension() {
 			if (HM.DragableObj) {
 				HM.DragableObj.el.style.top  = HM.DragableObj.offsetY + e.pageY - HM.DragableObj.el.offsetHeight +'px';
 				HM.DragableObj.el.style.left = HM.DragableObj.offsetX + e.pageX - HM.DragableObj.el.offsetWidth  +'px';
-			}},
-		'keypress': keyMarks,
-		'focus': function(e) {
-			window_focused = true;
-			Tinycon.setBubble(0);
-			unread_count = unread_count * 0; },
-		'blur': function(e) {
-			window_focused = false;
+			}
 		}
 	});
 	
 	// animation listener events
-	//PrefixedEvent("AnimationStart", insertListenerS);
+	PrefixedEvent("AnimationStart", insertListenerS);
 	PrefixedEvent("AnimationIteration", insertListenerI);
 	PrefixedEvent("AnimationEnd", insertListenerE);
 	// apply prefixed event handlers
@@ -2658,7 +2674,7 @@ pause = "data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMjJweCIgaGVpZ2h
 shoW = 'data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMzFweCIgaGVpZ2h0PSIzMXB4IiB2aWV3Qm94PSIwIDAgMzEgMzEiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiPjxnIGlkPSJQYWdlLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHNrZXRjaDp0eXBlPSJNU1BhZ2UiPjxjaXJjbGUgaWQ9Ik92YWwtMSIgc3Ryb2tlPSIjQUFBIiBmaWxsLW9wYWNpdHk9IjAiIGZpbGw9IiMwMDAiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiIGN4PSIxNS41IiBjeT0iMTUuNSIgcj0iMTQuNSI+PC9jaXJjbGU+PHBhdGggZD0iTTguMjQ4MDQ2ODgsMTIuNjcyMTE5MSBMMTUuNDk2Mzk4OSwxOS43NSBMMjIuOTA4NjkxNCwxMi42NzIxMTkxIiBpZD0iUGF0aC0zIiBzdHJva2U9IiNBQUEiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiPjwvcGF0aD48L2c+PC9zdmc+',
 closeW = 'data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMzFweCIgaGVpZ2h0PSIzMXB4IiB2aWV3Qm94PSIwIDAgMzEgMzEiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiPjxnIGlkPSJQYWdlLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHNrZXRjaDp0eXBlPSJNU1BhZ2UiPjxjaXJjbGUgaWQ9Ik92YWwtMSIgc3Ryb2tlPSIjREREIiBmaWxsLW9wYWNpdHk9IjAiIGZpbGw9IiMwMDAiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiIGN4PSIxNS41IiBjeT0iMTUuNSIgcj0iMTQuNSI+PC9jaXJjbGU+PHBhdGggZD0iTTExLjUsMTEuNSBMMTkuNSwxOS41IiBpZD0iTGluZSIgc3Ryb2tlPSIjREREIiBzdHJva2UtbGluZWNhcD0ic3F1YXJlIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIj48L3BhdGg+PHBhdGggZD0iTTE5LjUsMTEuNSBMMTEuNSwxOS41IiBpZD0iTGluZSIgc3Ryb2tlPSIjREREIiBzdHJva2UtbGluZWNhcD0ic3F1YXJlIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIj48L3BhdGg+PC9nPjwvc3ZnPg==';
 
-var mesShadows = /* hr sadow */ 'hr{border-style:none none solid!important;border-color:rgba(0,0,0,.3)!important;box-shadow:0 1px 0 #fff!important;}'+
+var mesShadows = /* hr shadow */ 'hr{border-style:none none solid!important;border-color:rgba(0,0,0,.3)!important;box-shadow:0 1px 0 #fff!important;}'+
 /* text spoiler, banner image & captcha image sadows */ '#yuki-captcha-image,.banner,.spoiler,.spoiler a,.spoiler blockquote,.spoiler blockquote blockquote,.spoiler blockquote blockquote blockquote{transition:all .1s ease;box-shadow:0 1px 2px -1px rgba(0,0,0,.7)!important;}.spoiler a:hover,.spoiler:hover,.transparent{box-shadow:none!important;}'+
 /* popup/error posts & settings panel sadows */ '.reply,.popup{border:0 none transparent!important;}.popup,#magic-panel{box-shadow:5px 5px 10px rgba(0,0,0,.4),inset 0 0 30px rgba(0,0,0,.1)!important;z-index:9;}'+
 /* reply post sadows */ '.highlight,.reply{padding:2px 1em 2px 2px!important;box-shadow:inset 0 1px 30px -9px #fff,0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);}.line-sect.reply{padding:2px 4px!important;}'+
@@ -2667,7 +2683,7 @@ var mesShadows = /* hr sadow */ 'hr{border-style:none none solid!important;borde
 /* error massage, theader & text input shadows */ '#yuki-errorMsg,.theader,.passvalid,input[type="text"],input[type="password"],input[type="number"],textarea,.docs-container{box-shadow:inset 0 1px 2px rgba(0,0,0,.3)!important;-webkit-border-radius:5px;border-style:none!important;}input[type="text"],input[type="number"],input[type="password"],textarea{-webkit-border-radius:3px!important;padding:4px!important;}'+
 /* input buttons style */ 'input[type="button"],input[type="submit"],.button{transition:all .3s ease;box-shadow:0 1px 3px -1px rgba(0,0,0,.5),0 0 2px rgba(0,0,0,.2) inset;padding:3px 6px;color:#999;border:0 none;background-color:#fff;}input[type="button"]:hover,input[type="submit"]:hover,.button:hover{background-color:rgba(255,255,255,.5);}input[type="button"]:active,input[type="submit"]:active,.button:active{box-shadow:0 0 2px rgba(255,255,255,.3),0 0 2px rgba(0,0,0,.2) inset;background-color:rgba(255,255,255,.2);}'+
 /* input checkbox style */ '.checkarea{box-shadow:inset 1px 1px 2px rgba(0,0,0,.3),0 0 2px #fff;border-radius:3px;padding:0 4px;background-color:#fff;font-size:14px;}.checkarea:before{content:"✗";color:transparent;}input[type="checkbox"]:checked + .checkarea:before{color:grey;}'+
-/* text shadows */ '.post-count,.allowed-posts,.mapped,.mapped:hover{font-variant:small-caps;font-weight:bold;color:transparent!important;text-shadow:0 1px 1px rgba(255,255,255,.8),-1px 0 0 #666;}'+
+/* text shadows */ '.etch-text,.mapped,.mapped:hover{font-variant:small-caps;font-weight:bold;color:transparent!important;text-shadow:0 1px 1px rgba(255,255,255,.8),-1px 0 0 #666;}'+
 /* video-container shadows */ '.video-container{box-shadow:0 0 2px rgba(0,0,0,.2),0 0 4px rgba(0,0,0,.4),0 9px 9px -8px rgba(0,0,0,.8)!important;}'+
 /* yuki-form previews shadows */ '.yukiFile img{box-shadow:0 4px 8px 0 rgba(0,0,0,.2);}';
 var mesAnimations = '.reply{animation:pview .3s normal;-webkit-animation:pview .3s normal;}.popup{animation:pview .2s linear;-webkit-animation:pview .2s linear;}\
@@ -2678,20 +2694,20 @@ var MagicStyle = '.hidout,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google
 .unexpanded,.rated{max-width:200px!important;max-height:200px!important;}.expanded{width:100%;height:auto;}#hideinfodiv{margin:5px;}.sp-r.rate{color:darkred;}#yuki-dropBox tr,.f-sect,.hideinfo{text-align:center!important;}\
 .dpop,.wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}.artwork{background:url('+artwork+')no-repeat scroll center center / 100% auto;}\
 .yuki_clickable,.txt-btn,.wmark-button,.button{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}\
-.replylinks,.button,.allowed-posts{line-height:2em;font-size:75%;clear:both;}.post-count,.txt-btn{color:#999;}.mapped,.mapped:hover{cursor:default;color:#666!important;}.dpop{cursor:move;}.hidup{top:-9999px!important;}\
+.replylinks,.button{line-height:2em;font-size:75%;clear:both;}#post-count,.txt-btn{color:#999;}.mapped,.mapped:hover{cursor:default;color:#666!important;}.hidup{top:-9999px!important;}\
 .userdelete:after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.cm-button{text-decoration:none;}.s-sect{text-align:left;padding-left:2em;color:#777;}\
 #yuki-captcha,#yuki-pass{width:295px;}#yuki-captcha-image{vertical-align:middle;margin:2px;}#yuki-dropBox{width:7em;height:18em;border:3px dashed rgba(99,99,99,.3);padding:2px;}\
 #convert-strike,.doubledash,.topformtr #yuki-replyForm #yuki-close-form{visibility:hidden;}.sagearrow{background:url(/src/svg/1409/Sage.svg)no-repeat center bottom;position:relative;right:24px;top:2px;}\
-#yuki-errorMsg{text-align:center;color:#FFF;background-color:#E04000;}.wmark-button{color:#fefefe;text-shadow:0 1px 0 rgba(0,0,0,.4);}.wmark-button .spoiler{text-shadow:none;}\
+#yuki-errorMsg{text-align:center;color:#FFF;background-color:#E04000;}.wmark-button{color:#fefefe;text-shadow:0 1px 0 rgba(0,0,0,.4);}.wmark-button .spoiler{text-shadow:none;}#allowed-posts{font-size:14px;}\
 .rating_SFW{background:green;}.rating_R15{background:yellow;}.rating_R18{background:orange;}.rating_R18G{background:red;}.line-sect,.yukiFile,.cpop{display:inline-block;}#warning-massage{color:#ff3428;}\
 .yukiFile,.yukiFileSets{font-size:66%;}.yukiFile{text-align:center;width:210px;background-color:#fefefe;-webkit-border-radius:5px;margin:5px;padding:2px;}.reply.new{background-color:rgba(212,115,94,.1);}\
 #yuki-files-placeholder > *{vertical-align:top;}.yukiFile img{max-width:150px;margin:5px 0;}.yukiFile span{max-width:200px;word-wrap:break-word;}.au-size{width:350px;height:80px;background-image:url(/src/png/1405/waveform.png);}\
 #yuki-replyForm{text-align:left;padding:4px 8px;}.selected:before{content:"✓ ";color:green;}.reply-button,.cpop{margin-left:.4em;}#oembedapi + .checkarea,#set-show-spoilers + .checkarea{font-size:20px!important;}\
 #yuki-dropBox tr{display:block;}.droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em;}.artwork > .file_name{display:block;background-color:rgba(255,255,255,.8);padding:2px 0;}\
-.cpop.ty{background-image:url(/src/svg/1411/closepopup.svg);}.cpop.all{background-image:url(/src/svg/1411/closeallpopups.svg);}.dpop{float:right;background-image:url('+cmove+');cursor:move;}\
-.cpop{width:14px;height:14px;}.dpop,.sagearrow span{width:20px;height:20px;cursor:inherit!important}.reply-button{width:23px;height:14px;background:url('+rp_arr+')no-repeat center center;}.artwork > .preview_img{height:150px;}\
+.cpop.ty{background-image:url(/src/svg/1411/closepopup.svg);}.cpop.all{background-image:url(/src/svg/1411/closeallpopups.svg);}.dpop{float:right;background-image:url('+cmove+');cursor:move;}.sagearrow span{cursor:default;}\
+.cpop{width:14px;height:14px;}.dpop,.sagearrow span{width:20px;height:20px;}.reply-button{width:23px;height:14px;background:url('+rp_arr+')no-repeat center center;}.artwork > .preview_img{height:150px;}\
 #magic-panel-button{z-index:9;position:fixed;right:1em;bottom:1em;opacity:.2;filter:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'grayscale\'><feColorMatrix type=\'matrix\' values=\'.3 .3 .3 0 0 .3 .3 .3 0 0 .3 .3 .3 0 0 0 0 0 1 0\'/></filter></svg>#grayscale");-webkit-filter:grayscale(100%);}\
-.ta-inact::-moz-selection{background:rgba(99,99,99,.3);}.ta-inact::selection{background:rgba(99,99,99,.3);}#int-upd{bottom:2px;position:relative;}.allowed-posts a{text-decoration:none;text-shadow:none;font-weight:normal;}\
+.ta-inact::-moz-selection{background:rgba(99,99,99,.3);}.ta-inact::selection{background:rgba(99,99,99,.3);}#int-upd{bottom:2px;position:relative;}#allowed-posts a{text-decoration:none;text-shadow:none;font-weight:normal;}\
 #magic-panel-button:hover,#magic-panel-button.active{opacity:1;filter:none;-webkit-filter:grayscale(0%);}#magic-panel tr{height:3em;}#vsize-textbox{color:#bbb;font-family:Trebuchet;}\
 #magic-panel{position:fixed;right:5px;bottom:5px;max-width:450px;height:300px;border-radius:8px;padding:9px;padding-bottom:3em;background-color:#fefefe;}.sp-r{text-align:right;font-size:18px;}\
 .deleted,.t-sec{opacity:.6;}.inactive{opacity:.4;}img[src="#transparent"]{opacity:0;}.wmark-button,.reply-button{vertical-align:middle;}.content-window{position:fixed;left:0;top:0;z-index:2999}\
@@ -2712,7 +2728,5 @@ var MagicStyle = '.hidout,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google
 
 _z.append(document.head, [
 	_z.setup("script", {"src": "/src/js/1501/aurora_0.4.4.js"}, null),
-	_z.setup("style", {"text": MagicStyle}, null),
-	_z.setup("script", {"src": "/src/js/1501/alac_0.1.0.js"}, null),
-	_z.setup("script", {"src": "/src/js/1501/flac_0.2.1.js"}, null)
+	_z.setup("style", {"text": MagicStyle}, null)
 ]);
