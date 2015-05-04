@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.1.5
+// @version 		1.2.0
 // @grant   		none
 // ==/UserScript==
 initStore();
@@ -499,6 +499,36 @@ function MagicExtension() {
 		}
 	}
 	
+	function getElementByXpath(path, value) {
+		var v = (value || 0)
+		var TYPE = [
+			'ANY_TYPE',
+			'NUMBER_TYPE',
+			'STRING_TYPE',
+			'BOOLEAN_TYPE',
+			'UNORDERED_NODE_ITERATOR_TYPE',
+			'ORDERED_NODE_ITERATOR_TYPE',
+			'UNORDERED_NODE_SNAPSHOT_TYPE',
+			'ORDERED_NODE_SNAPSHOT_TYPE',
+			'ANY_UNORDERED_NODE_TYPE',
+			'FIRST_ORDERED_NODE_TYPE']
+		return document.evaluate(path, document.body, null, XPathResult[TYPE[v]], null);
+	}
+	
+	function cleanStringForXpath(str)  {
+		var parts  = str.match(/[^'"]+|['"]/g);
+		parts = parts.map(function(part){
+			if (part === "'")  {
+				return '"\'"'; // output "'"
+			}
+			if (part === '"') {
+				return "'\"'"; // output '"'
+			}
+			return "'" + part + "'";
+		});
+		return "concat(" + parts.join(",") + ")";
+	}
+	
 	function difference(array1, array2) {
 		var result = [];
 		if (array2.length == 0) {
@@ -754,10 +784,11 @@ function MagicExtension() {
 				files = postJson.files,
 				len = files.length,
 				op = postJson.op,
+				hidden = checkIfHidden(),
 				wrap = _z.setup((op ? 'div' : 'table'), {'id': 'post_'+ postId, 'class': (op ? 'oppost' : 'replypost') +' post'}, null),
 				delicon = '<a class="delete icon"><input type="checkbox" id="delbox_r{post_id}" class="delete_checkbox" value="'+ postJson.thread_id +
 					'" name="r{post_id}"><img src="/images/blank.png" title="'+ ChLC.mrk_to_del[lng] +'" alt="✕" onclick="this.parentNode.classList.toggle(\'checked\')"></a>\n',
-				html = (op ? '' : '<tbody><tr><td class="doubledash">&gt;&gt;</td><td id="replyr{post_id}" class="reply new">') +
+				html = (op ? '' : '<tbody><tr><td class="doubledash">&gt;&gt;</td><td id="replyr{post_id}" class="reply new '+ (hidden ? 'by-'+ hidden[0] +' autohidden' : '') +'">') +
 					'<a name="ir{post_id}"></a><label>'+ 
 						(op ? '<a class="hide icon" onclick="hide_thread(event, \'r{board}\',r{post_id});" href="/api/thread/r{board}/r{post_id}/hide.redir"><img src="/images/blank.png" title="'+ LC.hide[lng] +'" alt="﹅"></a>\n'+
 							delicon + '<a class="unsigned icon" onclick="sign_thread(event, \'r{board}\',r{post_id});"><img src="/images/blank.png" title="'+ LC.subscrb[lng] +'" alt="✩"></a>\n' : delicon) +
@@ -772,7 +803,8 @@ function MagicExtension() {
 			}
 			wrap.insertAdjacentHTML('afterbegin', html.allReplace({'r{board}': board, 'r{thread_id}': threadId, 'r{post_id}': postId}) + 
 				(len > 1 ? '<br style="clear: both">' : '') +'<div class="postbody">'+ postJson.message_html +'</div><div class="abbrev"></div>' +
-				(op ? '' : '</td></tr></tbody>'));
+				(op ? '' : '</td>'+ (hidden ? '<td class="reply hinfo-stub"><label class="'+ (hidden[0] === 'Title' ? 'replytitle' : 'postername') +
+					' t-sec font-s">'+ hidden[1] +'</label> hidden post No.'+ postId +'</td>' : '') +'</tr></tbody>'));
 			if (!btp) {
 				unread_count++;
 				if (!op)
@@ -786,6 +818,26 @@ function MagicExtension() {
 			var wels = GetElements(wrap);
 				hooElements(wels.elements);
 				hooLinks(wels.links);
+			function checkIfHidden() {
+				var result; _z.each([
+					['Title', postJson.subject],
+					['Nametrip', postJson.name]],
+				function(type) {
+					var m, i, f, kwods = HM.Settings.Keywords[type[0]],
+						keys = kwods.keys.split(', ');
+					if (kwods.apply) {
+						for (i = 0; i < keys.length; i++) {
+							m = /^\*(.+)\*$|^\*(.+)|(.+)\*$/.exec(keys[i]);
+							f = m ? (m[1] || m[2] || m[3]) : keys[i];
+							if (type[1].isThere(f)) {
+								result = [type[0], keys[i]]
+								break;
+							}
+						}
+					}
+				});
+				return result;
+			}
 			return [wrap, (op ? wrap.firstChild : wrap.firstChild.firstChild.lastChild)];
 		}
 		function getHanabiraFile(file, pid, brd, tId, pId, ONE) {
@@ -943,9 +995,9 @@ function MagicExtension() {
 			}
 			function binded(el) {
 				var load = !el ? _z.setup('td', {'class': 'stub', 'text': LC.postdel[lng]}, null) :
-					_z.setup(el.cloneNode(true), {'id': 'load-' + id, 'class': undefined}, null);
+					_z.setup((op ? el : el.parentNode.lastElementChild).cloneNode(true), {'id': 'load-' + id, 'class': undefined}, null);
 				attachEvents(load);
-				if (el && attach) {
+				if (el && attach && (op ? true : el.parentNode.lastElementChild.classList[1] !== 'hinfo-stub')) {
 					BindCloseRef(reftab);
 				} else {
 					BindRemoveRef(a, reftab);
@@ -969,8 +1021,16 @@ function MagicExtension() {
 			} else {
 				getDataResponse('/api/post/'+ brd +'/'+ tid +'/'+ pid +'.json?message_html&new_format',
 				function(status, sText, json, xhr) {
-					var temp, node;
-					if (status !== 200 || json.error) {
+					var temp, node, ErrorMSG;
+					if (status !== 200) {
+						ErrorMSG = new MagicElements()['WarningMsg'];
+						_z.replace(reftab.querySelector('.loading'), _z.setup(ErrorMSG, {
+							'text': status +' '+ sText, 'style': ''}, null));
+						setTimeout(function() {
+							reftab.remove();
+						}, 7000)
+						return;
+					} else if (json.error) {
 						node = 'stub';
 					} else {
 						temp = getHanabiraPost(json.result, true, [brd, tid, pid]);
@@ -1316,16 +1376,16 @@ function MagicExtension() {
 	}
 	function hooLinks(links) {
 		_z.each(links, function(link) {
-			if (!link.href)
+			if (!link.href || link.href.slice(0, 4) !== 'http')
 				return;
 			var href = escapeUrl(link.href), hash = _urlHash(link.href);
 			if (href.isThere("/res/") && href.isThere("dobrochan")) {
 				var targ = ParseUrl(href), refl = _z.route(link, '.reflink a'),
 					from = ParseUrl(refl.href);
 				if (targ != null && targ.thread) {
-					var reply_id = !targ.pid ? targ.thread : targ.pid,
-						diffb = targ.board != HM.URL.board,
-						dataArr = [HM.URL.board, from.thread, from.pid, (diffb ? targ.board : '')];
+					var reply_id = (targ.pid || targ.thread),
+						diffb = (targ.board !== from.board) || (from.board !== HM.URL.board),
+						dataArr = [from.board, from.thread, from.pid, (diffb ? targ.board : '')];
 					if (!link.textContent.isThere(">>"))
 						_z.setup(link, {'href': href.replace(/https?:\/\/dobrochan\.\w+/, ''), 'onclick': 'Highlight(event, "'+ reply_id +'")',
 						'text': '>>'+ (diffb ? targ.board +'/' : '') + reply_id}, null);
@@ -1680,7 +1740,7 @@ function MagicExtension() {
 				'/</span></label><span>&nbsp;<a id="yuki-close-form" title="'+ LC.remv[lng] +'"><img src="/images/delete.png" alt="✖︎"></a></span></td></tr>'+
 			'<tr id="trsubject"><td><input placeholder="'+ LCY.subj[lng] +'" name="subject" size="30" maxlength="64" value="" type="text">'+
 				'<label class="submit-button">\n<span>'+ LCY.send[lng] +'</span>\n<input type="submit" value="'+ LCY.post[lng] +'"></label>\n'+
-				'<span class="wmark-buttons-panel">'+
+				'<span id="wmark-buttons-panel">'+
 					'<a class="wmark-button" id="convert-strike" title="'+ LCY.wmark['~'][lng] +'"><strong>{~}</strong>&nbsp;</a>'+
 					'<a class="wmark-button" id="list-mark" title="'+ LCY.wmark['ul'][lng] +'"><span>◉</span></a>&nbsp;'+
 					'<a class="wmark-button" id="strike-mark" title="'+ LCY.wmark['s'][lng] +'"><img src="/src/svg/1405/~S-mark.svg" alt="~$"></a>&nbsp;'+
@@ -2377,7 +2437,7 @@ function MagicExtension() {
 				m_macro: ['Make Image Macro', 'Создать макро'],
 				fnd_src_wth: ["Find Source with", "Найти оригинал в"]
 			}
-		this.funct = null;
+		this.funct = function(e){};
 		this['iteration'] = 0;
 		this['ImageMenu'] = _z.setup('menu', {'type': 'context', 'id': 'image-context', 'src': '', 'edit': '', 'html': 
 			'<menuitem icon="/images/edit.gif" label="'+ tLC.m_macro[lng] +'" onclick="window.open($(this).parent().attr(\'edit\'), \'_blank\')"></menuitem><menu label="'+ tLC.fnd_src_wth[lng] +'" icon="">'+
@@ -2410,7 +2470,7 @@ function MagicExtension() {
 	}
 	
 	function MagicSettings(h) {
-		var MSs = this,
+		var MSs = this, ActiveButton,
 			SLC = {
 				mcp: ["Post", "В посте"],
 				mcw: ["Fixed Window", "В окне"],
@@ -2422,11 +2482,16 @@ function MagicExtension() {
 					'title': ['Enable oEmbed API support', 'Включает встраивание для внешних ссылок и поддержку oEmbed API'],
 					'url': ['embedded_media_links', 'vstraivanije_dla_vneshnih_ssilok'],
 					'txt': ['Embedded Media Links', 'Встраивание ссылок']
-				}
-			}
-		this.$ = function(child) { return this['Panel'].querySelector(child) }
+				}},
+			keywordsObj = {
+				Nametrip: { apply: false, keys: '' },
+				Title: { apply: false, keys: '' },
+				Words: { apply: false, keys: '' }}
+		this.Keywords = JSON.parse(_z.getlSVal('Keywords', JSON.stringify(keywordsObj)))
+		this.$ = function(child) { return this['GeneralSets'].querySelector(child) }
 		this['SpStyle'] = _z.setup('style', {'text': '.spoiler, .spoiler * {color:inherit!important;}'}, null);
-		this['Panel'] = _z.setup('div', {'id': 'magic-panel', 'html': '<table><tbody><tr><td class="f-sect"><span id="media-placement"><input '+
+		this['Panel'] = _z.setup('table', {'id': 'magic-panel'}, null);
+		this['GeneralSets'] = _z.setup('tbody', {'html': '<tr><td class="f-sect"><span id="media-placement"><input '+
 				(HM.MC == 0 ? 'checked' : '') +' value="windowFrame" name="cont_p" type="radio">\n'+ SLC.mcw[lng] +'\n<input '+
 				(HM.MC == 1 ? 'checked' : '') +' value="postContent" name="cont_p" type="radio">\n'+ SLC.mcp[lng] +'\n</span></td><td class="s-sect">'+
 				SLC.cframe[lng] +'</td></tr><tr class="vs-set'+ (HM.MC == 0 ? ' hidout' : '') +'"><td class="f-sect"><input id="video-frame-size" min="1" value="'+
@@ -2439,7 +2504,47 @@ function MagicExtension() {
 				'<tr><td class="f-sect"><label><input id="set-show-spoilers" hidden="" type="checkbox"><span class="checkarea"></span></label></td><td class="s-sect">'+
 				LC.txtspoils[lng] +'</td></tr><tr><td class="f-sect"><label><a class="paperclip'+
 				(HM.AttachPopups ? '' : ' inactive') +'"><input id="attach-popups" type="checkbox" hidden><img src="/src/png/1411/attachpopup.png"></a></label></td><td class="s-sect">'+
-				SLC.clipopup[lng] +'</td></tr></tbody></table>'}, null);
+				SLC.clipopup[lng] +'</td></tr>'}, null);
+		this['HideBySets'] = _z.setup('tbody', {'html': '<tr><th></th><th class="s-sect">Скрытие постов и тредов</th></tr>'+
+				'<tr><td class="o-sect"><label><input id="chx-Nametrip" type="checkbox" hidden><span class="checkarea"></span></label></td><td><span class="font-s cyan-light">'+
+				'По имени или трипкоду</span><br><textarea id="type-Nametrip" class="keywords-input font-s" placeholder="Mr.Yoba, Mr.*, *Yoba, !Hyd5gFre"></textarea></td></tr>'+
+				'<tr><td class="o-sect"><label><input id="chx-Title" type="checkbox" hidden><span class="checkarea"></span></label></td><td><span class="font-s cyan-light">'+
+				'По заголовку</span><br><textarea id="type-Title" class="keywords-input font-s" placeholder="Официальный™*, *ожиданий от*, Унылый тред"></textarea></td></tr>'+
+				'<tr><td class="o-sect"><label><input id="chx-Words" type="checkbox" hidden><span class="checkarea"></span></label></td><td><span class="font-s cyan-light">'+
+				'Замена слов</span><br><textarea id="type-Words" class="keywords-input font-s" placeholder="белое::черное, &quot;[w]&quot;::«[w]»"></textarea></td></tr>'}, null);
+		var Types = ['Nametrip', 'Title', 'Words'];
+			for (var n = 0; n < Types.length; n++) {
+				_z.setup(this['HideBySets'].querySelector('#chx-'+ Types[n]), {'checked': this.Keywords[Types[n]].apply}, {
+					'change': function(e) {
+						var type = this.id.split('-')[1]
+						MSs.Keywords[type].apply = this.checked
+						_z.setlSVal('Keywords', JSON.stringify(MSs.Keywords))
+						if (this.checked) {
+							_z.each(document.querySelectorAll('.by-'+type+'.showhidden'), function(hel) {
+								hel.classList.remove('showhidden')
+								hel.classList.add('autohidden')
+							});
+							wer(MSs.Keywords[type].keys, type)
+						} else {
+							_z.each(document.querySelectorAll('.by-'+type+'.autohidden'), function(hel) {
+								hel.classList.remove('autohidden')
+								hel.classList.add('showhidden')
+							});
+						}
+					}
+				});
+				_z.setup(this['HideBySets'].querySelector('#type-'+ Types[n]), {'value': this.Keywords[Types[n]].keys}, {
+					'blur': function(e) {
+						var type = this.id.split('-')[1]
+						MSs.Keywords[type].keys = this.value
+						_z.setlSVal('Keywords', JSON.stringify(MSs.Keywords))
+						if (MSs.Keywords[type].apply)
+							wer(this.value, type)
+					}
+				});
+				if (this.Keywords[Types[n]].apply)
+					wer(this.Keywords[Types[n]].keys, Types[n])
+			}
 		this['MediaPlacement'] = _z.setup(this.$('#media-placement'), {}, {
 				'change': placeMedia
 			});
@@ -2484,17 +2589,32 @@ function MagicExtension() {
 					}
 				}
 			});
-		this['PanelButton'] = _z.setup('a', {
-				'id': 'magic-panel-button',
-				'html': '<img width="38" height="28" src="/src/png/1409/list4.png">'
+		this['ButtonsPanel'] = _z.setup('a', {
+				'id': 'magic-buttons-panel',
+				'html': '<span id="hide-set" class="mpanel-btn txt-btn"></span><span id="general-set" class="mpanel-btn txt-btn"></span>'
 			}, {
 				'click': function(e) {
-					this.classList.toggle('active');
-					if (this.previousElementSibling.id === 'magic-panel') {
+					var TABLE, INNER = MSs['Panel'].firstElementChild;
+					switch (e.target.id) {
+						case 'general-set': TABLE = MSs['GeneralSets']; break;
+						case    'hide-set': TABLE = MSs['HideBySets'];  break;
+					}
+					if (e.target.classList[2] === 'active') {
 						MSs['Panel'].remove()
 					} else {
-						_z.before(this, MSs['Panel']);
+						if (!INNER) {
+							MSs['Panel'].appendChild(TABLE);
+						} else if (INNER !== TABLE) {
+							MSs['Panel'].replaceChild(TABLE, INNER);
+							if (ActiveButton)
+								ActiveButton.classList.remove('active');
+						}
+						if (this.previousElementSibling.id !== 'magic-panel') {
+							_z.before(this, MSs['Panel']);
+						}
 					}
+					ActiveButton = e.target;
+					e.target.classList.toggle('active');
 				}
 			});
 		this['SetShowSpoilers'] = _z.setup(this.$('#set-show-spoilers'), {
@@ -2540,6 +2660,40 @@ function MagicExtension() {
 			}
 			_z.setlSVal('EmbedIn', val)
 		}
+		function wer(val, arg) {
+			var i, n, f, m, c, nodes, keys = val.split(', '),
+				reg = arg === 'Words' ? /^(.+)\:\:(.+)$/ : /^\*(.+)\*$|^\*(.+)|(.+)\*$/,
+				Class = {
+					'Nametrip': ['postername', 'postertrip'],
+					'Title': ['replytitle'],
+					'Words': ['message'] }
+			for (i = 0; i < keys.length; i++) {
+				if (keys[i] === '')
+					continue;
+				m = reg.exec(keys[i]);
+				c = keys[i].slice(0, 1) === '!' && arg === 'Nametrip' ? 1 : 0;
+				if (arg === 'Words') {
+					//nodes = getElementByXpath('//div[@class="'+ Class[arg][c] +'"][contains(.,"'+m[1]+'")]', 6);
+					break;
+				} else {
+					f = m && m[1] ? 'contains(.,"'+m[1]+'")' :
+						m && m[2] ? '"'+m[2]+'" = substring(., string-length(.) - string-length("'+m[2]+'") +1)' :
+						m && m[3] ? 'starts-with(.,"'+m[3]+'")' : 'text()="'+ keys[i] +'"';
+					nodes = getElementByXpath('//span[@class="'+ Class[arg][c] +'"]['+ f +']/parent::*/parent::*[not(contains(@class, "autohidden")) and not(contains(@class, "showhidden")) and not(parent::*[contains(@class, "showhidden") or contains(@class, "autohidden")])]', 7);
+					for (n = 0; n < nodes.snapshotLength; n++) {
+						var node = nodes.snapshotItem(n),
+							tag = 'td';
+						if (node.classList[0] === 'oppost') {
+							node = node.parentNode;
+							tag = 'label';
+						}
+						node.classList.add('by-'+ arg); node.classList.add('autohidden');
+						node.insertAdjacentHTML('afterend', '<'+tag+' class="'+ node.classList[0] +' hinfo-stub"><label class="'+
+							Class[arg][c] +' t-sec font-s">'+ keys[i] +'</label> hidden post No.'+ _cid(node.id) +'</'+tag+'>');
+					}
+				}
+			}
+		}
 		function spDisclosing() {
 			if (HM.DiscloseTextSpoilers)
 				document.body.appendChild(MSs['SpStyle']);
@@ -2578,14 +2732,21 @@ function MagicExtension() {
 				pass = deli.value, mEl = new MagicElements(), HM.Elems = GetElements(), Nagato = new Yuki(), HM.Settings = new MagicSettings();
 				Chanabira = new CharmingHanabira();
 				
-				_z.each(document.getElementsByClassName('postername'), function(pname) {
+				_hide(postForm);
+				if (HM.URL.thread) {
+					_z.append(delForm, [Nagato['OpenBottomForm'], Chanabira['NewPostLoader']]);
+					_z.after(Target.thread(), Chanabira['PostsCount']);
+					Chanabira.updateTimer();
+				} else {
+					_z.before(delForm.querySelector('.pages'), Nagato['OpenBottomForm']);
+				}
+				_z.each(document.querySelectorAll('.postername:not(.t-sec)'), function(pname) {
 					if (!lng)
 						pname.textContent = getDefaultName(pname.textContent);
 					var oldate = pname.parentNode.lastChild;
 					oldate.previousElementSibling.insertAdjacentHTML('afterend', getDateTime(oldate.textContent))
 					oldate.remove();
 				});
-				_hide(postForm);
 				_z.each([showinfo.firstElementChild, hideinfo.firstElementChild], function(el) {
 					_z.setup(el, {'onclick': undefined, 'href': undefined}, {'click': Nagato.getForm});
 				});
@@ -2597,15 +2758,8 @@ function MagicExtension() {
 				_z.append(document.body, [
 					mEl['ContentWindow'], mEl['ContentMarker'],
 					mEl['ReverseSearch'], mEl['ImageMenu'],
-					HM.Settings['PanelButton']
+					HM.Settings['ButtonsPanel']
 				]);
-				if (HM.URL.thread) {
-					_z.append(delForm, [Nagato['OpenBottomForm'], Chanabira['NewPostLoader']]);
-					_z.after(Target.thread(), Chanabira['PostsCount']);
-					Chanabira.updateTimer();
-				} else {
-					_z.before(delForm.querySelector('.pages'), Nagato['OpenBottomForm']);
-				}
 				delForm.addEventListener('submit', Nagato.submitForm, false)
 		}
 	}
@@ -2619,7 +2773,7 @@ function MagicExtension() {
 				wmarkText(e.target, '\	', '\n\	');
 				return fallback(e);
 			}
-			if (e.keyCode === 82 && !['TEXTAREA', 'INPUT'].isThere(e.target.tagName)) {
+			if (e.keyCode === 32 && !['TEXTAREA', 'INPUT'].isThere(e.target.tagName)) {
 				_z.each('.reply.new', function(masRp) {
 					masRp.classList.remove('new')
 					masRp.removeEventListener('click', markAsRead, false)
@@ -2672,7 +2826,8 @@ artwork = 'data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iNTAwcHgiIGhla
 play = "data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMjRweCIgaGVpZ2h0PSIyNHB4IiB2aWV3Qm94PSIwIDAgMjQgMjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiPjxnIGlkPSJQYWdlLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHNrZXRjaDp0eXBlPSJNU1BhZ2UiPjxwYXRoIGQ9Ik0xNC4wNzQ1ODM0LDIuOTQ4MDc4NyBMMjUuMTQxNDkyLDIwLjk5NDAyOSBMMy4wMDc2NzUwMywyMC45OTQwMjkgTDE0LjA3NDU4MzQsMi45NDgwNzg3IEwxNC4wNzQ1ODM0LDIuOTQ4MDc4NyBaIiBpZD0iUGxheSIgc3Ryb2tlPSIjREREIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgZmlsbD0iI0RERCIgc2tldGNoOnR5cGU9Ik1TU2hhcGVHcm91cCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTQuMDA3Njc1LCAxMS45NDgwNzkpIHJvdGF0ZSg5MC4wMDAwMDApIHRyYW5zbGF0ZSgtMTQuMDA3Njc1LCAtMTEuOTQ4MDc5KSAiPjwvcGF0aD48L2c+PC9zdmc+",
 pause = "data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMjJweCIgaGVpZ2h0PSIyNnB4IiB2aWV3Qm94PSIwIDAgMjIgMjYiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiPjxnIGlkPSJQYWdlLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHNrZXRjaDp0eXBlPSJNU1BhZ2UiPjxwYXRoIGQ9Ik0xLDEgTDEsMjUgTDgsMjUgTDgsMSBMMSwxIEwxLDEgWiBNMTQsMSBMMTQsMjUgTDIxLDI1IEwyMSwxIEwxNCwxIEwxNCwxIFoiIGlkPSJTdG9wIiBzdHJva2U9IiNEREQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBmaWxsPSIjREREIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIj48L3BhdGg+PC9nPjwvc3ZnPg==",
 shoW = 'data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMzFweCIgaGVpZ2h0PSIzMXB4IiB2aWV3Qm94PSIwIDAgMzEgMzEiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiPjxnIGlkPSJQYWdlLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHNrZXRjaDp0eXBlPSJNU1BhZ2UiPjxjaXJjbGUgaWQ9Ik92YWwtMSIgc3Ryb2tlPSIjQUFBIiBmaWxsLW9wYWNpdHk9IjAiIGZpbGw9IiMwMDAiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiIGN4PSIxNS41IiBjeT0iMTUuNSIgcj0iMTQuNSI+PC9jaXJjbGU+PHBhdGggZD0iTTguMjQ4MDQ2ODgsMTIuNjcyMTE5MSBMMTUuNDk2Mzk4OSwxOS43NSBMMjIuOTA4NjkxNCwxMi42NzIxMTkxIiBpZD0iUGF0aC0zIiBzdHJva2U9IiNBQUEiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiPjwvcGF0aD48L2c+PC9zdmc+',
-closeW = 'data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMzFweCIgaGVpZ2h0PSIzMXB4IiB2aWV3Qm94PSIwIDAgMzEgMzEiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiPjxnIGlkPSJQYWdlLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHNrZXRjaDp0eXBlPSJNU1BhZ2UiPjxjaXJjbGUgaWQ9Ik92YWwtMSIgc3Ryb2tlPSIjREREIiBmaWxsLW9wYWNpdHk9IjAiIGZpbGw9IiMwMDAiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiIGN4PSIxNS41IiBjeT0iMTUuNSIgcj0iMTQuNSI+PC9jaXJjbGU+PHBhdGggZD0iTTExLjUsMTEuNSBMMTkuNSwxOS41IiBpZD0iTGluZSIgc3Ryb2tlPSIjREREIiBzdHJva2UtbGluZWNhcD0ic3F1YXJlIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIj48L3BhdGg+PHBhdGggZD0iTTE5LjUsMTEuNSBMMTEuNSwxOS41IiBpZD0iTGluZSIgc3Ryb2tlPSIjREREIiBzdHJva2UtbGluZWNhcD0ic3F1YXJlIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIj48L3BhdGg+PC9nPjwvc3ZnPg==';
+closeW = 'data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMzFweCIgaGVpZ2h0PSIzMXB4IiB2aWV3Qm94PSIwIDAgMzEgMzEiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiPjxnIGlkPSJQYWdlLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHNrZXRjaDp0eXBlPSJNU1BhZ2UiPjxjaXJjbGUgaWQ9Ik92YWwtMSIgc3Ryb2tlPSIjREREIiBmaWxsLW9wYWNpdHk9IjAiIGZpbGw9IiMwMDAiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiIGN4PSIxNS41IiBjeT0iMTUuNSIgcj0iMTQuNSI+PC9jaXJjbGU+PHBhdGggZD0iTTExLjUsMTEuNSBMMTkuNSwxOS41IiBpZD0iTGluZSIgc3Ryb2tlPSIjREREIiBzdHJva2UtbGluZWNhcD0ic3F1YXJlIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIj48L3BhdGg+PHBhdGggZD0iTTE5LjUsMTEuNSBMMTEuNSwxOS41IiBpZD0iTGluZSIgc3Ryb2tlPSIjREREIiBzdHJva2UtbGluZWNhcD0ic3F1YXJlIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIj48L3BhdGg+PC9nPjwvc3ZnPg==',
+hideS = 'data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMjhweCIgaGVpZ2h0PSIyOHB4IiB2aWV3Qm94PSIwIDAgMjggMjgiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiPjxkZWZzPjxmaWx0ZXIgeD0iLTUwJSIgeT0iLTUwJSIgd2lkdGg9IjIwMCUiIGhlaWdodD0iMjAwJSIgZmlsdGVyVW5pdHM9Im9iamVjdEJvdW5kaW5nQm94IiBpZD0iZmlsdGVyLTEiPjxmZU9mZnNldCBkeD0iMCIgZHk9IjEiIGluPSJTb3VyY2VBbHBoYSIgcmVzdWx0PSJzaGFkb3dPZmZzZXRJbm5lcjEiPjwvZmVPZmZzZXQ+PGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMC41IiBpbj0ic2hhZG93T2Zmc2V0SW5uZXIxIiByZXN1bHQ9InNoYWRvd0JsdXJJbm5lcjEiPjwvZmVHYXVzc2lhbkJsdXI+PGZlQ29tcG9zaXRlIGluPSJzaGFkb3dCbHVySW5uZXIxIiBpbjI9IlNvdXJjZUFscGhhIiBvcGVyYXRvcj0iYXJpdGhtZXRpYyIgazI9Ii0xIiBrMz0iMSIgcmVzdWx0PSJzaGFkb3dJbm5lcklubmVyMSI+PC9mZUNvbXBvc2l0ZT48ZmVDb2xvck1hdHJpeCB2YWx1ZXM9IjAgMCAwIDAgMCAgIDAgMCAwIDAgMCAgIDAgMCAwIDAgMCAgMCAwIDAgMC4zNSAwIiBpbj0ic2hhZG93SW5uZXJJbm5lcjEiIHR5cGU9Im1hdHJpeCIgcmVzdWx0PSJzaGFkb3dNYXRyaXhJbm5lcjEiPjwvZmVDb2xvck1hdHJpeD48ZmVNZXJnZT48ZmVNZXJnZU5vZGUgaW49IlNvdXJjZUdyYXBoaWMiPjwvZmVNZXJnZU5vZGU+PGZlTWVyZ2VOb2RlIGluPSJzaGFkb3dNYXRyaXhJbm5lcjEiPjwvZmVNZXJnZU5vZGU+PC9mZU1lcmdlPjwvZmlsdGVyPjwvZGVmcz48ZyBpZD0iUGFnZS0xIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIiBza2V0Y2g6dHlwZT0iTVNQYWdlIj48cGF0aCBkPSJNMjYuNTg2OTg1NCw3LjU3ODY2NjY3IEMyNi41ODY5ODU0LDYuNjA4IDI2LjA2NjQwMTEsNi4xMjI2NjY2NyAyNS4wNjI0MTcsNi4xMjI2NjY2NyBDMjQuMTY5OTg2Nyw2LjEyMjY2NjY3IDIyLjY0NTQxODMsNi4yNzIgMjAuNDE0MzQyNiw2LjUzMzMzMzMzIEMyMC42Mzc0NTAyLDUuMTE0NjY2NjcgMjAuODIzMzczMiw0LjAzMiAyMC45MzQ5MjcsMy4yODUzMzMzMyBDMjEuMTIwODQ5OSwyLjE2NTMzMzMzIDIxLjIzMjQwMzcsMS41MzA2NjY2NyAyMS4yMzI0MDM3LDEuMzgxMzMzMzMgQzIxLjIzMjQwMzcsMC45NzA2NjY2NjcgMjEuMDQ2NDgwNywwLjYzNDY2NjY2NyAyMC43MTE4MTk0LDAuMzczMzMzMzMzIEMyMC4zMzk5NzM0LDAuMTQ5MzMzMzMzIDE5LjkzMDk0MjksMC4wMzczMzMzMzMzIDE5LjU1OTA5NjksMC4wMzczMzMzMzMzIEMxOC44ODk3NzQyLDAuMDM3MzMzMzMzMyAxOC40NDM1NTkxLDAuNjcyIDE4LjIyMDQ1MTUsMS44NjY2NjY2NyBDMTcuOTIyOTc0OCwzLjQzNDY2NjY3IDE3LjYyNTQ5OCw1LjExNDY2NjY3IDE3LjMyODAyMTIsNi44MzIgTDExLjIyOTc0NzcsNy40MjkzMzMzMyBDMTEuODk5MDcwNCw1LjcxMiAxMi40OTQwMjM5LDQuMjkzMzMzMzMgMTIuOTQwMjM5LDMuMTczMzMzMzMgTDEzLjQ5ODAwOCwxLjcxNzMzMzMzIEMxMy40OTgwMDgsMC41OTczMzMzMzMgMTMuMDE0NjA4MiwwIDEyLjEyMjE3OCwwIEMxMS41NjQ0MDksMCAxMS4wODEwMDkzLDAuMjk4NjY2NjY3IDEwLjcwOTE2MzMsMC44MjEzMzMzMzMgQzEwLjQxMTY4NjYsMS4yNjkzMzMzMyAxMC4wMDI2NTYsMS45NDEzMzMzMyA5LjU1NjQ0MDksMi44IEM4Ljk2MTQ4NzM4LDMuODQ1MzMzMzMgOC43MDExOTUyMiw0LjQ4IDguNzAxMTk1MjIsNC43Nzg2NjY2NyBDOC43MDExOTUyMiw1LjAwMjY2NjY3IDguNzM4Mzc5ODEsNS4xODkzMzMzMyA4Ljg0OTkzMzYsNS4zMzg2NjY2NyBMNy45MjAzMTg3Myw3LjkxNDY2NjY3IEM1LjM5MTc2NjI3LDguNCAzLjA4NjMyMTM4LDguOTIyNjY2NjcgMS4wNzgzNTMyNSw5LjUyIEMwLjMzNDY2MTM1NSw5Ljc0NCAwLDEwLjE5MiAwLDEwLjg2NCBDMCwxMi4wNTg2NjY3IDAuNDQ2MjE1MTM5LDEyLjYxODY2NjcgMS4zNzU4MzAwMSwxMi42MTg2NjY3IEMxLjQ4NzM4MzgsMTIuNjE4NjY2NyAxLjc4NDg2MDU2LDEyLjU0NCAyLjMwNTQ0NDg5LDEyLjM5NDY2NjcgQzQuNjEwODg5NzcsMTEuODM0NjY2NyA2LjEzNTQ1ODE3LDExLjQ2MTMzMzMgNi45MTYzMzQ2NiwxMS4yNzQ2NjY3IEM2LjM5NTc1MDMzLDEzLjU4OTMzMzMgNi4wMjM5MDQzOCwxNS40MTg2NjY3IDUuODM3OTgxNDEsMTYuNzI1MzMzMyBDNC4wNTMxMjA4NSwxNi44IDIuNzUxNjYwMDMsMTYuODc0NjY2NyAxLjg1OTIyOTc1LDE2LjkxMiBDMC44OTI0MzAyNzksMTcuMDI0IDAuNDA5MDMwNTQ0LDE3LjU0NjY2NjcgMC40MDkwMzA1NDQsMTguNDQyNjY2NyBDMC40MDkwMzA1NDQsMTkuNDg4IDAuODkyNDMwMjc5LDIwLjAxMDY2NjcgMS44NTkyMjk3NSwyMC4wMTA2NjY3IEMzLjIzNTA1OTc2LDIwLjAxMDY2NjcgNC4zODc3ODIyLDE5Ljk3MzMzMzMgNS4zNTQ1ODE2NywxOS44NjEzMzMzIEM1LjEzMTQ3NDEsMjIuMTAxMzMzMyA1LjA1NzEwNDkxLDIzLjc0NCA1LjA1NzEwNDkxLDI0LjgyNjY2NjcgQzUuMDU3MTA0OTEsMjUuOTQ2NjY2NyA1LjU3NzY4OTI0LDI2LjQ2OTMzMzMgNi42MTg4NTc5LDI2LjQ2OTMzMzMgQzcuNTg1NjU3MzcsMjYuNDY5MzMzMyA4LjA2OTA1NzEsMjUuOTg0IDguMDY5MDU3MSwyNC45Mzg2NjY3IEM4LjA2OTA1NzEsMjIuNTg2NjY2NyA4LjE0MzQyNjI5LDIwLjgzMiA4LjI5MjE2NDY3LDE5LjYzNzMzMzMgQzExLjI2NjkzMjMsMTkuMjY0IDEzLjYwOTU2MTgsMTguOTY1MzMzMyAxNS4zMjAwNTMxLDE4LjcwNCBDMTQuODczODM4LDIxLjA5MzMzMzMgMTQuNTM5MTc2NiwyMi44NDggMTQuMzkwNDM4MiwyNC4wMDUzMzMzIEMxNC4yNDE2OTk5LDI0LjcxNDY2NjcgMTQuMjA0NTE1MywyNS4xNjI2NjY3IDE0LjIwNDUxNTMsMjUuMzQ5MzMzMyBDMTQuMjA0NTE1MywyNi4zOTQ2NjY3IDE0LjcyNTA5OTYsMjYuOTE3MzMzMyAxNS44NDA2Mzc1LDI2LjkxNzMzMzMgQzE2LjU4NDMyOTMsMjYuOTE3MzMzMyAxNy4wMzA1NDQ1LDI2LjI0NTMzMzMgMTcuMjUzNjUyMSwyNC45MDEzMzMzIEMxNy41MTM5NDQyLDIzLjA3MiAxNy44ODU3OTAyLDIwLjg2OTMzMzMgMTguMzMyMDA1MywxOC4yOTMzMzMzIEwyMi40NTk0OTU0LDE3LjY1ODY2NjcgQzIyLjY4MjYwMjksMTcuODA4IDIyLjkwNTcxMDUsMTcuODQ1MzMzMyAyMy4yMDMxODczLDE3Ljg0NTMzMzMgQzIzLjcyMzc3MTYsMTcuODQ1MzMzMyAyNC4yODE1NDA1LDE3LjY1ODY2NjcgMjQuODAyMTI0OCwxNy4yNDggQzI1LjMyMjcwOTIsMTYuODc0NjY2NyAyNS42MjAxODU5LDE2LjM4OTMzMzMgMjUuNjIwMTg1OSwxNS44MjkzMzMzIEMyNS42MjAxODU5LDE0Ljc0NjY2NjcgMjQuOTUwODYzMiwxNC4xODY2NjY3IDIzLjYxMjIxNzgsMTQuMTg2NjY2NyBDMjMuNDYzNDc5NCwxNC4xODY2NjY3IDIzLjAxNzI2NDMsMTQuMjk4NjY2NyAyMi4yNzM1NzI0LDE0LjQ0OCBDMjEuMzgxMTQyMSwxNC42NzIgMjAuNzQ5MDA0LDE0LjgyMTMzMzMgMjAuMzc3MTU4LDE0Ljg1ODY2NjcgTDE4Ljg1MjU4OTYsMTUuMDgyNjY2NyBMMTkuODE5Mzg5MSw5LjYzMiBMMjEuNDE4MzI2Nyw5LjU1NzMzMzMzIEwyMS45Mzg5MTEsOS43ODEzMzMzMyBDMjIuOTQyODk1MSw5Ljc4MTMzMzMzIDIzLjk0Njg3OTIsOS42MzIgMjQuOTUwODYzMiw5LjI5NiBDMjYuMDI5MjE2NSw4Ljk2IDI2LjU4Njk4NTQsOC40IDI2LjU4Njk4NTQsNy41Nzg2NjY2NyBMMjYuNTg2OTg1NCw3LjU3ODY2NjY3IFogTTE2Ljc3MDI1MjMsOS45MzA2NjY2NyBMMTUuNzY2MjY4MywxNS40NTYgQzEyLjE5NjU0NzEsMTYuMDE2IDkuODkxMTAyMjYsMTYuMzE0NjY2NyA4Ljg0OTkzMzYsMTYuMzg5MzMzMyBDOS4zNzA1MTc5MywxMy45MjUzMzMzIDkuODE2NzMzMDcsMTIuMDIxMzMzMyAxMC4xODg1NzksMTAuNjc3MzMzMyBDMTMuNjgzOTMwOSwxMC4yMjkzMzMzIDE1Ljg3NzgyMiwxMC4wMDUzMzMzIDE2Ljc3MDI1MjMsOS45MzA2NjY2NyBMMTYuNzcwMjUyMyw5LjkzMDY2NjY3IFoiIGlkPSIjIiBmaWxsPSIjMTFCNkJFIiBmaWx0ZXI9InVybCgjZmlsdGVyLTEpIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIj48L3BhdGg+PC9nPjwvc3ZnPg==';
 
 var mesShadows = /* hr shadow */ 'hr{border-style:none none solid!important;border-color:rgba(0,0,0,.3)!important;box-shadow:0 1px 0 #fff!important;}'+
 /* text spoiler, banner image & captcha image sadows */ '#yuki-captcha-image,.banner,.spoiler,.spoiler a,.spoiler blockquote,.spoiler blockquote blockquote,.spoiler blockquote blockquote blockquote{transition:all .1s ease;box-shadow:0 1px 2px -1px rgba(0,0,0,.7)!important;}.spoiler a:hover,.spoiler:hover,.transparent{box-shadow:none!important;}'+
@@ -2690,25 +2845,25 @@ var mesAnimations = '.reply{animation:pview .3s normal;-webkit-animation:pview .
 @keyframes pview{0%{transform:scale(0,0);opacity:0;}25%{transform:scale(.3,.3);opacity:.1;}50%{transform:scale(.9,.9);opacity:.3;}75%{transform:scale(1.02,1.02);opacity:.7;}100%{transform:scale(1,1);opacity:1;}}\
 @-webkit-keyframes pview{0%{-webkit-transform:scale(0,0);opacity:0;}25%{-webkit-transform:scale(.3,.3);opacity:.1;}50%{-webkit-transform:scale(.9,.9);opacity:.3;}75%{-webkit-transform:scale(1.02,1.02);opacity:.7;}100%{-webkit-transform:scale(1,1);opacity:1;}}';
 
-var MagicStyle = '.hidout,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google,.reply_,#postform,#hideinfodiv hr,.reply #yuki-newThread-create,.submit-button.process input,.pleer-container + br,.artwork > select,.artwork > .file_name + br,.magic-info + br{display:none!important;}\
+var MagicStyle = '.hidout,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google,.reply_,#postform,#hideinfodiv hr,.reply #yuki-newThread-create,.submit-button.process input,.pleer-container + br,.artwork > select,.artwork > .file_name + br,.magic-info + br,.autohidden,.showhidden + .hinfo-stub{display:none!important;}\
 .unexpanded,.rated{max-width:200px!important;max-height:200px!important;}.expanded{width:100%;height:auto;}#hideinfodiv{margin:5px;}.sp-r.rate{color:darkred;}#yuki-dropBox tr,.f-sect,.hideinfo{text-align:center!important;}\
-.dpop,.wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}.artwork{background:url('+artwork+')no-repeat scroll center center / 100% auto;}\
+.dpop,#wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}.artwork{background:url('+artwork+')no-repeat scroll center center / 100% auto;}\
 .yuki_clickable,.txt-btn,.wmark-button,.button{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}\
 .replylinks,.button{line-height:2em;font-size:75%;clear:both;}#post-count,.txt-btn{color:#999;}.mapped,.mapped:hover{cursor:default;color:#666!important;}.hidup{top:-9999px!important;}\
 .userdelete:after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.cm-button{text-decoration:none;}.s-sect{text-align:left;padding-left:2em;color:#777;}\
 #yuki-captcha,#yuki-pass{width:295px;}#yuki-captcha-image{vertical-align:middle;margin:2px;}#yuki-dropBox{width:7em;height:18em;border:3px dashed rgba(99,99,99,.3);padding:2px;}\
 #convert-strike,.doubledash,.topformtr #yuki-replyForm #yuki-close-form{visibility:hidden;}.sagearrow{background:url(/src/svg/1409/Sage.svg)no-repeat center bottom;position:relative;right:24px;top:2px;}\
 #yuki-errorMsg{text-align:center;color:#FFF;background-color:#E04000;}.wmark-button{color:#fefefe;text-shadow:0 1px 0 rgba(0,0,0,.4);}.wmark-button .spoiler{text-shadow:none;}#allowed-posts{font-size:14px;}\
-.rating_SFW{background:green;}.rating_R15{background:yellow;}.rating_R18{background:orange;}.rating_R18G{background:red;}.line-sect,.yukiFile,.cpop{display:inline-block;}#warning-massage{color:#ff3428;}\
+.rating_SFW{background:green;}.rating_R15{background:yellow;}.rating_R18{background:orange;}.rating_R18G{background:red;}.line-sect,.yukiFile,.cpop,.mpanel-btn{display:inline-block;}#warning-massage{color:#ff3428;}\
 .yukiFile,.yukiFileSets{font-size:66%;}.yukiFile{text-align:center;width:210px;background-color:#fefefe;-webkit-border-radius:5px;margin:5px;padding:2px;}.reply.new{background-color:rgba(212,115,94,.1);}\
 #yuki-files-placeholder > *{vertical-align:top;}.yukiFile img{max-width:150px;margin:5px 0;}.yukiFile span{max-width:200px;word-wrap:break-word;}.au-size{width:350px;height:80px;background-image:url(/src/png/1405/waveform.png);}\
 #yuki-replyForm{text-align:left;padding:4px 8px;}.selected:before{content:"✓ ";color:green;}.reply-button,.cpop{margin-left:.4em;}#oembedapi + .checkarea,#set-show-spoilers + .checkarea{font-size:20px!important;}\
 #yuki-dropBox tr{display:block;}.droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em;}.artwork > .file_name{display:block;background-color:rgba(255,255,255,.8);padding:2px 0;}\
 .cpop.ty{background-image:url(/src/svg/1411/closepopup.svg);}.cpop.all{background-image:url(/src/svg/1411/closeallpopups.svg);}.dpop{float:right;background-image:url('+cmove+');cursor:move;}.sagearrow span{cursor:default;}\
 .cpop{width:14px;height:14px;}.dpop,.sagearrow span{width:20px;height:20px;}.reply-button{width:23px;height:14px;background:url('+rp_arr+')no-repeat center center;}.artwork > .preview_img{height:150px;}\
-#magic-panel-button{z-index:9;position:fixed;right:1em;bottom:1em;opacity:.2;filter:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'grayscale\'><feColorMatrix type=\'matrix\' values=\'.3 .3 .3 0 0 .3 .3 .3 0 0 .3 .3 .3 0 0 0 0 0 1 0\'/></filter></svg>#grayscale");-webkit-filter:grayscale(100%);}\
+#magic-buttons-panel{z-index:9;position:fixed;right:1em;bottom:1em;}.mpanel-btn{padding:0 9px;width:28px;height:28px;opacity:.2;filter:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'grayscale\'><feColorMatrix type=\'matrix\' values=\'.3 .3 .3 0 0 .3 .3 .3 0 0 .3 .3 .3 0 0 0 0 0 1 0\'/></filter></svg>#grayscale");-webkit-filter:grayscale(100%);}\
 .ta-inact::-moz-selection{background:rgba(99,99,99,.3);}.ta-inact::selection{background:rgba(99,99,99,.3);}#int-upd{bottom:2px;position:relative;}#allowed-posts a{text-decoration:none;text-shadow:none;font-weight:normal;}\
-#magic-panel-button:hover,#magic-panel-button.active{opacity:1;filter:none;-webkit-filter:grayscale(0%);}#magic-panel tr{height:3em;}#vsize-textbox{color:#bbb;font-family:Trebuchet;}\
+.mpanel-btn:hover,.mpanel-btn.active{opacity:1;filter:none;-webkit-filter:grayscale(0%);}#magic-panel tr{height:3em;}#vsize-textbox{color:#bbb;font-family:Trebuchet;}\
 #magic-panel{position:fixed;right:5px;bottom:5px;max-width:450px;height:300px;border-radius:8px;padding:9px;padding-bottom:3em;background-color:#fefefe;}.sp-r{text-align:right;font-size:18px;}\
 .deleted,.t-sec{opacity:.6;}.inactive{opacity:.4;}img[src="#transparent"]{opacity:0;}.wmark-button,.reply-button{vertical-align:middle;}.content-window{position:fixed;left:0;top:0;z-index:2999}\
 .submit-button span{display:none;}.submit-button.process{font-size:13px;font-style:italic;color:#777;}@keyframes process{0%{width:0;}100%{width:1em;}}@-webkit-keyframes process{0%{width:0;}100%{width:1em;}}\
@@ -2722,6 +2877,8 @@ var MagicStyle = '.hidout,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google
 #show-content-window{right:52%;position:fixed;background-image:url('+shoW+');border-radius:100%;}#close-content-window:hover,#show-content-window:hover{opacity:1;}\
 #ma-play{background:url('+play+')no-repeat scroll center;}#ma-pause{background:url('+pause+')no-repeat scroll center;}.magic-audio{width:200px;height:200px;}input:focus,select:focus,textarea:focus,button:focus{outline:none;}\
 .ma-controls,.ma-controls a{display:block;width:50px;height:50px;}.ma-controls{position:relative;top:37%;left:37%;border:2px solid #ddd;border-radius:100%;background-color:#333;opacity:.8;}\
+.font-s{font-size:12px;}.keywords-input{width:300px;height:55px;resize:none;}.o-sect{padding:0 1em;}.cyan-light{color:rgba(90,152,155,.8);}\
+#hide-set{background:url('+hideS+')no-repeat scroll center;}#general-set{background:url(/src/png/1409/list4.png)no-repeat scroll center center / 80%;}\
 .blink{-webkit-animation-name:blinker;-webkit-animation-duration:1s;-webkit-animation-timing-function:linear;-webkit-animation-iteration-count:infinite;animation-name:blinker;animation-duration:1s;animation-timing-function:linear;animation-iteration-count:infinite;}\
 @-webkit-keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}@keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}\
 @keyframes onReady{50% {opacity:0;}} @-webkit-keyframes onReady{50% {opacity:0;}}'+ mesShadows + mesAnimations;
