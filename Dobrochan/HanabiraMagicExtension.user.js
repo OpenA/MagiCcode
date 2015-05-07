@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.2.0
+// @version 		1.2.1
 // @grant   		none
 // ==/UserScript==
 initStore();
@@ -222,11 +222,7 @@ function MagicExtension() {
 		AttachPopups: _z.getlSVal('AttachPopups', true),
 		RemoveFileName: _z.getlSVal('RemoveFileName', false),
 		DiscloseTextSpoilers: _z.getlSVal('DiscloseTextSpoilers', false),
-		UpdateInterval: function() {
-			var i = _z.getlSVal('UpdateInterval', 45, true),
-				t = i < 10 ? 45 : i;
-			return { val: t, int: t * 1000 }
-		}},
+	},
 	Megia = {
 		'video': new MagicContent(),
 		'scbc': new MagicContent(),
@@ -398,7 +394,7 @@ function MagicExtension() {
 			images: node.querySelectorAll('.file > a > img.thumb[onclick^="expand_image"], .file > a[href$=".svg"] > img'),
 			hoos: node.querySelectorAll('.reply-button, .reply-link, .cm-button, .spr-image, .ma-button'),
 			links: node.querySelectorAll('.message a:not(#cm-link):not(.reply-link)'),
-			elements: node.querySelectorAll('.reflink, .file > a[href$=".swf"] > img, img[alt^="r-1"]:not(.spr-image), img[alt="unrated"]:not(.spr-image), .file > a > img[src="/thumb/generic/sound.png"], .file > a[href$=".webm"] > img, .file > a[href$=".pdf"] > img, .file > a > img[onclick^="open_url"]')
+			elements: node.querySelectorAll('.reflink, .file > a[href$=".swf"] > img, img[alt^="r-1"]:not(.spr-image), img[alt="unrated"]:not(.spr-image), img[alt="illegal"]:not(.spr-image), .file > a > img[src="/thumb/generic/sound.png"], .file > a[href$=".webm"] > img, .file > a[href$=".pdf"] > img, .file > a > img[onclick^="open_url"]')
 		}
 	}
 	function _show (el) { el.classList.remove('hidout') }
@@ -430,7 +426,7 @@ function MagicExtension() {
 		return btoa(base64String)
 	}
 	function _urlHash(url) {
-		return url.replace(/https?:\/\//g, '').hashCode().toString();
+		return url.replace(/https?:\/\//, '').hashCode().toString();
 	}
 	
 	/************************************************************************/
@@ -590,28 +586,33 @@ function MagicExtension() {
 	//* @ original code 	http://dobrochan.com/js/hanabira-0.5.1311-.js
 	//* @ copyright 		Dobrochan
 	function CharmingHanabira(h) {
-		var Chana = this, thread_updating, play_notify, timer_id = 0,
-			ref_tamplate = '<a class="reply-link" href="/r{brd}/res/r{tid}.xhtml#ir{pid}" onclick="Highlight(event, \'r{pid}\')">&gt;&gt;r{L}r{pid}</a>',
+		var Chana = this, thread_updating, play_notify, ref_tamplate = '<a class="reply-link r{cl}" href="/r{brd}/res/r{tid}.xhtml#ir{pid}" onclick="Highlight(event, \'r{pid}\')">&gt;&gt;r{L}r{pid}</a>',
+			Timer = { id: 0, offset: 0, ql: UpdateInterval(0) },
+			Count = { dif: 0, new: 0, del: 0, mod: 0 },
 			Notif = _z.setup(new Audio('/src/mp3/1406/musbox.mp3'), {}, {
 				'play': function(e) { play_notify = true },
 				'ended': function(e) { play_notify = false }
 			}),
-			Count = { dif: 0, new: 0, del: 0, mod: 0 },
 			ChLC = {
-				update_title: ["Automatically check thread for the new uploaded posts every %s% seconds", "Автоматически проверять тред на наличие новых постов каждые %s% секунд"],
-				snd_notify_title: ["Add notification sound for new loaded posts", "Оповещать о новых постах звуковым уведомлением"],
-				snd_notify: ["Sound Notifications", "Звуковое уведомление"],
+				snd_notify: ["Sound Notifications", "Звуковые уведомления"],
 				mrk_to_del: ["Mark to delete", "Отметить для удаления"],
 				loadnew: ["Load New Posts", "Подгрузить посты"],
 				updprog: ["Updating...", "Обновление..."],
-				updauto: ["Autoupdate", "Автообновление"]
+				updauto: ["Autoupdate Thread", "Автообновление треда"],
+				dsl: {
+					'quet': ['Quet Mode', 'Тихий режим'],
+					'autotimer': ['Аutotimer', 'Автотаймер'],
+					'manual': ['Manual', 'Вручную']
+				}
 			}
-		function updtitle() { return ChLC.update_title[lng].replace('%s%', HM.UpdateInterval().val) }
 		this.$ = function(child) { return this['NewPostLoader'].querySelector(child) }
-		this['NewPostLoader'] = _z.setup('span', {'id': 'new-post-loader', 'html': '<div id="update-stat"><a>'+ ChLC.loadnew[lng] +'</a></div><label title="'+
-				ChLC.snd_notify_title[lng] +'"><input id="notif-chbx" type="checkbox" hidden><span class="checkarea"></span>\n'+ ChLC.snd_notify[lng] +'</label><br><label title="'+
-				updtitle() +'"><input id="upd-chbx" type="checkbox" hidden><span class="checkarea"></span>\n'+ ChLC.updauto[lng] +'</label>\n<span id="int-stat" class="t-sec">⟨'+
-				HM.UpdateInterval().val +' '+ LC.tm['s'][lng] +'.⟩</span><input max="180" min="15" id="int-upd" style="width:34px;margin:0 4px" type="number" hidden>'
+		this['NewPostLoader'] = _z.setup('span', {'id': 'new-post-loader', 'html': '<div id="update-stat"><a>'+ ChLC.loadnew[lng] +
+				'</a></div><label><input id="notif-chbx" type="checkbox" hidden><span class="checkarea"></span>\n'+ ChLC.snd_notify[lng] +
+				'</label><br><label><input id="upd-chbx" type="checkbox" hidden><span class="checkarea"></span>\n'+ ChLC.updauto[lng] +
+				'</label><ul class="dropdown line-sect" id="timer-update-sets"><li class="dropdown-toggle"><label class="dropdown-label el-li t-sec">'+
+				(ChLC.dsl[Timer.ql.value] || checkHTime(Timer.ql.value))[lng] +'</label><ul class="dropdown-menu"><li class="dropdown-item el-li" id="quet-mode-set">'+
+				ChLC.dsl['quet'][lng] +'</li><li class="dropdown-item el-li" id="autotimer-set">'+ ChLC.dsl['autotimer'][lng] +'</li><li class="dropdown-item el-li" id="manual-int-set">'+
+				ChLC.dsl['manual'][lng] +':\n<input id="int-val" max="180" min="15" type="number"></li></ul></li></ul>'
 			}, null);
 		this['UpdateStat'] = this.$('#update-stat');
 		this['PostsCount'] = _z.setup('label', {'id': 'post-count', 'class': 'etch-text', 'text': HM.Elems.posts.length + LC.omit[lng]}, null);
@@ -630,22 +631,25 @@ function MagicExtension() {
 					Chana.updateTimer();
 				}
 			});
-		this['UpdateInterval'] = _z.setup(this.$('#int-upd'), {'value': HM.UpdateInterval().val}, {
-				'input': function() {
-					_z.setlSVal('UpdateInterval', this.value, true);
-					Chana['AutoUpdate'].title = updtitle();
-				},
-				'mouseout': function() {
-					setTimeout(function() {
-						_z.setup(Chana['UIntTextBox'], {'hidden': undefined, 'text': '⟨'+ HM.UpdateInterval().val +' '+ LC.tm['s'][lng] +'.⟩'}, null);
-						Chana['UpdateInterval'].setAttribute('hidden', '');
-					}, 3000)
-				}
-			});
-		this['UIntTextBox'] = _z.setup(this.$('#int-stat'), {'value': HM.UpdateInterval().val}, {
+		this['setInterval'] = _z.setup(this.$('#int-val'), {'value': Timer.ql.int}, null);
+		this['UpdateModeMenu'] = _z.setup(this.$('#timer-update-sets'), {}, {
 				'click': function(e) {
-					this.setAttribute('hidden', '');
-					Chana['UpdateInterval'].removeAttribute('hidden');
+					var val, tbox = this.firstElementChild.firstElementChild;
+					if (e.target.tagName === 'INPUT')
+						return;
+					if (e.target.classList[0] === 'dropdown-item') {
+						switch (e.target.id) {
+							case 'manual-int-set':
+								val = Chana['setInterval'].value;
+								tbox.textContent = checkHTime(val)[lng];
+								break;
+							default:
+								val = e.target.id.split('-')[0];
+								tbox.textContent = e.target.textContent;
+						}
+						_z.setlSVal('UpdateMode', val, true);
+					}	
+					this.firstElementChild.classList.toggle('active');
 				}
 			});
 		this.updateThread = updateThread;
@@ -654,7 +658,7 @@ function MagicExtension() {
 				var cid = _cid(post.id), replies_links = new Array(0);
 				if (HM.RepliesMap[cid]) {
 					_z.each(HM.RepliesMap[cid], function(Id) {
-						replies_links.push(ref_tamplate.allReplace({'r{brd}': Id[0], 'r{tid}':
+						replies_links.push(ref_tamplate.allReplace({'r{brd}': Id[0], 'r{cl}': 'cview', 'r{tid}':
 						(!Id[1] ? Id[2] : Id[1]), 'r{pid}': Id[2], 'r{L}': (Id[3] ? '❪'+ Id[0].toUpperCase() +'❫' : '')}));
 					});
 					var replies_div_arr = post.getElementsByClassName('replylinks'),
@@ -669,23 +673,43 @@ function MagicExtension() {
 			});
 		}
 		this.updateTimer = function() {
-			clearTimeout(timer_id);
-			timer_id = setTimeout(function() {
+			clearTimeout(Timer.id);
+			Timer.ql = UpdateInterval(Timer.offset);
+			Timer.id = setTimeout(function() {
 				if (HM.AutoUpdate) {
-					updateThread(true)
-				} else {
-					getDataResponse('/api/thread/'+ HM.URL.board +'/'+ HM.URL.thread +'.json?new_format',
-						function(status, sText, json, xhr) {
-							if (json.result) {
-								updateCount(json.result.posts_count)
-								var postStat = '( '+ (Count.new > 0 ? '+'+ Count.new + LC.newp[lng] : '') +
-									' • '+ (Count.del < 0 ? Count.del + LC.delp[lng] : '') +' • '+ (Count.mod > 0 ? Count.mod + LC.pmod[lng] : '') +')';
-								Chana['PostsCount'].textContent = HM.Elems.posts.length + LC.omit[lng] + postStat;
-							}
-						});
-					Chana.updateTimer();
+					if (Timer.ql.value === 'quet') {
+						getDataResponse('/api/thread/'+ HM.URL.board +'/'+ HM.URL.thread +'.json?new_format',
+							function(status, sText, json, xhr) {
+								if (json.result) {
+									updateCount(json.result.posts_count)
+									var postStat = '( '+ (Count.new > 0 ? '+'+ Count.new + LC.newp[lng] : '') +
+										' • '+ (Count.del < 0 ? Count.del + LC.delp[lng] : '') +' • '+ (Count.mod > 0 ? Count.mod + LC.pmod[lng] : '') +')';
+									Chana['PostsCount'].textContent = HM.Elems.posts.length + LC.omit[lng] + postStat;
+								}
+							});
+						Chana.updateTimer();
+					} else
+						updateThread(true)
 				}
-			}, HM.UpdateInterval().int);
+			}, Timer.ql.int * 1000);
+		}
+		function UpdateInterval(offset) {
+			var t, val = _z.getlSVal('UpdateMode', 'autotimer', true);
+			if (isNaN(val))
+				t = 45 + (offset > 135 ? 135 : offset);
+			else
+				t = val < 15 ? 45 : val;
+			return { value: val, int: t }
+		}
+		function checkHTime(x) {
+			var s, m, v = 's';
+			if (x > 59) {
+				s = (x % 60).toString()
+				m = (x / 60).toString().split('.')[0]
+				x = m + ':'+ (s.length < 2 ? '0'+ s : s)
+				v = 'm'
+			}
+			return ['every '+ x +' '+ LC.tm[v][0] +'.', 'каждые '+ x +' '+ LC.tm[v][1] +'.'];
 		}
 		function updateCount(jPC) {
 			var i = (jPC + Count.mod) - HM.Elems.posts.length - Count.dif,
@@ -717,12 +741,14 @@ function MagicExtension() {
 					len = el ? el.length : 0;
 					Count.dif = Count.new = 0;
 					if (len > 0) {
+						Timer.offset = 0;
 						for (i = 0; i < len; i++) {
 							temp = getHanabiraPost(el[i]);
 							Target.thread().appendChild(temp[0]);
 						}
 						Tinycon.setBubble(unread_count);
-					}
+					} else if (e === true)
+						Timer.offset += 15;
 				}
 				if (e && !errorMsg) {
 					if (HM.Elems.posts.length != pCount + Count.mod) {
@@ -753,7 +779,7 @@ function MagicExtension() {
 							.querySelector('.doubledash').setAttribute('style', 'display:inline-block;');
 						}
 						if (pnid(i) > jpid(i)) {
-							var derefl = ref_tamplate.allReplace({'r{brd}': HM.URL.board, 'r{tid}': HM.URL.thread, 'r{pid}': jpid(i), 'r{L}': ''}),
+							var derefl = ref_tamplate.allReplace({'r{brd}': HM.URL.board, 'r{tid}': HM.URL.thread, 'r{pid}': jpid(i), 'r{L}': '', 'r{cl}': 'nview'}),
 								temp = getHanabiraPost(jsonPosts[i], true), s = Chana['AllowedPosts'].querySelector('.reply-link') ? ', ' : ': ';
 							if (!HM.Elems.posts[i])
 								Target.thread().appendChild(temp[0]);
@@ -953,18 +979,15 @@ function MagicExtension() {
 				}
 			}
 		}
-		this.MagicPostView = function (e) {
-			var a = e.target, attach = HM.AttachPopups,
-				L = ParseUrl(a.href), brd = L.board, tid = L.thread,
-				pid = L.pid, op = tid === pid,
-				postid = (op ? 'post_' : 'reply') + pid,
-				id = brd +'-'+ postid,
-				refl = _z.route(a, '.reflink a'),
-				href = refl.getAttribute('href'),
-				active = document.getElementById('ref-'+ id),
+		this.MagicPostView = function(e) {
+			var a = e.target, attach = HM.AttachPopups, L = ParseUrl(a.href),
+				brd = L.board, tid = L.thread, pid = L.pid, op = tid === pid,
+				postid = (op ? 'post_' : 'reply') + pid, id = brd +'-'+ postid,
+				refl = _z.route(a, '.reflink a'), href = refl.getAttribute('href'),
 				reftab = _z.setup('table', {'class': (op ? 'oppost popup' : 'popup'), 'id': 'ref-'+ id,
 					'html': '<tbody><tr><td class="loading"><span class="waiting'+ Math.floor(Math.random() * 3) +
-					' icon"><img src="/images/blank.png"></span>\n'+ LC.wsec[lng] +'</td></tr></tbody>'}, null);
+					' icon"><img src="/images/blank.png"></span>\n'+ LC.wsec[lng] +'</td></tr></tbody>'}, null),
+				loading = reftab.querySelector('.loading'), active = document.getElementById('ref-'+ id),
 				post = HM.LoadedPosts[id] || document.getElementById(postid);
 			function add_mapping(mapp) {
 				if (!mapp)
@@ -980,14 +1003,16 @@ function MagicExtension() {
 				}
 			}
 			function set_style(r) {
-				var w = window.innerWidth,
-				x = e.pageX, y = e.pageY + 30,
-				wx = w - x, y2 = y - r.offsetHeight - 45;
-				if (y2 > 0)
-					y = y2;
-				if ((wx < 600 || wx < w / 2) && r.offsetWidth > wx) {
-					var mw = w - 400;
-					x = null;
+				var w = window.innerWidth, mw,
+					x = e.pageX, y = e.pageY + 30,
+					wx = w - x, y2 = y - r.offsetHeight - 45;
+				if (a.classList[1] !== 'cview') {
+					if (y2 > 0)
+						y = y2;
+					if ((wx < 600 || wx < w / 2) && r.offsetWidth > wx) {
+						mw = w - 400;
+						x = null;
+					}
 				}
 				r.setAttribute('style', 'top:'+ y +'px;max-width:'+
 					(mw || wx) +'px;'+ (x == null ? 'right:0' : 'left:'+ x) +'px'+
@@ -1002,13 +1027,13 @@ function MagicExtension() {
 				} else {
 					BindRemoveRef(a, reftab);
 				}
-				_z.replace(reftab.querySelector('.loading'), load);
+				_z.replace(loading, load);
 				add_mapping(reftab.querySelector('a[href="'+ href +'"]'));
 			}
 			if (active) {
 				var loc = active.querySelector('.locked');
 				if (loc && loc.hash !== refl.hash) {
-					loc.className = 'reply-link';
+					loc.className = 'reply-link cview';
 					attachEvents(active);
 				}
 				add_mapping(active.querySelector('a[href="'+ href +'"]'));
@@ -1024,7 +1049,7 @@ function MagicExtension() {
 					var temp, node, ErrorMSG;
 					if (status !== 200) {
 						ErrorMSG = new MagicElements()['WarningMsg'];
-						_z.replace(reftab.querySelector('.loading'), _z.setup(ErrorMSG, {
+						_z.replace(loading, _z.setup(ErrorMSG, {
 							'text': status +' '+ sText, 'style': ''}, null));
 						setTimeout(function() {
 							reftab.remove();
@@ -1751,7 +1776,7 @@ function MagicExtension() {
 					'<a class="wmark-button" id="quote-mark" title="'+ LCY.wmark['q'][lng] +'"><img src="/src/svg/1405/„q”-mark.svg" alt="&gt;"></a>'+
 				'</span></td></tr>'+
 			'<tr id="trmessage"><td>'+
-				'<textarea placeholder="'+ LCY.txar[lng] +'" id="yuki-replyText" name="message" cols="80" rows="8" style="resize:both;height:180px;">'+
+				'<textarea placeholder="'+ LCY.txar[lng] +'" id="yuki-replyText" name="message" style="resize:both;width:538px;height:208px;">'+
 			'</textarea></td></tr><tr id="trcaptcha"><td><span>'+
 					'<img alt="Капча" id="yuki-captcha-image" src="">&nbsp;'+
 					'<span id="yuki-attach-captcha-button" class="txt-btn yuki_clickable" title="'+ LCY.acap[lng] +'">[+]</span></span><br>'+
@@ -1931,7 +1956,7 @@ function MagicExtension() {
 			}
 		}
 		function checkfilesLimit() {
-			if (HM.URL.board !== 'mu' && fileList.length >= 5) {
+			if (fileList.length >= (HM.URL.board === 'mu' ? 10 : 5)) {
 				_z.prepend(Yu['FilesPlaceholder'],
 					_z.setup(mEl['WarningMsg'], {'text': LCY.maxfc[lng], 'style':'display:block;text-align:center;'}, null))
 				mEl.funct = _rmMsg;
@@ -2478,6 +2503,12 @@ function MagicExtension() {
 				maxr: ["Max Allowing Rating", "Макс. разрешенный рейтинг"],
 				cframe: ["Content Frame", "Положение видеоплеера"],
 				clipopup: ["Clipping Popup Posts", "Закреплять превью постов"],
+				hidby: {
+					'hr': ['Hide Posts and Threads', 'Скрытие постов и тредов'],
+					'nt': ['by Tripcode or Name', 'По имени или трипкоду'],
+					'tl': ['by Title', 'По заголовку'],
+					'rw': ['Replace Words', 'Замена слов']
+				},
 				emb: {
 					'title': ['Enable oEmbed API support', 'Включает встраивание для внешних ссылок и поддержку oEmbed API'],
 					'url': ['embedded_media_links', 'vstraivanije_dla_vneshnih_ssilok'],
@@ -2505,13 +2536,13 @@ function MagicExtension() {
 				LC.txtspoils[lng] +'</td></tr><tr><td class="f-sect"><label><a class="paperclip'+
 				(HM.AttachPopups ? '' : ' inactive') +'"><input id="attach-popups" type="checkbox" hidden><img src="/src/png/1411/attachpopup.png"></a></label></td><td class="s-sect">'+
 				SLC.clipopup[lng] +'</td></tr>'}, null);
-		this['HideBySets'] = _z.setup('tbody', {'html': '<tr><th></th><th class="s-sect">Скрытие постов и тредов</th></tr>'+
+		this['HideBySets'] = _z.setup('tbody', {'html': '<tr><th></th><th class="s-sect">'+ SLC.hidby['hr'][lng] +'</th></tr>'+
 				'<tr><td class="o-sect"><label><input id="chx-Nametrip" type="checkbox" hidden><span class="checkarea"></span></label></td><td><span class="font-s cyan-light">'+
-				'По имени или трипкоду</span><br><textarea id="type-Nametrip" class="keywords-input font-s" placeholder="Mr.Yoba, Mr.*, *Yoba, !Hyd5gFre"></textarea></td></tr>'+
+				SLC.hidby['nt'][lng] +'</span><br><textarea id="type-Nametrip" class="keywords-input font-s" placeholder="Mr.Yoba, Mr.*, *Yoba, !Hyd5gFre"></textarea></td></tr>'+
 				'<tr><td class="o-sect"><label><input id="chx-Title" type="checkbox" hidden><span class="checkarea"></span></label></td><td><span class="font-s cyan-light">'+
-				'По заголовку</span><br><textarea id="type-Title" class="keywords-input font-s" placeholder="Официальный™*, *ожиданий от*, Унылый тред"></textarea></td></tr>'+
+				SLC.hidby['tl'][lng] +'</span><br><textarea id="type-Title" class="keywords-input font-s" placeholder="Официальный™*, *ожиданий от*, Унылый тред"></textarea></td></tr>'+
 				'<tr><td class="o-sect"><label><input id="chx-Words" type="checkbox" hidden><span class="checkarea"></span></label></td><td><span class="font-s cyan-light">'+
-				'Замена слов</span><br><textarea id="type-Words" class="keywords-input font-s" placeholder="белое::черное, &quot;[w]&quot;::«[w]»"></textarea></td></tr>'}, null);
+				SLC.hidby['rw'][lng] +'</span><br><textarea id="type-Words" class="keywords-input font-s" placeholder="белое::черное, &quot;[w]&quot;::«[w]»"></textarea></td></tr>'}, null);
 		var Types = ['Nametrip', 'Title', 'Words'];
 			for (var n = 0; n < Types.length; n++) {
 				_z.setup(this['HideBySets'].querySelector('#chx-'+ Types[n]), {'checked': this.Keywords[Types[n]].apply}, {
@@ -2809,15 +2840,14 @@ function MagicExtension() {
 }; MagicExtension();
 
 function initStore() {
-	if (sessionStorage.getItem('Sage') !== null) {
-		sessionStorage.clear()
-	}
 	if (localStorage.getItem('VWidth') !== null) {
 		localStorage.clear()
 	}
 	if (localStorage.getItem('oEmbedAPI') == 'false') {
 		sessionStorage.setItem('LinksCache', '{}');
 	}
+	sessionStorage.removeItem('UpdateInterval')
+	sessionStorage.removeItem('Sage')
 }
 
 var rp_arr = "data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMjNweCIgaGVpZ2h0PSIxNHB4IiB2aWV3Qm94PSIwIDAgMjMgMTQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiPjxkZWZzPjxmaWx0ZXIgeD0iLTUwJSIgeT0iLTUwJSIgd2lkdGg9IjIwMCUiIGhlaWdodD0iMjAwJSIgZmlsdGVyVW5pdHM9Im9iamVjdEJvdW5kaW5nQm94IiBpZD0iZmlsdGVyLTEiPjxmZU9mZnNldCBkeD0iMCIgZHk9IjAiIGluPSJTb3VyY2VBbHBoYSIgcmVzdWx0PSJzaGFkb3dPZmZzZXRPdXRlcjEiPjwvZmVPZmZzZXQ+PGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMC41IiBpbj0ic2hhZG93T2Zmc2V0T3V0ZXIxIiByZXN1bHQ9InNoYWRvd0JsdXJPdXRlcjEiPjwvZmVHYXVzc2lhbkJsdXI+PGZlQ29sb3JNYXRyaXggdmFsdWVzPSIwIDAgMCAwIDAgICAwIDAgMCAwIDAgICAwIDAgMCAwIDAgIDAgMCAwIDAuNyAwIiBpbj0ic2hhZG93Qmx1ck91dGVyMSIgdHlwZT0ibWF0cml4IiByZXN1bHQ9InNoYWRvd01hdHJpeE91dGVyMSI+PC9mZUNvbG9yTWF0cml4PjxmZU1lcmdlPjxmZU1lcmdlTm9kZSBpbj0ic2hhZG93TWF0cml4T3V0ZXIxIj48L2ZlTWVyZ2VOb2RlPjxmZU1lcmdlTm9kZSBpbj0iU291cmNlR3JhcGhpYyI+PC9mZU1lcmdlTm9kZT48L2ZlTWVyZ2U+PC9maWx0ZXI+PC9kZWZzPjxnIGlkPSJQYWdlLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHNrZXRjaDp0eXBlPSJNU1BhZ2UiPjxwYXRoIGQ9Ik0xMi42NTg4OTc2LDUuOTkxNjcyMzkgTDExLjQ3MTM5NzYsOC4yOTUxNzk0MyBMMS43MjA3MDMxMiwxMi41OTc5NTY3IEwzLjAxMzc1ODY4LDguODYwMTkwNTkgTDkuMTIyNzg2NDYsNi43ODg0ODMgTDIuMTU2MTE5NzksMy44NDc1Mjc0NyBMNS40NTQ3MzA5LDIuMjUzOTA2MjUgTDEyLjY1ODg5NzYsNS45OTE2NzIzOSBaIE0yMC45MjMwMTc5LDUuOTkxNjcyMzkgTDE5LjczNTUxNzksOC4yOTUxNzk0MyBMOS45ODQ4MjM1LDEyLjU5Nzk1NjcgTDExLjI3Nzg3OTEsOC44NjAxOTA1OSBMMTcuMzg2OTA2OCw2Ljc4ODQ4MyBMMTAuNDIwMjQwMiwzLjg0NzUyNzQ3IEwxMy43MTg4NTEzLDIuMjUzOTA2MjUgTDIwLjkyMzAxNzksNS45OTE2NzIzOSBaIiBpZD0iPj4tY29weSIgZmlsbC1vcGFjaXR5PSIwLjQiIGZpbGw9IiMwMDAiIGZpbHRlcj0idXJsKCNmaWx0ZXItMSkiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiPjwvcGF0aD48cGF0aCBkPSJNMTIuNjU4ODk3Niw0Ljk5MTY3MjM5IEwxMS40NzEzOTc2LDcuMjk1MTc5NDMgTDEuNzIwNzAzMTIsMTEuNTk3OTU2NyBMMy4wMTM3NTg2OCw3Ljg2MDE5MDU5IEw5LjEyMjc4NjQ2LDUuNzg4NDgzIEwyLjE1NjExOTc5LDIuODQ3NTI3NDcgTDUuNDU0NzMwOSwxLjI1MzkwNjI1IEwxMi42NTg4OTc2LDQuOTkxNjcyMzkgWiBNMjAuOTIzMDE3OSw0Ljk5MTY3MjM5IEwxOS43MzU1MTc5LDcuMjk1MTc5NDMgTDkuOTg0ODIzNSwxMS41OTc5NTY3IEwxMS4yNzc4NzkxLDcuODYwMTkwNTkgTDE3LjM4NjkwNjgsNS43ODg0ODMgTDEwLjQyMDI0MDIsMi44NDc1Mjc0NyBMMTMuNzE4ODUxMywxLjI1MzkwNjI1IEwyMC45MjMwMTc5LDQuOTkxNjcyMzkgWiIgaWQ9Ij4+IiBzdHJva2Utb3BhY2l0eT0iMC40IiBzdHJva2U9IiM5OTkiIGZpbGw9IiNGRkYiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiPjwvcGF0aD48L2c+PC9zdmc+",
@@ -2831,7 +2861,7 @@ hideS = 'data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMjhweCIgaGVpZ2h
 
 var mesShadows = /* hr shadow */ 'hr{border-style:none none solid!important;border-color:rgba(0,0,0,.3)!important;box-shadow:0 1px 0 #fff!important;}'+
 /* text spoiler, banner image & captcha image sadows */ '#yuki-captcha-image,.banner,.spoiler,.spoiler a,.spoiler blockquote,.spoiler blockquote blockquote,.spoiler blockquote blockquote blockquote{transition:all .1s ease;box-shadow:0 1px 2px -1px rgba(0,0,0,.7)!important;}.spoiler a:hover,.spoiler:hover,.transparent{box-shadow:none!important;}'+
-/* popup/error posts & settings panel sadows */ '.reply,.popup{border:0 none transparent!important;}.popup,#magic-panel{box-shadow:5px 5px 10px rgba(0,0,0,.4),inset 0 0 30px rgba(0,0,0,.1)!important;z-index:9;}'+
+/* popup/error posts, settings panel sadows & dropdown menu */ '.reply,.popup{border:0 none transparent!important;}.active > .dropdown-label,.dropdown-menu,.popup,#magic-panel{box-shadow:5px 5px 10px rgba(0,0,0,.4),inset 0 0 30px rgba(0,0,0,.1)!important;z-index:9;}'+
 /* reply post sadows */ '.highlight,.reply{padding:2px 1em 2px 2px!important;box-shadow:inset 0 1px 30px -9px #fff,0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);}.line-sect.reply{padding:2px 4px!important;}'+
 /* new reply post sadows */ '.reply.new{box-shadow:inset 0 1px 30px -9px rgba(255, 85, 0, 0.8),0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);}'+
 /* post images/files & audio players shadows */ '.thumb,.yukiFile,.scbc-container,.prosto-pleer,.audio-container video{box-shadow:1px 2px 2px -1px rgba(0,0,0,.4),-1px 0 4px -1px rgba(0,0,0,.2),inset 0 0 30px rgba(0,0,0,.1)!important;}'+
@@ -2848,11 +2878,11 @@ var mesAnimations = '.reply{animation:pview .3s normal;-webkit-animation:pview .
 var MagicStyle = '.hidout,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google,.reply_,#postform,#hideinfodiv hr,.reply #yuki-newThread-create,.submit-button.process input,.pleer-container + br,.artwork > select,.artwork > .file_name + br,.magic-info + br,.autohidden,.showhidden + .hinfo-stub{display:none!important;}\
 .unexpanded,.rated{max-width:200px!important;max-height:200px!important;}.expanded{width:100%;height:auto;}#hideinfodiv{margin:5px;}.sp-r.rate{color:darkred;}#yuki-dropBox tr,.f-sect,.hideinfo{text-align:center!important;}\
 .dpop,#wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}.artwork{background:url('+artwork+')no-repeat scroll center center / 100% auto;}\
-.yuki_clickable,.txt-btn,.wmark-button,.button{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}\
+.yuki_clickable,.txt-btn,.wmark-button,.button,.el-li{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}\
 .replylinks,.button{line-height:2em;font-size:75%;clear:both;}#post-count,.txt-btn{color:#999;}.mapped,.mapped:hover{cursor:default;color:#666!important;}.hidup{top:-9999px!important;}\
 .userdelete:after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.cm-button{text-decoration:none;}.s-sect{text-align:left;padding-left:2em;color:#777;}\
 #yuki-captcha,#yuki-pass{width:295px;}#yuki-captcha-image{vertical-align:middle;margin:2px;}#yuki-dropBox{width:7em;height:18em;border:3px dashed rgba(99,99,99,.3);padding:2px;}\
-#convert-strike,.doubledash,.topformtr #yuki-replyForm #yuki-close-form{visibility:hidden;}.sagearrow{background:url(/src/svg/1409/Sage.svg)no-repeat center bottom;position:relative;right:24px;top:2px;}\
+#convert-strike,.doubledash,.topformtr #yuki-replyForm #yuki-close-form,.dropdown-menu{visibility:hidden;}.sagearrow{background:url(/src/svg/1409/Sage.svg)no-repeat center bottom;position:relative;right:24px;top:2px;}\
 #yuki-errorMsg{text-align:center;color:#FFF;background-color:#E04000;}.wmark-button{color:#fefefe;text-shadow:0 1px 0 rgba(0,0,0,.4);}.wmark-button .spoiler{text-shadow:none;}#allowed-posts{font-size:14px;}\
 .rating_SFW{background:green;}.rating_R15{background:yellow;}.rating_R18{background:orange;}.rating_R18G{background:red;}.line-sect,.yukiFile,.cpop,.mpanel-btn{display:inline-block;}#warning-massage{color:#ff3428;}\
 .yukiFile,.yukiFileSets{font-size:66%;}.yukiFile{text-align:center;width:210px;background-color:#fefefe;-webkit-border-radius:5px;margin:5px;padding:2px;}.reply.new{background-color:rgba(212,115,94,.1);}\
@@ -2879,6 +2909,8 @@ var MagicStyle = '.hidout,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google
 .ma-controls,.ma-controls a{display:block;width:50px;height:50px;}.ma-controls{position:relative;top:37%;left:37%;border:2px solid #ddd;border-radius:100%;background-color:#333;opacity:.8;}\
 .font-s{font-size:12px;}.keywords-input{width:300px;height:55px;resize:none;}.o-sect{padding:0 1em;}.cyan-light{color:rgba(90,152,155,.8);}\
 #hide-set{background:url('+hideS+')no-repeat scroll center;}#general-set{background:url(/src/png/1409/list4.png)no-repeat scroll center center / 80%;}\
+.dropdown,.dropdown-menu{padding-left:0;list-style:outside none none;}.active > .dropdown-label,.active > .dropdown-menu{visibility:visible;background-clip:padding-box;background-color:#fefefe;}.active > .dropdown-label{border-radius:4px 4px 0 0;}.dropdown-label{padding:4px 8px;border-radius:2px;font-variant:small-caps;font-size:14px;}.dropdown-menu{color:#777;position:absolute;min-width:150px;font-size:14px;line-height:1.8;}\
+.dropdown-item{padding:0 10px;}.dropdown-item:hover{background-color:rgba(0,0,0,.1);}.dropdown-menu{border-radius:0 0 4px 4px;}.dropdown-label:before{content:"⟨ ";}.dropdown-label:after{content:" ⟩";}#int-val{width:50px;margin:0 4px;}\
 .blink{-webkit-animation-name:blinker;-webkit-animation-duration:1s;-webkit-animation-timing-function:linear;-webkit-animation-iteration-count:infinite;animation-name:blinker;animation-duration:1s;animation-timing-function:linear;animation-iteration-count:infinite;}\
 @-webkit-keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}@keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}\
 @keyframes onReady{50% {opacity:0;}} @-webkit-keyframes onReady{50% {opacity:0;}}'+ mesShadows + mesAnimations;
