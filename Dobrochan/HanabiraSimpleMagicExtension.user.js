@@ -131,13 +131,13 @@
 	window._z = _z;
 })();
 
-var GlobalStyle = _z.setup('style', {'text': '.hide,.reply_,#postform,#hideinfodiv hr{display:none!important;position:absolute;left:-9999;}.reply-button,.cpop,.callpop{margin-left:9px;}\
+var GlobalStyle = _z.setup('style', {'text': '.hide,.reply_,#postform,#hideinfodiv hr{display:none!important;position:absolute;left:-9999;}.reply-button,.cpop,.callpop{margin-left:8px;}\
 .unexpanded,.rated{max-width:200px!important;max-height:200px!important;}.expanded{width:100%;height:auto;}#hideinfodiv{margin:5px;}.sp-r.rate{color:darkred;}#music_player{right:5px;position:fixed;bottom:5px;}\
 .search_google{background-image:url(/src/png/1407/google_14_icon.png)!important;}.search_derpibooru{background-image:url(/src/png/1407/derpibooru_reverse_search_14_icon.png);}.search_saucenao{background-image:url(/src/png/1502/saucenao_favicon1.png);}\
 .yuki_clickable,.txt-btn,.wmark-button{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}\
 .replylinks{line-height:2em;font-size:75%;clear:both;}.hideinfo{text-align:center!important;}.post-count,.txt-btn{color:#999;}.mapped,.mapped:hover{cursor:default;color:#666!important;}.dpop{cursor:move;}\
 .postername:after, .userdelete:after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.dpop,.sp-r,.wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}.err-msg{color:#ff3428;}.deleted{opacity:.6;}.reply.new{background:#ee9;}\
-.font-s-a{font-size:12px;font-size-adjust:.7;}\
+.font-s-a{font-size:12px;font-size-adjust:.8;}\
 @keyframes onReady{50% {opacity:0;}} @-webkit-keyframes onReady{50% {opacity:0;}}'}, null);
 document.head.appendChild(GlobalStyle);
 
