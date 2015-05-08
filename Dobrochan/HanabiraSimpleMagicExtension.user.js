@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraSimpleMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.2.1
+// @version 		1.2.2
 // @grant   		none
 // ==/UserScript==
 
@@ -131,12 +131,13 @@
 	window._z = _z;
 })();
 
-var GlobalStyle = _z.setup('style', {'text': '.hide,.reply_,#postform,#hideinfodiv hr{display:none!important;position:absolute;left:-9999;}.reply-button,.cpop,.callpop{margin-left:.4em;}\
+var GlobalStyle = _z.setup('style', {'text': '.hide,.reply_,#postform,#hideinfodiv hr{display:none!important;position:absolute;left:-9999;}.reply-button,.cpop,.callpop{margin-left:9px;}\
 .unexpanded,.rated{max-width:200px!important;max-height:200px!important;}.expanded{width:100%;height:auto;}#hideinfodiv{margin:5px;}.sp-r.rate{color:darkred;}#music_player{right:5px;position:fixed;bottom:5px;}\
 .search_google{background-image:url(/src/png/1407/google_14_icon.png)!important;}.search_derpibooru{background-image:url(/src/png/1407/derpibooru_reverse_search_14_icon.png);}.search_saucenao{background-image:url(/src/png/1502/saucenao_favicon1.png);}\
 .yuki_clickable,.txt-btn,.wmark-button{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}\
 .replylinks{line-height:2em;font-size:75%;clear:both;}.hideinfo{text-align:center!important;}.post-count,.txt-btn{color:#999;}.mapped,.mapped:hover{cursor:default;color:#666!important;}.dpop{cursor:move;}\
 .postername:after, .userdelete:after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.dpop,.sp-r,.wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}.err-msg{color:#ff3428;}.deleted{opacity:.6;}.reply.new{background:#ee9;}\
+.font-s-a{font-size:12px;font-size-adjust:.7;}\
 @keyframes onReady{50% {opacity:0;}} @-webkit-keyframes onReady{50% {opacity:0;}}'}, null);
 document.head.appendChild(GlobalStyle);
 
@@ -452,7 +453,7 @@ document.head.appendChild(GlobalStyle);
 					reftab.style['z-index'] = HM.zIndex + 1
 					HM.RefTab = reftab; 
 					return _z.fall(e) }}),
-			close = _z.setup('span', {'class': 'cpop txt-btn', 'title': LC.clos[lng], 'text': '\n✕'}, {
+			close = _z.setup('span', {'class': 'cpop txt-btn font-s-a', 'title': LC.clos[lng], 'text': '\n✕'}, {
 				'click': function(e) { reftab.remove() }}),
 			closeAll = _z.setup('span', {'class': 'callpop txt-btn', 'title': LC.clos[lng] + LC.all[lng], 'text': '\n☒'}, {
 				'click': RemoveAllRefs });
@@ -646,7 +647,7 @@ document.head.appendChild(GlobalStyle);
 					break;
 				case 'reflink':
 					var url = ParseUrl(link.firstElementChild.href),
-						targ = _z.setup('a', {'class': 'reply-button txt-btn', 'title': LC.repl[lng], 'text': '➤➤'}, {
+						targ = _z.setup('a', {'class': 'reply-button txt-btn font-s-a', 'title': LC.repl[lng], 'text': '➤➤'}, {
 							'click': function(e) {
 								HM.Form.getForm(e, url.board, url.thread, url.pid)
 							}
@@ -835,8 +836,8 @@ document.head.appendChild(GlobalStyle);
 					'<span id="yuki-attach-captcha-button" class="txt-btn yuki_clickable" title="'+ LCY.acap[lng] +'">[+]</span></span><br>'+
 					'<input id="yuki-captcha" autocomplete="off" name="captcha" type="text" hidden></td></tr>'+
 			'<tr id="trrempass"><td><input id="yuki-pass" name="password" size="35" value="'+ pass +'" type="password" hidden></td></tr>'+
-			'<tr id="trfile"><td id="files_parent"><div id="file_1_div"><label><input id="dumb_file_field" type="file" hidden multiple><input type="button" value="'+
-			LC.add[lng] +' '+ LC.file[lng] + LC.few['u-c'][lng] +'" id="yuki-add-files"></label>\n<span class="yukiFileSets"><label><input id="yuki-removeExif" type="checkbox">\n'+
+			'<tr id="trfile"><td id="files_parent"><div id="file_1_div">\n<input id="dumb_file_field" type="file" hidden multiple><input type="button" value="'+
+			LC.add[lng] +' '+ LC.file[lng] + LC.few['u-c'][lng] +'" id="yuki-add-files">\n<span class="yukiFileSets"><label><input id="yuki-removeExif" type="checkbox">\n'+
 			LCY.rmv[lng] +' Exif</label>\n<label><input id="yuki-removeFilename" type="checkbox">\n'+ LCY.rmv[lng] +' '+ LCY.fnm[lng] +
 		'</label></span></div></td></tr></tbody></table><div id="yuki-files-placeholder"></div><style>'+style+'</style>';
 		this.$ = function(child) { return this['ReplyForm'].querySelector(child) }
