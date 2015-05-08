@@ -2804,7 +2804,7 @@ function MagicExtension() {
 				wmarkText(e.target, '\	', '\n\	');
 				return fallback(e);
 			}
-			if (e.keyCode === 32 && !['TEXTAREA', 'INPUT'].isThere(e.target.tagName)) {
+			if (e.keyCode === 82 && !['TEXTAREA', 'INPUT'].isThere(e.target.tagName)) {
 				_z.each('.reply.new', function(masRp) {
 					masRp.classList.remove('new')
 					masRp.removeEventListener('click', markAsRead, false)
