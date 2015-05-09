@@ -131,7 +131,7 @@
 	window._z = _z;
 })();
 
-var GlobalStyle = _z.setup('style', {'text': '.hide,.reply_,#postform,#hideinfodiv hr{display:none!important;position:absolute;left:-9999;}.reply-button,.cpop,.callpop{margin-left:8px;}\
+var GlobalStyle = _z.setup('style', {'text': '.hide,.reply_,#postform,#hideinfodiv hr{display:none!important;position:absolute;left:-9999;}.reply-button,.cpop,.callpop{margin-left:.4em;}\
 .unexpanded,.rated{max-width:200px!important;max-height:200px!important;}.expanded{width:100%;height:auto;}#hideinfodiv{margin:5px;}.sp-r.rate{color:darkred;}#music_player{right:5px;position:fixed;bottom:5px;}\
 .search_google{background-image:url(/src/png/1407/google_14_icon.png)!important;}.search_derpibooru{background-image:url(/src/png/1407/derpibooru_reverse_search_14_icon.png);}.search_saucenao{background-image:url(/src/png/1502/saucenao_favicon1.png);}\
 .yuki_clickable,.txt-btn,.wmark-button{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}\
