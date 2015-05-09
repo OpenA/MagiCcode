@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.2.1
+// @version 		1.2.2
 // @grant   		none
 // ==/UserScript==
 initStore();
@@ -99,7 +99,7 @@ metadataCallback(metadata);},errorCallback);}});}}
 (function(){
 	var _z = {
 		each: $each, setup: $setup, route: $route,
-		getlSVal: getlSValue, setlSVal: setlSValue,
+		getlSVal: getlSValue, setlSVal: setlSValue, fall: fallback,
 		append: function(el, nodes) { $nodeUtil('append', el, nodes) },
 		prepend: function(el, nodes) { $nodeUtil('prepend', el, nodes) },
 		after: function(el, nodes) { $nodeUtil('after', el, nodes) },
@@ -182,13 +182,12 @@ metadataCallback(metadata);},errorCallback);}});}}
 		}
 	}
 	function setlSValue(name, value, sess) {
-		var stor = sess ? sessionStorage : localStorage;
 		if (typeof name === 'object') {
 			for (var key in name) {
 				probeStore(key, (name[key] === null ? value : name[key]), sess);
 			}
 		} else {
-			stor.setItem(name, value);
+			probeStore(name, value, sess);
 		}
 	}
 	function getlSValue(name, def, sess) {
@@ -203,6 +202,12 @@ metadataCallback(metadata);},errorCallback);}});}}
 			return def;
 		}
 	}
+	function fallback(e) {
+		if (e.preventDefault)
+			e.preventDefault();
+		else
+			e.returnValue = false;
+	}
 	window._z = _z;
 })();
 
@@ -210,7 +215,7 @@ function MagicExtension() {
 	var hideinfo, showinfo, postForm, pfplaceh, topForm, delForm, deli, pass, lng, mEl, Chanabira, Nagato,
 		unread_count = 0, lceche = {}, 
 	HM = {
-		MC: ['windowFrame', 'postContent'].indexOf(_z.getlSVal('EmbedIn', 'postContent')),
+		MC: _z.getlSVal('EmbedIn', 1),
 		Sage: false, zIndex: 0, DragableObj: null, Played: null, LastKey: null,
 		LoadedPosts: {}, VActive: [], RepliesMap: {}, AlbumArts: {}, URL: ParseUrl(),
 		LinksMap: JSON.parse(_z.getlSVal('LinksCache', '{}', true)), 
@@ -346,12 +351,6 @@ function MagicExtension() {
 	function matchIndex(str) {
 		return this.indexOf(str) >= 0;
 	}
-	function fallback(e) {
-		if (e.preventDefault)
-			e.preventDefault();
-		else
-			e.returnValue = false;
-	}
 	function setupOptions(obj, option, sess) {
 		if (obj.type === 'checkbox')
 			val = obj.checked;
@@ -392,7 +391,7 @@ function MagicExtension() {
 		var node = el || document;
 		return { posts: node.getElementsByClassName('post'),
 			images: node.querySelectorAll('.file > a > img.thumb[onclick^="expand_image"], .file > a[href$=".svg"] > img'),
-			hoos: node.querySelectorAll('.reply-button, .reply-link, .cm-button, .spr-image, .ma-button'),
+			hoos: node.querySelectorAll('.reply-button, .reply-link, .cm-button, .spr-image, .ma-button, .sp-r'),
 			links: node.querySelectorAll('.message a:not(#cm-link):not(.reply-link)'),
 			elements: node.querySelectorAll('.reflink, .file > a[href$=".swf"] > img, img[alt^="r-1"]:not(.spr-image), img[alt="unrated"]:not(.spr-image), img[alt="illegal"]:not(.spr-image), .file > a > img[src="/thumb/generic/sound.png"], .file > a[href$=".webm"] > img, .file > a[href$=".pdf"] > img, .file > a > img[onclick^="open_url"]')
 		}
@@ -433,37 +432,36 @@ function MagicExtension() {
 	function getDataResponse(uri, Fn) {
 		var apiReq = new XMLHttpRequest();
 		apiReq.open('GET', uri, true);
-		apiReq.send(null);
 		apiReq.onreadystatechange = function() {
-			if(apiReq.readyState !== 4) {
+			if (this.readyState !== 4)
 				return;
-			}
-			if(apiReq.status === 304) {
-				console.log('304 ' + apiReq.statusText);
+			if (this.status === 304) {
+				console.log('304 ' + this.statusText);
 			} else {
 				try {
-					var json = JSON.parse(apiReq.responseText);
+					var json = JSON.parse(this.responseText);
 				} catch(e){
 					console.log(e.toString())
 				} finally {
-					Fn(apiReq.status, apiReq.statusText, (json || apiReq.responseText), this);
+					Fn(this.status, this.statusText, (json || this.responseText), this);
 					Fn = null;
 				}
 			}
 		}
+		apiReq.send(null);
 	}
 	function getFileReaderData(readAs, file, Fn) {
 		var reader = new FileReader();
 		reader.onload = function() {
-			if (reader.readyState < 1) {
+			if (this.readyState < 1) {
 				console.log('No data has been loaded yet.');
 				return;
 			}
-			if (reader.error) {
-				console.log(reader.error);
+			if (this.error) {
+				console.log(this.error);
 			} else {
 				try {
-					var data = reader.result;
+					var data = this.result;
 				} catch(e) {
 					console.log(e.toString());
 				} finally {
@@ -780,7 +778,8 @@ function MagicExtension() {
 						}
 						if (pnid(i) > jpid(i)) {
 							var derefl = ref_tamplate.allReplace({'r{brd}': HM.URL.board, 'r{tid}': HM.URL.thread, 'r{pid}': jpid(i), 'r{L}': '', 'r{cl}': 'nview'}),
-								temp = getHanabiraPost(jsonPosts[i], true), s = Chana['AllowedPosts'].querySelector('.reply-link') ? ', ' : ': ';
+								temp = getHanabiraPost(jsonPosts[i], [json.result.archived, json.result.autosage]),
+								s = Chana['AllowedPosts'].querySelector('.reply-link') ? ', ' : ': ';
 							if (!HM.Elems.posts[i])
 								Target.thread().appendChild(temp[0]);
 							else
@@ -803,10 +802,10 @@ function MagicExtension() {
 				Chana['PostsCount'].textContent = pCount + LC.omit[lng] + (Count.mod > 0 ? ' ( +'+ Count.mod + LC.pmod[lng] +' )' : '');
 			});
 		}
-		function getHanabiraPost(postJson, gen, btp) {
-			var threadId = btp ? btp[1] : Target.tid,
+		function getHanabiraPost(postJson, margArr, mapArr) {
+			var threadId = mapArr ? mapArr[1] : Target.tid,
 				postId = postJson.display_id,
-				board = btp ? btp[0] : HM.URL.board,
+				board = mapArr ? mapArr[0] : HM.URL.board,
 				files = postJson.files,
 				len = files.length,
 				op = postJson.op,
@@ -822,8 +821,9 @@ function MagicExtension() {
 							'<span class="ipmark" style="background:rgba(0,0,0,.5)">&nbsp;</span><span class="ipmark" style="background:rgba(255,255,255,.5)">&nbsp;</span>'+
 							'<span class="ipmark" style="background:rgba(25,25,25,.6)">&nbsp;</span><span class="ipmark" style="background:rgba(99,99,99,.6)">&nbsp;</span>'+
 							'<span class="ipmark" style="background:rgba(175,175,175,.6)">&nbsp;</span></span>\n<img class="geoicon" src="/src/png/1408/polandball_kawaii_16.png" alt="(^ ^)" title="Polandball (^ ^)">\n' : '') +
-						'<span class="replytitle">'+ postJson.subject +'</span>\n<span class="postername">'+ getDefaultName(postJson.name) +'</span> '+ getDateTime(postJson.date) +
-					' </label><span class="reflink"><a onclick="Highlight(0, r{post_id})" href="/r{board}/res/r{thread_id}.xhtml#ir{post_id}">No.r{post_id}</a></span>\n<span class="cpanel"></span><br>';
+				'<span class="replytitle">'+ postJson.subject +'</span>\n<span class="postername">'+ getDefaultName(postJson.name) +'</span>\n'+ (op && margArr[0] ? '<img src="/images/archive.gif" alt="В архиве" title="В архиве">\n' :
+				'') + (op && margArr[1] ? '<img src="/images/autosage.gif" alt="Бамп-лимит" title="Бамп-лимит">\n' : '') +'<span class="posterdate">'+ getDateTime(postJson.date) +
+				'</span>\n</label><span class="reflink"><a onclick="Highlight(0, r{post_id})" href="/r{board}/res/r{thread_id}.xhtml#ir{post_id}">No.r{post_id}</a></span>\n<span class="cpanel"></span><br>';
 			for (var i = 0; i < len; i++) {
 				html += getHanabiraFile(files[i], postJson.post_id, board, threadId, postId, (len === 1));
 			}
@@ -831,14 +831,14 @@ function MagicExtension() {
 				(len > 1 ? '<br style="clear: both">' : '') +'<div class="postbody">'+ postJson.message_html +'</div><div class="abbrev"></div>' +
 				(op ? '' : '</td>'+ (hidden ? '<td class="reply hinfo-stub"><label class="'+ (hidden[0] === 'Title' ? 'replytitle' : 'postername') +
 					' t-sec font-s">'+ hidden[1] +'</label> hidden post No.'+ postId +'</td>' : '') +'</tr></tbody>'));
-			if (!btp) {
+			if (!mapArr) {
 				unread_count++;
 				if (!op)
 					wrap.querySelector('.reply.new').addEventListener('click', markAsRead, false);
 				if (HM.SoundNotify && !play_notify)
 					Notif.play();
 			}
-			if (gen)
+			if (margArr)
 				Chana.genReplyMap([wrap]);
 			attachEvents(wrap);
 			var wels = GetElements(wrap);
@@ -934,7 +934,7 @@ function MagicExtension() {
 					'mousedown': function(e) {
 						reftab.style['z-index'] = HM.zIndex + 1
 						HM.DragableObj = { el: reftab, offsetY: 9, offsetX: 9 }
-						return fallback(e) }}),
+						return _z.fall(e) }}),
 				close = _z.setup('span', {
 					'class': 'cpop ty txt-btn',
 					'title': LC.clos[lng]}, {
@@ -1044,9 +1044,9 @@ function MagicExtension() {
 			} else if (HM.URL.thread == tid) {
 				binded(null);
 			} else {
-				getDataResponse('/api/post/'+ brd +'/'+ tid +'/'+ pid +'.json?message_html&new_format',
+				getDataResponse('/api/post/'+ brd +'/'+ tid +'/'+ pid +'.json?message_html&new_format'+ (op ? '&thread' : ''),
 				function(status, sText, json, xhr) {
-					var temp, node, ErrorMSG;
+					var temp, node, tstat, jpost, ErrorMSG;
 					if (status !== 200) {
 						ErrorMSG = new MagicElements()['WarningMsg'];
 						_z.replace(loading, _z.setup(ErrorMSG, {
@@ -1058,7 +1058,9 @@ function MagicExtension() {
 					} else if (json.error) {
 						node = 'stub';
 					} else {
-						temp = getHanabiraPost(json.result, true, [brd, tid, pid]);
+						tstat = op ? [json.result.threads[0].archived, json.result.threads[0].autosage] : true;
+						jpost = op ? json.result.threads[0].posts[0] : json.result;
+						temp = getHanabiraPost(jpost, tstat, [brd, tid, pid]);
 						node = op ? temp[0] : temp[1];
 					}
 					HM.LoadedPosts[id] = node;
@@ -1099,7 +1101,7 @@ function MagicExtension() {
 			if (active) {
 				key = KeyCodes.symbs.indexOf(key) >= 4 ? key + key : key;
 				wmarkText(TextArea, key, (key === '(' ? ')' : key))
-				return fallback(e);
+				return _z.fall(e);
 			}
 		}
 		if (CED && TA && KeyCodes.codew.isThere(key)) {
@@ -1108,7 +1110,7 @@ function MagicExtension() {
 					(key === '(' ? ')' :
 					 key === '{' ? '}' :
 					 key === '[' ? ']' : key))
-				return fallback(e);
+				return _z.fall(e);
 			}
 		}
 		if (YRT && KeyCodes.quots.isThere(key)) {
@@ -1116,7 +1118,7 @@ function MagicExtension() {
 			if (['\n', ''].isThere(sSp) || selected.isThere('\n')) {
 				key = key === '^' ? '*' : key;
 				wmarkText(TextArea, key +' ', '\n'+ key +' ');
-				return fallback(e);
+				return _z.fall(e);
 			}
 		}
 		if (TA && e.keyCode != 8) { HM.LastKey = key;
@@ -1352,7 +1354,7 @@ function MagicExtension() {
 		}
 		if (th.Type === 'video')
 			HM.VActive = [pcont, cont];
-		return fallback(e);
+		return _z.fall(e);
 	}
 	
 	function attachFile(el, type) {
@@ -1532,6 +1534,11 @@ function MagicExtension() {
 					if (a.classList[2] !== 'locked')
 						a.addEventListener('mouseover', Chanabira.MagicPostView, false)
 					break;
+				case 'sp-r':
+					a.addEventListener('click', function(e) {
+						hRate(this, this.parentNode.parentNode.querySelector('img.spr-image'))
+					}, false)
+					break;
 				case 'spr-image':
 					a.addEventListener('click', MagicSpoirate, false)
 					break;
@@ -1550,21 +1557,22 @@ function MagicExtension() {
 		});
 	}
 	
+	function hRate(el, img) {
+		if (el.classList[2]) {
+			el.classList.remove('rate')
+			img.src = img.parentNode.href
+		} else {
+			el.classList.add('rate')
+			img.src = '/images/'+ img.alt +'.png'
+		}
+	}
 	function MagicSpoirate(e) {
 		if (this.classList[3]) {
 			var finf = _z.route(this, '.fileinfo > a + br'), iMg = this,
 				href = this.parentNode.href,
 				fid = this.parentNode.parentNode.id.split('_'),
 				btnRate = _z.setup('a', {'class': 'sp-r txt-btn', 'text': this.alt}, {
-					'click': function(e) {
-						if (this.classList[2]) {
-							this.classList.remove('rate')
-							iMg.src = href
-						} else {
-							this.classList.add('rate')
-							iMg.src = '/images/'+ iMg.alt +'.png'
-						}
-					}
+					'click': function(e) { hRate(this, iMg) }
 				});
 			createImgContext(this);
 			_z.after(finf, btnRate);
@@ -1576,7 +1584,7 @@ function MagicExtension() {
 		}
 		this.classList.toggle('unexpanded')
 		this.classList.toggle('expanded')
-		return fallback(e);
+		return _z.fall(e);
 	}
 	function createImg(imgSrc, Id) {
 		var fileName = getPageName(imgSrc),
@@ -1863,7 +1871,7 @@ function MagicExtension() {
 					StrikeConvert(Yu['ReplyText']) }
 			});
 		this['DropBox'] = _z.setup(this.$("#yuki-dropBox"), {}, {
-				'dragover': fallback,
+				'dragover': _z.fall,
 				'dragenter': function(e) {
 					var items = e.dataTransfer.mozItemCount || '';
 					if (this.classList[0] != 'thumb') {
@@ -1880,7 +1888,7 @@ function MagicExtension() {
 					yukiAddFile(e);
 					this.firstChild.textContent = '';
 					this.classList.remove('thumb');
-					return fallback(e);
+					return _z.fall(e);
 				}
 			});
 		this['Sage'] = _z.setup(this.$('#yuki-sage'), {
@@ -1956,13 +1964,14 @@ function MagicExtension() {
 			}
 		}
 		function checkfilesLimit() {
-			if (fileList.length >= (HM.URL.board === 'mu' ? 10 : 5)) {
+			var limit, mu = (Target.board === 'mu');
+			if (fileList.length >= (mu ? 10 : 5)) {
 				_z.prepend(Yu['FilesPlaceholder'],
 					_z.setup(mEl['WarningMsg'], {'text': LCY.maxfc[lng], 'style':'display:block;text-align:center;'}, null))
 				mEl.funct = _rmMsg;
-				return true;
-			} else 
-				return false;
+				limit = true;
+			}
+			return limit;
 		}
 		function attachthisFile() {
 			fileList[fileList.length - 1].el.querySelector('.yuki_clickable').onclick = (function(data) {
@@ -2144,7 +2153,7 @@ function MagicExtension() {
 			ajaxPost.open('POST', action, true);
 			ajaxPost.onreadystatechange = Fn;
 			ajaxPost.send(fd);
-			return fallback(e);
+			return _z.fall(e);
 		}
 		function makeReplyForm(e, brd, tid, pid) {
 			if (Target.thread(tid) && HM.URL.thread != tid)
@@ -2195,7 +2204,7 @@ function MagicExtension() {
 								(Yu['TargetThread'].value > 0 ? 'inactive' : 'selected');
 							break;
 					}
-					return fallback(e);
+					return _z.fall(e);
 			}
 		}
 		function makeRandId(size) {
@@ -2452,7 +2461,7 @@ function MagicExtension() {
 			btn.id = 'ma-pause';
 			HM.Played.play();
 		}
-		return fallback(e);
+		return _z.fall(e);
 	}
 	
 	/************************************************************************/
@@ -2521,10 +2530,10 @@ function MagicExtension() {
 		this.Keywords = JSON.parse(_z.getlSVal('Keywords', JSON.stringify(keywordsObj)))
 		this.$ = function(child) { return this['GeneralSets'].querySelector(child) }
 		this['SpStyle'] = _z.setup('style', {'text': '.spoiler, .spoiler * {color:inherit!important;}'}, null);
-		this['Panel'] = _z.setup('table', {'id': 'magic-panel'}, null);
-		this['GeneralSets'] = _z.setup('tbody', {'html': '<tr><td class="f-sect"><span id="media-placement"><input '+
-				(HM.MC == 0 ? 'checked' : '') +' value="windowFrame" name="cont_p" type="radio">\n'+ SLC.mcw[lng] +'\n<input '+
-				(HM.MC == 1 ? 'checked' : '') +' value="postContent" name="cont_p" type="radio">\n'+ SLC.mcp[lng] +'\n</span></td><td class="s-sect">'+
+		this['Panel'] = _z.setup('div', {'id': 'magic-panel'}, null);
+		this['GeneralSets'] = _z.setup('table', {'html': '<tbody><tr><td class="f-sect"><span id="media-placement"><input '+
+				(HM.MC == 0 ? 'checked' : '') +' value="0" name="cont_p" type="radio">\n'+ SLC.mcw[lng] +'\n<input '+
+				(HM.MC == 1 ? 'checked' : '') +' value="1" name="cont_p" type="radio">\n'+ SLC.mcp[lng] +'\n</span></td><td class="s-sect">'+
 				SLC.cframe[lng] +'</td></tr><tr class="vs-set'+ (HM.MC == 0 ? ' hidout' : '') +'"><td class="f-sect"><input id="video-frame-size" min="1" value="'+
 				getVSize('value') +'" step="1" max="4" type="range" name="v_size"></td><td class="s-sect">'+ SLC.vsyz[lng] +'\n<span id="vsize-textbox">('+
 				getVSize('text') +')</span></td></tr><tr><td class="f-sect"><select id="max-allowed-rating"><option class="rating_SFW">SFW</option>'+
@@ -2535,14 +2544,14 @@ function MagicExtension() {
 				'<tr><td class="f-sect"><label><input id="set-show-spoilers" hidden="" type="checkbox"><span class="checkarea"></span></label></td><td class="s-sect">'+
 				LC.txtspoils[lng] +'</td></tr><tr><td class="f-sect"><label><a class="paperclip'+
 				(HM.AttachPopups ? '' : ' inactive') +'"><input id="attach-popups" type="checkbox" hidden><img src="/src/png/1411/attachpopup.png"></a></label></td><td class="s-sect">'+
-				SLC.clipopup[lng] +'</td></tr>'}, null);
-		this['HideBySets'] = _z.setup('tbody', {'html': '<tr><th></th><th class="s-sect">'+ SLC.hidby['hr'][lng] +'</th></tr>'+
+				SLC.clipopup[lng] +'</td></tr></tbody>'}, null);
+		this['HideBySets'] = _z.setup('table', {'html': '<tbody><tr><th></th><th class="s-sect">'+ SLC.hidby['hr'][lng] +'</th></tr>'+
 				'<tr><td class="o-sect"><label><input id="chx-Nametrip" type="checkbox" hidden><span class="checkarea"></span></label></td><td><span class="font-s cyan-light">'+
 				SLC.hidby['nt'][lng] +'</span><br><textarea id="type-Nametrip" class="keywords-input font-s" placeholder="Mr.Yoba, Mr.*, *Yoba, !Hyd5gFre"></textarea></td></tr>'+
 				'<tr><td class="o-sect"><label><input id="chx-Title" type="checkbox" hidden><span class="checkarea"></span></label></td><td><span class="font-s cyan-light">'+
 				SLC.hidby['tl'][lng] +'</span><br><textarea id="type-Title" class="keywords-input font-s" placeholder="Официальный™*, *ожиданий от*, Унылый тред"></textarea></td></tr>'+
 				'<tr><td class="o-sect"><label><input id="chx-Words" type="checkbox" hidden><span class="checkarea"></span></label></td><td><span class="font-s cyan-light">'+
-				SLC.hidby['rw'][lng] +'</span><br><textarea id="type-Words" class="keywords-input font-s" placeholder="белое::черное, &quot;[w]&quot;::«[w]»"></textarea></td></tr>'}, null);
+				SLC.hidby['rw'][lng] +'</span><br><textarea id="type-Words" class="keywords-input font-s" placeholder="белое::черное, &quot;[w]&quot;::«[w]»"></textarea></td></tr></tbody>'}, null);
 		var Types = ['Nametrip', 'Title', 'Words'];
 			for (var n = 0; n < Types.length; n++) {
 				_z.setup(this['HideBySets'].querySelector('#chx-'+ Types[n]), {'checked': this.Keywords[Types[n]].apply}, {
@@ -2670,24 +2679,24 @@ function MagicExtension() {
 			p == 3 ? size(720, 480) : p == 4 ? size(854, 576) : size(0, 0);
 		}
 		function placeMedia(e) {
-			var val = e.target.value, cont = HM.VActive[1],
-				vsset = MSs.$('.vs-set');
-			if (val === 'windowFrame') { HM.MC = 0;
-				_hide(vsset);
-				if (cont) {
-					mEl['ContentWindow'].appendChild(_z.setup(cont, {'class': 'content-frame video', 'id': 'content_'+cont.id.split('_')[1]}, null));
-					_z.setup(Megia['video']['Frame'], {'width': '100%', 'height': '100%'}, null);
-					_show(mEl['ContentMarker']);
-				}
-			}
-			if (val === 'postContent') { HM.MC = 1;
-				_show(vsset);
-				if (cont) {
-					_z.prepend(HM.VActive[0], _z.setup(cont, {'class': 'video-container', 'id': 'video_'+cont.id.split('_')[1]}, null));
-					_z.setup(Megia['video']['Frame'], {'class': '', 'width': getVSize()[0], 'height': getVSize()[1]}, null);
-					_hide(mEl['ContentMarker']);
-					mEl['ContentWindow'].classList.add('hidup');
-				}
+			var val = e.target.value,
+				cont = HM.VActive[1],
+				vsset = MSs.$('.vs-set'); 
+				HM.MC = val;
+			switch (val) {
+				case '0': _hide(vsset);
+					if (cont) {
+						mEl['ContentWindow'].appendChild(_z.setup(cont, {'class': 'content-frame video', 'id': 'content_'+cont.id.split('_')[1]}, null));
+						_z.setup(Megia['video']['Frame'], {'width': '100%', 'height': '100%'}, null);
+						_show(mEl['ContentMarker']);
+					}; break;
+				case '1': _show(vsset);
+					if (cont) {
+						_z.prepend(HM.VActive[0], _z.setup(cont, {'class': 'video-container', 'id': 'video_'+cont.id.split('_')[1]}, null));
+						_z.setup(Megia['video']['Frame'], {'class': '', 'width': getVSize()[0], 'height': getVSize()[1]}, null);
+						_hide(mEl['ContentMarker']);
+						mEl['ContentWindow'].classList.add('hidup');
+					}
 			}
 			_z.setlSVal('EmbedIn', val)
 		}
@@ -2802,7 +2811,7 @@ function MagicExtension() {
 		'keydown': function(e) {
 			if (e.keyCode === 9 && e.target.id === 'code_edit_ta') {
 				wmarkText(e.target, '\	', '\n\	');
-				return fallback(e);
+				return _z.fall(e);
 			}
 			if (e.keyCode === 82 && !['TEXTAREA', 'INPUT'].isThere(e.target.tagName)) {
 				_z.each('.reply.new', function(masRp) {
@@ -2840,6 +2849,9 @@ function MagicExtension() {
 }; MagicExtension();
 
 function initStore() {
+	if (isNaN(localStorage.getItem('EmbedIn'))) {
+		localStorage.removeItem('EmbedIn')
+	}
 	if (localStorage.getItem('VWidth') !== null) {
 		localStorage.clear()
 	}
