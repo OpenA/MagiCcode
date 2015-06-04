@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.2.2
+// @version 		1.4.0
 // @grant   		none
 // ==/UserScript==
 initStore();
@@ -212,10 +212,10 @@ metadataCallback(metadata);},errorCallback);}});}}
 })();
 
 function MagicExtension() {
-	var hideinfo, showinfo, postForm, pfplaceh, topForm, delForm, deli, pass, lng, mEl, Chanabira, Nagato,
-		unread_count = 0, lceche = {}, 
+	var hideinfo, showinfo, postForm, pfplaceh, topForm, delForm, deli, pass, lng, mEl, Nagato,  locationThread,
+		unread_count = 0, Chanabira = new CharmingHanabira(), UrlCache,
 	HM = {
-		MC: _z.getlSVal('EmbedIn', 1),
+		MC: _z.getlSVal('EmbedIn', 1), ThreadListener: {},
 		Sage: false, zIndex: 0, DragableObj: null, Played: null, LastKey: null,
 		LoadedPosts: {}, VActive: [], RepliesMap: {}, AlbumArts: {}, URL: ParseUrl(),
 		LinksMap: JSON.parse(_z.getlSVal('LinksCache', '{}', true)), 
@@ -234,18 +234,11 @@ function MagicExtension() {
 		'docs': new MagicContent(true),
 		'pdf': new MagicContent(true)
 	},
-	Target = {
-		board: HM.URL.board,
-		tid: HM.URL.thread,
-		thread: function(num) {
-			return document.getElementById('thread_'+ (num || Target.tid));
-		},
-		last: function() {
-			var tlel = Target.thread().lastElementChild;
-			return tlel.nodeName === 'FORM' ? tlel.previousElementSibling : tlel;
-		}}, 
+	Tamplate = {
+		ref: '<a class="reply-link r{cl}" href="/r{brd}/res/r{tid}.xhtml#ir{pid}">&gt;&gt;r{L}r{pid}</a>'
+	},
 	Files = {
-		audio: ['flac', 'alac', 'wav', 'm4a', 'm4r', 'aac', 'ogg', 'mp3', 'opus'],
+		audio: ['wav', 'm4a', 'm4r', 'aac', 'ogg', 'mp3', 'opus', 'flac', 'alac'],
 		video: ['webm', 'ogv', 'ogm', 'mp4', 'm4v', 'flv', '3gp', 'swf'],
 		image: ['jpeg', 'jpg', 'png', 'svg', 'gif'],
 		arch: ['zip', 'rar', '7z']},
@@ -259,7 +252,6 @@ function MagicExtension() {
 		repl: ["Reply", "Ответ"],
 		hide: ["Hide", "Скрыть"],
 		edit: ["Edit", "Изменить"],
-		hide: ["Hide", "Скрыть"],
 		newp: [" new ", " новых "],
 		allw: ["allowed", "раскрытых"],
 		omit: [" omited ", " ответов "],
@@ -281,6 +273,11 @@ function MagicExtension() {
 		line: [" line", " строк"],
 		all: [" All", " все"],
 		add: ["Add", "Добавить"],
+		hidden: [
+			['Hidden ', 'Cкрытый '],
+			['Thread', 'тред'],
+			['Post', 'пост']
+		],
 		names: {
 			'en': ['Anonymous', 'Developer', 'Lawrense', 'Anonymous Expert', 'Slowpoke', 'Experimenter'],
 			'ru': ['Анонимус', 'Доброкодер', 'Лоуренс', 'Анонимный эксперт', 'Добропок', 'Экспериментатор']
@@ -393,7 +390,7 @@ function MagicExtension() {
 			images: node.querySelectorAll('.file > a > img.thumb[onclick^="expand_image"], .file > a[href$=".svg"] > img'),
 			hoos: node.querySelectorAll('.reply-button, .reply-link, .cm-button, .spr-image, .ma-button, .sp-r'),
 			links: node.querySelectorAll('.message a:not(#cm-link):not(.reply-link)'),
-			elements: node.querySelectorAll('.reflink, .file > a[href$=".swf"] > img, img[alt^="r-1"]:not(.spr-image), img[alt="unrated"]:not(.spr-image), img[alt="illegal"]:not(.spr-image), .file > a > img[src="/thumb/generic/sound.png"], .file > a[href$=".webm"] > img, .file > a[href$=".pdf"] > img, .file > a > img[onclick^="open_url"]')
+			elements: node.querySelectorAll('.reply_, .file > a[href$=".swf"] > img, img[alt^="r-1"]:not(.spr-image), img[alt="unrated"]:not(.spr-image), img[alt="illegal"]:not(.spr-image), .file > a > img[src="/thumb/generic/sound.png"], .file > a[href$=".webm"] > img, .file > a[href$=".pdf"] > img, .file > a > img[onclick^="open_url"]')
 		}
 	}
 	function _show (el) { el.classList.remove('hidout') }
@@ -406,9 +403,11 @@ function MagicExtension() {
 	function _unc(str, n) {
 		return str ? str : (n || 'Unknown');
 	}
-	function _stub(c) {
-		var stb = _z.setup('div', {'html': c}, null);
-		return stb.firstElementChild;
+	function _stub(tag, html) {
+		var stb = _z.setup('div', {'html': html}, null);
+		if (!stb.querySelector(tag))
+			console.log(html)
+		return stb.querySelector(tag);
 	}
 	function _bitonum(arr, hex) {
 		var hexNum = "";
@@ -580,116 +579,99 @@ function MagicExtension() {
 		Tinycon.setBubble(unread_count);
 	}
 	
-	/*** Charming Hanabira ***/
-	//* @ original code 	http://dobrochan.com/js/hanabira-0.5.1311-.js
-	//* @ copyright 		Dobrochan
-	function CharmingHanabira(h) {
-		var Chana = this, thread_updating, play_notify, ref_tamplate = '<a class="reply-link r{cl}" href="/r{brd}/res/r{tid}.xhtml#ir{pid}" onclick="Highlight(event, \'r{pid}\')">&gt;&gt;r{L}r{pid}</a>',
+	/*** Magic Thread Listener ***/
+	function MagicThreadListener(Thread) {
+		var MListen = this, CiD, Inner, thread_updating, play_notify,
 			Timer = { id: 0, offset: 0, ql: UpdateInterval(0) },
 			Count = { dif: 0, new: 0, del: 0, mod: 0 },
+			ExpCache = new Array(0),
 			Notif = _z.setup(new Audio('/src/mp3/1406/musbox.mp3'), {}, {
 				'play': function(e) { play_notify = true },
 				'ended': function(e) { play_notify = false }
 			}),
-			ChLC = {
+			MLLC = {
 				snd_notify: ["Sound Notifications", "Звуковые уведомления"],
 				mrk_to_del: ["Mark to delete", "Отметить для удаления"],
 				loadnew: ["Load New Posts", "Подгрузить посты"],
 				updprog: ["Updating...", "Обновление..."],
 				updauto: ["Autoupdate Thread", "Автообновление треда"],
+				unexpt: ["Unexpand Thread", "Свернуть тред"],
+				expant: ["Expand Thread", "Развернуть тред"],
+				expdin: ["Expanding...", 'Разворачивается...'],
+				unexin: ["Unexpanding...", 'Сворачивается...'],
 				dsl: {
 					'quet': ['Quet Mode', 'Тихий режим'],
 					'autotimer': ['Аutotimer', 'Автотаймер'],
 					'manual': ['Manual', 'Вручную']
 				}
 			}
-		this.$ = function(child) { return this['NewPostLoader'].querySelector(child) }
-		this['NewPostLoader'] = _z.setup('span', {'id': 'new-post-loader', 'html': '<div id="update-stat"><a>'+ ChLC.loadnew[lng] +
-				'</a></div><label><input id="notif-chbx" type="checkbox" hidden><span class="checkarea"></span>\n'+ ChLC.snd_notify[lng] +
-				'</label><br><label><input id="upd-chbx" type="checkbox" hidden><span class="checkarea"></span>\n'+ ChLC.updauto[lng] +
-				'</label><ul class="dropdown line-sect" id="timer-update-sets"><li class="dropdown-toggle"><label class="dropdown-label el-li t-sec">'+
-				(ChLC.dsl[Timer.ql.value] || checkHTime(Timer.ql.value))[lng] +'</label><ul class="dropdown-menu"><li class="dropdown-item el-li" id="quet-mode-set">'+
-				ChLC.dsl['quet'][lng] +'</li><li class="dropdown-item el-li" id="autotimer-set">'+ ChLC.dsl['autotimer'][lng] +'</li><li class="dropdown-item el-li" id="manual-int-set">'+
-				ChLC.dsl['manual'][lng] +':\n<input id="int-val" max="180" min="15" type="number"></li></ul></li></ul>'
-			}, null);
-		this['UpdateStat'] = this.$('#update-stat');
-		this['PostsCount'] = _z.setup('label', {'id': 'post-count', 'class': 'etch-text', 'text': HM.Elems.posts.length + LC.omit[lng]}, null);
-		this['AllowedPosts'] = _z.setup('span', {'id': 'allowed-posts', 'class': 'etch-text', 'text': ' | '+ LC.allw[lng]}, null);
-		this['LoadButton'] = _z.setup(this['UpdateStat'].firstChild, {}, {
-				'click': updateThread
-			});
-		this['SoundNotify'] = _z.setup(this.$('#notif-chbx'), {'checked': HM.SoundNotify}, {
-				'change': function(e) {
-					setupOptions(this, 'SoundNotify', true);
-				}
-			});
-		this['AutoUpdate'] = _z.setup(this.$('#upd-chbx'), {'checked': HM.AutoUpdate}, {
-				'change': function(e) {
-					setupOptions(this, 'AutoUpdate', true);
-					Chana.updateTimer();
-				}
-			});
-		this['setInterval'] = _z.setup(this.$('#int-val'), {'value': Timer.ql.int}, null);
-		this['UpdateModeMenu'] = _z.setup(this.$('#timer-update-sets'), {}, {
-				'click': function(e) {
-					var val, tbox = this.firstElementChild.firstElementChild;
-					if (e.target.tagName === 'INPUT')
-						return;
-					if (e.target.classList[0] === 'dropdown-item') {
-						switch (e.target.id) {
-							case 'manual-int-set':
-								val = Chana['setInterval'].value;
-								tbox.textContent = checkHTime(val)[lng];
-								break;
-							default:
-								val = e.target.id.split('-')[0];
-								tbox.textContent = e.target.textContent;
-						}
-						_z.setlSVal('UpdateMode', val, true);
-					}	
-					this.firstElementChild.classList.toggle('active');
-				}
-			});
-		this.updateThread = updateThread;
-		this.genReplyMap = function(posts) {
-			_z.each(posts, function(post) {
-				var cid = _cid(post.id), replies_links = new Array(0);
-				if (HM.RepliesMap[cid]) {
-					_z.each(HM.RepliesMap[cid], function(Id) {
-						replies_links.push(ref_tamplate.allReplace({'r{brd}': Id[0], 'r{cl}': 'cview', 'r{tid}':
-						(!Id[1] ? Id[2] : Id[1]), 'r{pid}': Id[2], 'r{L}': (Id[3] ? '❪'+ Id[0].toUpperCase() +'❫' : '')}));
-					});
-					var replies_div_arr = post.getElementsByClassName('replylinks'),
-						replies_div = _z.setup('div', {'class': 'replylinks'}, null);
-					if (replies_div_arr.length == 0)
-						post.getElementsByClassName('abbrev')[0].appendChild(replies_div);
-					else
-						replies_div = replies_div_arr[0];
-					replies_div.innerHTML = LC.repl[lng] + LC.few['u-c'][lng] +': '+ replies_links.join(', ');
-					attachEvents(replies_div);
-				}
-			});
+		if (Thread) {
+			CiD = _cid(Thread.id)
+			Inner = collectPNodes(Thread)
+			this.updateThread = updateThread; this.updateTimer = updateTimer; this.expandThread = expandThread; this.concatThread = concatThread;
+			function el$(child) { return MListen['NewPostLoader'].querySelector(child) }
+			this['NewPostLoader'] = _z.setup('span', {'id': 'new-post-loader', 'html': '<div id="update-stat"><a class="load-new">'+ MLLC.loadnew[lng] +
+					'</a></div><label><input id="notif-chbx" type="checkbox" hidden><span class="checkarea"></span>\n'+ MLLC.snd_notify[lng] +
+					'</label><br><label><input id="upd-chbx" type="checkbox" hidden><span class="checkarea"></span>\n'+ MLLC.updauto[lng] +
+					'</label><ul class="dropdown line-sect" id="timer-update-sets"><li class="dropdown-toggle"><label class="dropdown-label el-li t-sec">'+
+					(MLLC.dsl[Timer.ql.value] || checkHTime(Timer.ql.value))[lng] +'</label><ul class="dropdown-menu"><li class="dropdown-item el-li" id="quet-mode-set">'+
+					MLLC.dsl['quet'][lng] +'</li><li class="dropdown-item el-li" id="autotimer-set">'+ MLLC.dsl['autotimer'][lng] +'</li><li class="dropdown-item el-li" id="manual-int-set">'+
+					MLLC.dsl['manual'][lng] +':\n<input id="int-val" max="180" min="15" type="number"></li></ul></li></ul>'
+				}, null);
+			this['UpdateStat'] = el$('#update-stat');
+			this['DummyLine'] = _z.setup('div', {'class': 'dummy-line', 'html': '<a class="dummy-load">'+ MLLC.loadnew[lng] +'</a>'}, null);
+			this['PostsCount'] = _z.setup('label', {'id': 'post-count', 'class': 'etch-text', 'text': Inner.posts.length + LC.omit[lng]}, null);
+			this['AllowedPosts'] = _z.setup('span', {'id': 'allowed-posts', 'class': 'etch-text', 'text': ' | '+ LC.allw[lng]}, null);
+			this['LoadButton'] = _z.setup(this['UpdateStat'].firstChild, {}, {
+					'click': function(e) { updateThread(e, true) }
+				});
+			this['DummyButton'] = _z.setup(this['DummyLine'].firstChild, {}, {
+					'click': function(e) { updateThread(e, false) }
+				});
+			this['SoundNotify'] = _z.setup(el$('#notif-chbx'), {'checked': HM.SoundNotify}, {
+					'change': function(e) {
+						setupOptions(this, 'SoundNotify', true);
+					}
+				});
+			this['AutoUpdate'] = _z.setup(el$('#upd-chbx'), {'checked': HM.AutoUpdate}, {
+					'change': function(e) {
+						setupOptions(this, 'AutoUpdate', true);
+						updateTimer();
+					}
+				});
+			this['setInterval'] = _z.setup(el$('#int-val'), {'value': Timer.ql.int}, null);
+			this['UpdateModeMenu'] = _z.setup(el$('#timer-update-sets'), {}, {
+					'click': function(e) {
+						var val, tbox = this.firstElementChild.firstElementChild;
+						if (e.target.tagName === 'INPUT')
+							return;
+						if (e.target.classList[0] === 'dropdown-item') {
+							switch (e.target.id) {
+								case 'manual-int-set':
+									val = MListen['setInterval'].value;
+									tbox.textContent = checkHTime(val)[lng];
+									break;
+								default:
+									val = e.target.id.split('-')[0];
+									tbox.textContent = e.target.textContent;
+							}
+							_z.setlSVal('UpdateMode', val, true);
+						}	
+						this.firstElementChild.classList.toggle('active');
+					}
+				});
+		} else {
+			return {
+				getPost: getHanabiraPost,
+				getFile: getHanabiraFile
+			}
 		}
-		this.updateTimer = function() {
-			clearTimeout(Timer.id);
-			Timer.ql = UpdateInterval(Timer.offset);
-			Timer.id = setTimeout(function() {
-				if (HM.AutoUpdate) {
-					if (Timer.ql.value === 'quet') {
-						getDataResponse('/api/thread/'+ HM.URL.board +'/'+ HM.URL.thread +'.json?new_format',
-							function(status, sText, json, xhr) {
-								if (json.result) {
-									updateCount(json.result.posts_count)
-									var postStat = '( '+ (Count.new > 0 ? '+'+ Count.new + LC.newp[lng] : '') +
-										' • '+ (Count.del < 0 ? Count.del + LC.delp[lng] : '') +' • '+ (Count.mod > 0 ? Count.mod + LC.pmod[lng] : '') +')';
-									Chana['PostsCount'].textContent = HM.Elems.posts.length + LC.omit[lng] + postStat;
-								}
-							});
-						Chana.updateTimer();
-					} else
-						updateThread(true)
-				}
-			}, Timer.ql.int * 1000);
+		function collectPNodes(thr) {
+			return { posts: thr.getElementsByClassName('post'),
+				last: function() {
+					var last = thr.lastElementChild;
+					return last.nodeName === 'FORM' ? last.previousElementSibling : last }
+			}
 		}
 		function UpdateInterval(offset) {
 			var t, val = _z.getlSVal('UpdateMode', 'autotimer', true);
@@ -710,144 +692,13 @@ function MagicExtension() {
 			return ['every '+ x +' '+ LC.tm[v][0] +'.', 'каждые '+ x +' '+ LC.tm[v][1] +'.'];
 		}
 		function updateCount(jPC) {
-			var i = (jPC + Count.mod) - HM.Elems.posts.length - Count.dif,
+			var i = (jPC + Count.mod) - Inner.posts.length - Count.dif,
 				n = i > 0 ? i : 0, d = i < 0 ? i : 0;
 				Count.dif += i; Count.new += n; Count.del += d;
 		}
-		function updateThread(e) {
-			if (thread_updating)
-				return;
-			thread_updating = true;
-			Chana['LoadButton'].textContent = ChLC.updprog[lng];
-			getDataResponse('/api/thread/'+ HM.URL.board +'/'+ Target.tid +'/new.json?new_format&message_html&last_post='+ _cid(Target.last().id),
-			function(status, sText, json, xhr) {
-				var i, temp, el, pCount, len, errorMsg;
-				if (status !== 200 || json.error) {
-					errorMsg = !json.error ? status +' '+ sText : json.error.message +' '+ json.error.code;
-					Chana['UpdateStat'].replaceChild(_z.setup(mEl['WarningMsg'], {
-						'text': errorMsg, 'style': ''}, null), Chana['LoadButton']);
-					mEl.funct = function(e) {
-						if (mEl['iteration'] >= 8) {
-							Chana['UpdateStat'].replaceChild(Chana['LoadButton'], mEl['WarningMsg']);
-							mEl['iteration'] = 0;
-							Chana.updateTimer();
-						}
-					}
-				} else {
-					pCount = json.result.posts_count;
-					el = json.result.posts;
-					len = el ? el.length : 0;
-					Count.dif = Count.new = 0;
-					if (len > 0) {
-						Timer.offset = 0;
-						for (i = 0; i < len; i++) {
-							temp = getHanabiraPost(el[i]);
-							Target.thread().appendChild(temp[0]);
-						}
-						Tinycon.setBubble(unread_count);
-					} else if (e === true)
-						Timer.offset += 15;
-				}
-				if (e && !errorMsg) {
-					if (HM.Elems.posts.length != pCount + Count.mod) {
-						updateCount(pCount)
-						getHanabiraFullThread();
-					} else
-						Chana['PostsCount'].textContent = pCount + LC.omit[lng] + (Count.mod > 0 ? ' ( +'+ Count.mod + LC.pmod[lng] +' )' : '');
-					Chana.updateTimer();
-				}
-				Chana.genReplyMap(HM.Elems.posts);
-				Chana['LoadButton'].textContent = ChLC.loadnew[lng];
-				thread_updating = false;
-			});
-		}
-		function getHanabiraFullThread() {
-			getDataResponse('/api/thread/'+ HM.URL.board +'/'+ HM.URL.thread +'/all.json?new_format&message_html',
-			function(status, sText, json, xhr) {
-				var i, jsonPosts = json.result.posts, pCount = json.result.posts_count;
-				function pnid(n) { return !HM.Elems.posts[n] ? 99999999 : _cid(HM.Elems.posts[n].id) }
-				function jpid(n) { return !jsonPosts[n] ? 99999999 : jsonPosts[n].display_id }
-				if (jsonPosts.length == HM.Elems.posts.length) {
-					Count.dif = Count.del = 0;
-					Count.mod = HM.Elems.posts.length - pCount;
-				} else {
-					for (i = 0; i < (HM.Elems.posts.length + Count.new); i++) {
-						if (pnid(i) < jpid(i)) {
-							_z.setup(HM.Elems.posts[i], {'class': "deleted"}, null)
-							.querySelector('.doubledash').setAttribute('style', 'display:inline-block;');
-						}
-						if (pnid(i) > jpid(i)) {
-							var derefl = ref_tamplate.allReplace({'r{brd}': HM.URL.board, 'r{tid}': HM.URL.thread, 'r{pid}': jpid(i), 'r{L}': '', 'r{cl}': 'nview'}),
-								temp = getHanabiraPost(jsonPosts[i], [json.result.archived, json.result.autosage]),
-								s = Chana['AllowedPosts'].querySelector('.reply-link') ? ', ' : ': ';
-							if (!HM.Elems.posts[i])
-								Target.thread().appendChild(temp[0]);
-							else
-								_z.before(HM.Elems.posts[i], temp[0]);
-							_z.after(Chana['PostsCount'], Chana['AllowedPosts'])
-							Chana['AllowedPosts'].insertAdjacentHTML('beforeend', s + derefl);
-							attachEvents(Chana['AllowedPosts'])
-						}
-						if (pnid(i) < jpid(i)) {
-							_z.setup(HM.Elems.posts[i], {'class': "deleted"}, null)
-							.querySelector('.doubledash').setAttribute('style', 'display:inline-block;');
-						}
-					}
-					Tinycon.setBubble(unread_count);
-					Count = { dif: 0, new: 0, del: 0, mod: 0 }
-					if (pCount !== HM.Elems.posts.length && jsonPosts.length === HM.Elems.posts.length) {
-						Count.mod = HM.Elems.posts.length - pCount;
-					}
-				}
-				Chana['PostsCount'].textContent = pCount + LC.omit[lng] + (Count.mod > 0 ? ' ( +'+ Count.mod + LC.pmod[lng] +' )' : '');
-			});
-		}
-		function getHanabiraPost(postJson, margArr, mapArr) {
-			var threadId = mapArr ? mapArr[1] : Target.tid,
-				postId = postJson.display_id,
-				board = mapArr ? mapArr[0] : HM.URL.board,
-				files = postJson.files,
-				len = files.length,
-				op = postJson.op,
-				hidden = checkIfHidden(),
-				wrap = _z.setup((op ? 'div' : 'table'), {'id': 'post_'+ postId, 'class': (op ? 'oppost' : 'replypost') +' post'}, null),
-				delicon = '<a class="delete icon"><input type="checkbox" id="delbox_r{post_id}" class="delete_checkbox" value="'+ postJson.thread_id +
-					'" name="r{post_id}"><img src="/images/blank.png" title="'+ ChLC.mrk_to_del[lng] +'" alt="✕" onclick="this.parentNode.classList.toggle(\'checked\')"></a>\n',
-				html = (op ? '' : '<tbody><tr><td class="doubledash">&gt;&gt;</td><td id="replyr{post_id}" class="reply new '+ (hidden ? 'by-'+ hidden[0] +' autohidden' : '') +'">') +
-					'<a name="ir{post_id}"></a><label>'+ 
-						(op ? '<a class="hide icon" onclick="hide_thread(event, \'r{board}\',r{post_id});" href="/api/thread/r{board}/r{post_id}/hide.redir"><img src="/images/blank.png" title="'+ LC.hide[lng] +'" alt="﹅"></a>\n'+
-							delicon + '<a class="unsigned icon" onclick="sign_thread(event, \'r{board}\',r{post_id});"><img src="/images/blank.png" title="'+ LC.subscrb[lng] +'" alt="✩"></a>\n' : delicon) +
-						(board === 'mad' ? '<span class="iphash">'+
-							'<span class="ipmark" style="background:rgba(0,0,0,.5)">&nbsp;</span><span class="ipmark" style="background:rgba(255,255,255,.5)">&nbsp;</span>'+
-							'<span class="ipmark" style="background:rgba(25,25,25,.6)">&nbsp;</span><span class="ipmark" style="background:rgba(99,99,99,.6)">&nbsp;</span>'+
-							'<span class="ipmark" style="background:rgba(175,175,175,.6)">&nbsp;</span></span>\n<img class="geoicon" src="/src/png/1408/polandball_kawaii_16.png" alt="(^ ^)" title="Polandball (^ ^)">\n' : '') +
-				'<span class="replytitle">'+ postJson.subject +'</span>\n<span class="postername">'+ getDefaultName(postJson.name) +'</span>\n'+ (op && margArr[0] ? '<img src="/images/archive.gif" alt="В архиве" title="В архиве">\n' :
-				'') + (op && margArr[1] ? '<img src="/images/autosage.gif" alt="Бамп-лимит" title="Бамп-лимит">\n' : '') +'<span class="posterdate">'+ getDateTime(postJson.date) +
-				'</span>\n</label><span class="reflink"><a onclick="Highlight(0, r{post_id})" href="/r{board}/res/r{thread_id}.xhtml#ir{post_id}">No.r{post_id}</a></span>\n<span class="cpanel"></span><br>';
-			for (var i = 0; i < len; i++) {
-				html += getHanabiraFile(files[i], postJson.post_id, board, threadId, postId, (len === 1));
-			}
-			wrap.insertAdjacentHTML('afterbegin', html.allReplace({'r{board}': board, 'r{thread_id}': threadId, 'r{post_id}': postId}) + 
-				(len > 1 ? '<br style="clear: both">' : '') +'<div class="postbody">'+ postJson.message_html +'</div><div class="abbrev"></div>' +
-				(op ? '' : '</td>'+ (hidden ? '<td class="reply hinfo-stub"><label class="'+ (hidden[0] === 'Title' ? 'replytitle' : 'postername') +
-					' t-sec font-s">'+ hidden[1] +'</label> hidden post No.'+ postId +'</td>' : '') +'</tr></tbody>'));
-			if (!mapArr) {
-				unread_count++;
-				if (!op)
-					wrap.querySelector('.reply.new').addEventListener('click', markAsRead, false);
-				if (HM.SoundNotify && !play_notify)
-					Notif.play();
-			}
-			if (margArr)
-				Chana.genReplyMap([wrap]);
-			attachEvents(wrap);
-			var wels = GetElements(wrap);
-				hooElements(wels.elements);
-				hooLinks(wels.links);
-			function checkIfHidden() {
-				var result; _z.each([
-					['Title', postJson.subject],
-					['Nametrip', postJson.name]],
+		function checkIfHidden(subj, name) {
+			var result; _z.each([
+				['Title', subj], ['Nametrip', name]],
 				function(type) {
 					var m, i, f, kwods = HM.Settings.Keywords[type[0]],
 						keys = kwods.keys.split(', ');
@@ -862,23 +713,211 @@ function MagicExtension() {
 						}
 					}
 				});
-				return result;
+			return result;
+		}
+		function updateTimer() {
+			clearTimeout(Timer.id);
+			Timer.ql = UpdateInterval(Timer.offset);
+			Timer.id = setTimeout(function() {
+				if (HM.AutoUpdate) {
+					if (Timer.ql.value === 'quet') {
+						getDataResponse('/api/thread/'+ HM.URL.board +'/'+ CiD +'.json?new_format',
+							function(status, sText, json, xhr) {
+								if (json.result) {
+									updateCount(json.result.posts_count)
+									var postStat = '( '+ (Count.new > 0 ? '+'+ Count.new + LC.newp[lng] : '') +
+										' • '+ (Count.del < 0 ? Count.del + LC.delp[lng] : '') +' • '+ (Count.mod > 0 ? Count.mod + LC.pmod[lng] : '') +')';
+									MListen['PostsCount'].textContent = Inner.posts.length + LC.omit[lng] + postStat;
+								}
+							});
+						updateTimer();
+					} else
+						updateThread(15, true);
+				}
+			}, Timer.ql.int * 1000);
+		}
+		function expandThread(e) {
+			if (ExpCache.length === 0) {
+				statusButton(e.target, 0)
+				getHanabiraFullThread(e.target, ExpCache)
+			} else {
+				_z.after(Thread.firstElementChild, ExpCache)
+				e.target.textContent = MLLC.unexpt[lng]
 			}
+		}
+		function concatThread(e) {
+			_z.remove(ExpCache)
+			e.target.textContent = MLLC.expant[lng]
+		}
+		function statusButton(btn, v) {
+			switch (btn.classList[0]) {
+				case 'load-new': btn.textContent = [MLLC.updprog[lng], MLLC.loadnew[lng]][v];
+					break;
+				case 'dummy-load': btn.textContent = [MLLC.updprog[lng], MLLC.loadnew[lng]][v];
+					break;
+				case 'thread-expand': btn.textContent = [MLLC.expdin[lng], MLLC.expant[lng]][v];
+					break;
+				case 'thread-concat': btn.textContent = [MLLC.unexin[lng], MLLC.unexpt[lng]][v];
+			}
+		}
+		function updateThread(e, rexk) {
+			var UpdBtn = typeof e === 'object' ? e.target : MListen['LoadButton']
+			if (thread_updating)
+				return;
+			thread_updating = true;
+			statusButton(UpdBtn, 0)
+			getDataResponse('/api/thread/'+ HM.URL.board +'/'+ CiD +'/new.json?new_format&message_html&last_post='+ _cid(Inner.last().id),
+			function(status, sText, json, xhr) {
+				var i, temp, el, pCount, len, errorMsg;
+				if (status !== 200 || json.error) {
+					errorMsg = !json.error ? status +' '+ sText : json.error.message +' '+ json.error.code;
+					_z.replace(UpdBtn, _z.setup(mEl['WarningMsg'], {
+						'text': errorMsg, 'style': ''}, null));
+					mEl.funct = function(e) {
+						if (mEl['iteration'] >= 8) {
+							_z.replace(mEl['WarningMsg'], UpdBtn);
+							mEl['iteration'] = 0;
+							if (rexk)
+								updateTimer();
+						}
+					}
+				} else {
+					pCount = json.result.posts_count;
+					el = json.result.posts;
+					len = el ? el.length : 0;
+					Count.dif = Count.new = 0;
+					if (len > 0) {
+						Timer.offset = 0;
+						for (i = 0; i < len; i++) {
+							temp = getHanabiraPost(el[i]);
+							Thread.appendChild(temp[0]);
+						}
+						Tinycon.setBubble(unread_count);
+					} else if (typeof e === 'number')
+						Timer.offset += e;
+				}
+				if (rexk && !errorMsg) {
+					if (Inner.posts.length != pCount + Count.mod) {
+						updateCount(pCount)
+						return getHanabiraFullThread(UpdBtn);
+					}
+					updateTimer();
+				}
+				if (e && !errorMsg) {
+					MListen['PostsCount'].textContent = pCount + LC.omit[lng] + (Count.mod > 0 ? ' ( +'+ Count.mod + LC.pmod[lng] +' )' : '');
+					genReplyMap(Inner.posts);
+				}
+				statusButton(UpdBtn, 1)
+				thread_updating = false;
+			});
+		}
+		function getHanabiraFullThread(UpdBtn, ExpandMap) {
+			getDataResponse('/api/thread/'+ HM.URL.board +'/'+ CiD +'/all.json?new_format&message_html',
+			function(status, sText, json, xhr) {
+				var i, jsonPosts = json.result.posts, pCount = json.result.posts_count;
+				function pnid(n) { return !Inner.posts[n] ? 99999999 : _cid(Inner.posts[n].id) }
+				function jpid(n) { return !jsonPosts[n] ? 99999999 : jsonPosts[n].display_id }
+				if (jsonPosts.length == Inner.posts.length) {
+					Count.dif = Count.del = 0;
+					Count.mod = Inner.posts.length - pCount;
+				} else {
+					for (i = 0; i < (Inner.posts.length + Count.new); i++) {
+						if (pnid(i) < jpid(i)) {
+							_z.setup(Inner.posts[i], {'class': "deleted"}, null)
+							.querySelector('.doubledash').setAttribute('style', 'display:inline-block;');
+						}
+						if (pnid(i) > jpid(i)) {
+							var derefl = Tamplate['ref'].allReplace({'r{brd}': HM.URL.board, 'r{tid}': CiD, 'r{pid}': jpid(i), 'r{L}': '', 'r{cl}': 'nview'}),
+								temp = getHanabiraPost(jsonPosts[i], [json.result.archived, json.result.autosage]), s;
+							if (!Inner.posts[i])
+								Thread.appendChild(temp[0]);
+							else
+								_z.before(Inner.posts[i], temp[0]);
+							if (ExpandMap) {
+								ExpandMap.push(temp[0])
+							} else {
+								s = MListen['AllowedPosts'].querySelector('.reply-link') ? ', ' : ': ';
+								_z.after(MListen['PostsCount'], MListen['AllowedPosts'])
+								MListen['AllowedPosts'].insertAdjacentHTML('beforeend', s + derefl);
+								attachEvents(MListen['AllowedPosts'])
+							}
+						}
+						if (pnid(i) < jpid(i)) {
+							_z.setup(Inner.posts[i], {'class': "deleted"}, null)
+							.querySelector('.doubledash').setAttribute('style', 'display:inline-block;');
+						}
+					}
+					Tinycon.setBubble(unread_count);
+					genReplyMap(Inner.posts);
+					Count = { dif: 0, new: 0, del: 0, mod: 0 }
+					if (pCount !== Inner.posts.length && jsonPosts.length === Inner.posts.length) {
+						Count.mod = Inner.posts.length - pCount;
+					}
+				}
+				statusButton(UpdBtn, 1)
+				thread_updating = false;
+				if (!ExpandMap)
+					updateTimer();
+				MListen['PostsCount'].textContent = pCount + LC.omit[lng] + (Count.mod > 0 ? ' ( +'+ Count.mod + LC.pmod[lng] +' )' : '');
+			});
+		}
+		function getHanabiraPost(postJson, margArr, mapArr) {
+			var threadId = mapArr ? mapArr[1] : CiD,
+				postId = postJson.display_id,
+				board = mapArr ? mapArr[0] : HM.URL.board,
+				files = postJson.files,
+				len = files.length,
+				op = postJson.op,
+				hidden = checkIfHidden(postJson.subject, postJson.name),
+				wrap = _z.setup((op ? 'div' : 'table'), {'id': 'post_'+ postId, 'class': (op ? 'oppost' : 'replypost') +' post'}, null),
+				delicon = '<span class="delete icon"><input type="checkbox" id="delbox_r{post_id}" class="delete_checkbox" onclick="this.parentNode.classList.toggle(\'checked\')" value="'+ 
+					postJson.thread_id +'" name="r{post_id}"><img src="/images/blank.png" title="'+ MLLC.mrk_to_del[lng] +'" alt="✕"></span>\n',
+				html = (op ? '' : '<tbody><tr><td class="doubledash">&gt;&gt;</td><td id="replyr{post_id}" class="reply new '+ (hidden ? 'by-'+ hidden[0] +' autohidden' : '') +'">') +
+					'<a name="ir{post_id}"></a><label>'+ 
+						(op ? '<a class="hide icon" onclick="hide_thread(event, \'r{board}\',r{post_id});" href="/api/thread/r{board}/r{post_id}/hide.redir"><img src="/images/blank.png" title="'+ LC.hide[lng] +'" alt="﹅"></a>\n'+
+							delicon + '<a class="unsigned icon" onclick="sign_thread(event, \'r{board}\',r{post_id});"><img src="/images/blank.png" title="'+ LC.subscrb[lng] +'" alt="✩"></a>\n' : delicon) +
+						(board === 'mad' ? '<span class="iphash">'+
+							'<span class="ipmark" style="background:rgba(0,0,0,.5)">&nbsp;</span><span class="ipmark" style="background:rgba(255,255,255,.5)">&nbsp;</span>'+
+							'<span class="ipmark" style="background:rgba(25,25,25,.6)">&nbsp;</span><span class="ipmark" style="background:rgba(99,99,99,.6)">&nbsp;</span>'+
+							'<span class="ipmark" style="background:rgba(175,175,175,.6)">&nbsp;</span></span>\n<img class="geoicon" src="/src/png/1408/polandball_kawaii_16.png" alt="(^ ^)" title="Polandball (^ ^)">\n' : '') +
+				'<span class="replytitle">'+ postJson.subject +'</span>\n<span class="postername">'+ getDefaultName(postJson.name) +'</span>\n'+ (op && margArr[0] ? '<img src="/images/archive.gif" alt="В архиве" title="В архиве">\n' :
+				'') + (op && margArr[1] ? '<img src="/images/autosage.gif" alt="Бамп-лимит" title="Бамп-лимит">\n' : '') +'<span class="posterdate">'+ getDateTime(postJson.date) +
+				'</span>\n</label><span class="reflink"><a onclick="Highlight(0, r{post_id})" href="/r{board}/res/r{thread_id}.xhtml#ir{post_id}">No.r{post_id}</a></span>\n<span class="cpanel"><a title="'+
+				 LC.repl[lng] +'" id="r{board}-r{thread_id}-r{post_id}" class="reply-button line-sect txt-btn"></a></span><br>';
+			for (var i = 0; i < len; i++) {
+				html += getHanabiraFile(files[i], postJson.post_id, board, threadId, postId, (len === 1));
+			}
+			wrap.insertAdjacentHTML('afterbegin', html.allReplace({'r{board}': board, 'r{thread_id}': threadId, 'r{post_id}': postId}) + 
+				(len > 1 ? '<br style="clear:both;">' : '') +'<div class="postbody">'+ postJson.message_html +'</div><div class="abbrev"></div>' +
+				(op ? '' : '</td>'+ (hidden ? '<td class="reply hinfo-stub"><label class="'+ (hidden[0] === 'Title' ? 'replytitle' : 'postername') +
+					' t-sec font-s">'+ hidden[1] +'</label>\n<i>('+ LC.hidden[0][lng] + LC.hidden[2][lng] +')</i>\nNo.'+ postId +'</td>' : '') +'</tr></tbody>'));
+			if (!mapArr) {
+				unread_count++;
+				if (!op)
+					wrap.querySelector('.reply.new').addEventListener('click', markAsRead, false);
+				if (HM.SoundNotify && !play_notify)
+					Notif.play();
+			}
+			if (margArr)
+				genReplyMap([wrap]);
+			attachEvents(wrap);
+			hooLinks(GetElements(wrap).links);
 			return [wrap, (op ? wrap.firstChild : wrap.firstChild.firstChild.lastChild)];
 		}
 		function getHanabiraFile(file, pid, brd, tId, pId, ONE) {
-			var name, info, edit, action = '', m = 0.01572,
-				src = file.src, fid = file.file_id,
-				fmd = file.metadata, imgW = fmd.width,
+			var name, meta, frontend, ieClass = cmClass = action = '',
+				src = file.src, fid = file.file_id, m = 0.01572,
+				fmd = file.metadata, imgW = fmd.width, metatype = fmd.type,
 				imgH = fmd.height, rating = file.rating,
 				size = bytesMagnitude(file.size), filename = getPageName(src),
 				maXr = HM.maXrating.toLowerCase(), ext = filename.fext(),
+				lines = fmd.lines, pages = fmd.pages, files = fmd.files_count,
 				type = file.type === 'code' ? 'text' : !file.type ? fmd.type : file.type,
 				R = maXr === rating || maXr.match(/\d+/) >= rating.match(/\d+g?/) || 
 					rating === 'sfw' ? false : true,
 				thumb = R ? 'images/'+ rating +'.png' : file.thumb,
-				thumbW = thumb !== file.thumb ? 200 : file.thumb_width,
-				thumbH = thumb !== file.thumb ? 200 : file.thumb_height,
+				thumbW = 'width="'+ (thumb !== file.thumb ? 200 : file.thumb_width) +'"',
+				thumbH = 'height="'+ (thumb !== file.thumb ? 200 : file.thumb_height) +'"',
 				isImage = ['image', 'vector'].isThere(type);
 			if (brd === 'b' || brd === 'rf') {
 				name = isImage ? getPageName(thumb).split('s')[0] +'.'+ ext :
@@ -886,47 +925,186 @@ function MagicExtension() {
 			} else {
 				name = !ONE && filename.length > 17 ? filename.substring(0, 17) + '...' : filename;
 			}
-			if (isImage) {
-				info = ext.slice(0, 1).toUpperCase() + ext.slice(1) +', '+ size +', '+ imgW +'×'+ imgH;
-				edit = '/utils/'+ type +'/edit/'+ fid +'/'+ pid;
-				action = R ? '' : 'contextmenu="image-context" oncontextmenu="$(\'#image-context\').attr({src:this.parentNode.href, edit:\''+ edit +'\'})" onclick="expand_image(event, '+ imgW +', '+ imgH +')"';
+			if (type == 'music') {
+				var brate = (fmd.bitrate / 1000).toFixed(0) + ' kbps',
+					srate = (fmd.sample_rate / 1000).toFixed(1) + ' kHz',
+					trlen = (fmd.length * m).toFixed(2).replace('.', ':'),
+					trnam = _unc(fmd.artist) +' — '+ _unc(fmd.album),
+					trnum = _unc(fmd.tracknumber, '0') +'/'+ _unc(fmd.totaltracks, '0'),
+					avid = Files.video.isThere(ext);
+				meta = trlen +' @ '+ brate +' / '+ srate +'<br>'+ (!ONE && trnam.length > 40 ? trnam.substring(0, 40) +'<br>'+ trnam.slice(40) : trnam) +' / '+ _unc(fmd.title) +' ['+ trnum +']';
+				frontend = '<div class="magic-audio thumb '+ (avid ? 'movie' : 'artwork') +'"><div class="ma-controls"><a href="/'+src+'" class="'+ (avid ? 'cm' : 'ma') +'-button" id="ma-play"></a></div></div>';
 			} else {
-				var meta, metatype = type == 'flash' ? 'Flash' : fmd.type,
-					lines = fmd.lines, pages = fmd.pages, files = fmd.files_count;
-				if (['text', 'archive'].isThere(type)) {
-					action = 'onclick="open_url(\'/utils/'+ type +'/'+ fid +'/'+ pid +'\', \'_blank\')"'
+				if (isImage) {
+					var edit = '/utils/'+ type +'/edit/'+ fid +'/'+ pid;
+						metatype = ext.slice(0, 1).toUpperCase() + ext.slice(1);
+						meta = imgW +'×'+ imgH;
+					if (R) {
+						ieClass = 'spr-image expanded rated ';
+						thumbH = thumbW = '';
+					} else {
+						action = 'contextmenu="image-context" oncontextmenu="$(\'#image-context\').attr({src:this.parentNode.href, edit:\''+ edit +'\'})"';
+						if (type === 'vector')
+							ieClass = 'spr-image unexpanded ';
+						else
+							action += ' onclick="expand_image(event, '+ imgW +', '+ imgH +')"';
+					}
+				} else {
+					var Type = type, Embed = '/utils/'+ type +'/'+ fid +'/'+ pid,
+						hash = _urlHash(encodeURI(HM.URL.host +'/'+ src));
+						cmClass = 'class="cm-button"';
+					switch (type) {
+						case 'text': Type = 'docs';
+							meta = lines + LC.line[lng] + (lines === 1 ? LC.few['ru'][lng] : lines < 5 ? LC.few['u-d'][lng] : LC.few['en'][lng] );
+							break;
+						case 'archive': Type = 'pdf'; thumb = 'src/png/1405/archive-icon.png';
+							meta = files +' '+ LC.file[lng].toLowerCase() + (files === 1 ? '' : files < 5 ? LC.few['u-a'][lng] : LC.few['u-b'][lng] );
+							break;
+						case 'pdf': Embed = 'iframe';
+							meta = imgW +'×'+ imgH +', '+ pages + LC.page[lng] + (pages === 1 ? LC.few['ru'][lng] : pages < 5 ? LC.few['u-c'][lng] : LC.few['en'][lng] );
+							break;
+						case 'flash': Embed = 'flash'; metatype = 'Flash Application'; Type = 'video';
+							break;
+						case 'video': Embed = 'html5'; size = fmd["File Size"];
+							metatype = fmd["File Type"] == 'WEBM' ? 'WebM' : fmd["File Type"];
+							meta = fmd["Image Size"] +' @ '+ fmd["Duration"];
+							break;
+						default: cmClass = '';
+					}
+					if (cmClass)
+						HM.LinksMap[hash] = {Embed: Embed, Type: Type}
 				}
-				if (type == 'text') {
-					meta = lines + LC.line[lng] + (lines === 1 ? LC.few['ru'][lng] : lines < 5 ? LC.few['u-d'][lng] : LC.few['en'][lng] );
-				}
-				if (type == 'pdf') {
-					meta = imgW +'×'+ imgH +', '+ pages + LC.page[lng] + (pages === 1 ? LC.few['ru'][lng] : pages < 5 ? LC.few['u-c'][lng] : LC.few['en'][lng] );
-				}
-				if (type == 'archive') {
-					thumb = 'src/png/1405/archive-icon.png';
-					meta = files +' '+ LC.file[lng].toLowerCase() + (files === 1 ? '' : files < 5 ? LC.few['u-a'][lng] : LC.few['u-b'][lng] );
-				}
-				if (type == 'video') {
-					metatype = fmd["File Type"] == 'WEBM' ? 'WebM' : fmd["File Type"];
-					size = fmd["File Size"];
-					meta = fmd["Image Size"] +' @ '+ fmd["Duration"];
-				}
-				if (type == 'music') {
-					var brate = (fmd.bitrate / 1000).toFixed(0) + ' kbps',
-						srate = (fmd.sample_rate / 1000).toFixed(1) + ' kHz',
-						trlen = (fmd.length * m).toFixed(2).replace('.', ':'),
-						trnam = _unc(fmd.artist) +' — '+ _unc(fmd.album),
-						trnum = _unc(fmd.tracknumber, '0') +'/'+ _unc(fmd.totaltracks, '0');
-					meta = trlen +' @ '+ brate +' / '+ srate +'<br>'+ (!ONE && trnam.length > 40 ? trnam.substring(0, 40) +'<br>'+ trnam.slice(40) : trnam) +' / '+ _unc(fmd.title) +' ['+ trnum +']';
-				}
-				info = metatype +', '+ size + (!meta ? '' : ', '+ meta);
+				frontend = '<a href="/'+ src +'" '+ cmClass +' target="_blank"><img class="'+ ieClass +'thumb" '+ thumbW +' '+ thumbH +' src="/'+ thumb +'" '+ action +' alt="'+ (R ? rating : filename) +'"></a>'
 			}
-			var filebtns = (type != 'music' && !R && ONE ? LC.clck_img_to[lng] + (type == 'video' ? LC.pvid[lng] : isImage ? LC.expd[lng] : LC.vitf[lng]) : '') +'<br>'+ (R ? LC.cens[lng] : '') +'</div>';
-			var fileinfo = '<div class="fileinfo">'+ LC.file[lng] +': <a href="/'+ src +'" target="_blank" title="'+ filename +'">'+ name +'</a><br><em>'+ info +'</em>';
-			var filethmb = '<a href="/'+ src +'" target="_blank"><img class="'+ (isImage && R ? 'spr-image thumb expanded rated"' : 'thumb" width="'+ thumbW +'" height="'+ thumbH +'"') +
-				' src="/'+ thumb +'" '+ action +' alt="'+ (R ? rating : filename) +'"></a>\n</div>';
-			var filediv = '<div id="file_'+ pId +'_'+ fid +'" class="file">';
-			return (ONE ? fileinfo + filebtns + filediv + filethmb : filediv + fileinfo + filebtns + filethmb);
+			var filebtns = (type != 'music' && !R && ONE ? LC.clck_img_to[lng] + (type == 'video' ? LC.pvid[lng] : isImage ? LC.expd[lng] : LC.vitf[lng]) : '') +'<br>'+ (R ? LC.cens[lng] : '') +'</div>',
+				fileinfo = '<div class="fileinfo'+ (!ONE ? ' limited' : '') +'">'+ LC.file[lng] +': <a href="/'+ src +'" target="_blank" title="'+ filename +'">'+ name +'</a><br><em'+
+					(type == 'music' ? ' class="magic-info"' : '') +'>'+ metatype +', '+ size + (!meta ? '' : ', '+ meta) +'</em>',
+				filediv = '<div id="file_'+ pId +'_'+ fid +'" class="file">';
+			return (ONE ? fileinfo + filebtns + filediv : filediv + fileinfo + filebtns) + frontend +'\n</div>';
+		}
+	}
+	
+	/*** Charming Hanabira ***/
+	//* @ original code 	http://dobrochan.com/js/hanabira-0.5.1311-.js
+	//* @ copyright 		Dobrochan
+	function CharmingHanabira(h) {
+		var Chana = this, gTimt = 0;
+		this.closeLastPopup = RemoveAllRefs;
+		this.MagicPostView = MagicPostView;
+		this.MagicHighlight = MagicHighlight;
+		function MagicHighlight(e) {
+			clearTimeout(gTimt); gTimt = 0;
+			var uri = ParseUrl(e.target.href),
+				post = document.getElementById('reply'+ uri.pid);
+			if (post) {
+				var phl = post.className.split(' ').isThere('highlight');
+				if (!phl) {
+					var prevhlight = document.querySelector('.highlight');
+					if (prevhlight)
+						prevhlight.classList.remove('highlight');
+					post.classList.add('highlight');
+				}
+				post.scrollIntoView({block: (e.target.classList[1] === 'cview' ? 'end' : 'start'), behavior: 'smooth'});
+			} else if (HM.URL.thread !== uri.thread)
+				return;
+			return _z.fall(e);
+		}
+		function MagicPostView(e) {
+			var a = e.target, attach = HM.AttachPopups, L = ParseUrl(a.href),
+				brd = L.board, tid = L.thread, pid = L.pid, op = tid === pid,
+				postid = (op ? 'post_' : 'reply') + pid, id = brd +'-'+ postid,
+				refl = _z.route(a, '.reflink a'), href = refl.getAttribute('href'),
+				reftab = _z.setup('table', {'class': (op ? 'oppost popup' : 'popup'), 'id': 'ref-'+ id,
+					'html': '<tbody><tr><td class="loading"><span class="waiting'+ Math.floor(Math.random() * 3) +
+					' icon"><img src="/images/blank.png"></span>\n'+ LC.wsec[lng] +'</td></tr></tbody>'}, null),
+				loading = reftab.querySelector('.loading'), active = document.getElementById('ref-'+ id),
+				post = HM.LoadedPosts[id] || document.getElementById(postid);
+			clearTimeout(gTimt); gTimt = setTimeout(function() {
+				if (active) {
+					var loc = active.querySelector('.locked');
+					if (loc && loc.hash !== refl.hash) {
+						loc.className = 'reply-link cview';
+						attachEvents(active);
+					}
+					add_mapping(active.querySelector('a[href="'+ href +'"]'));
+					set_style(active);
+					return active.click();
+				} else if (post) {
+					binded(post == 'stub' ? null : post);
+				} else if (HM.URL.thread == tid) {
+					binded(null);
+				} else {
+					getDataResponse('/api/post/'+ brd +'/'+ tid +'/'+ pid +'.json?message_html&new_format'+ (op ? '&thread' : ''),
+					function(status, sText, json, xhr) {
+						var temp, node, tstat, jpost, ErrorMSG;
+						if (status !== 200) {
+							ErrorMSG = new MagicElements()['WarningMsg'];
+							_z.replace(loading, _z.setup(ErrorMSG, {
+								'text': status +' '+ sText, 'style': ''}, null));
+							setTimeout(function() {
+								reftab.remove();
+							}, 7000)
+							return;
+						} else if (json.error) {
+							node = 'stub';
+						} else {
+							ssf = {id:0}
+							tstat = op ? [json.result.threads[0].archived, json.result.threads[0].autosage] : true;
+							jpost = op ? json.result.threads[0].posts[0] : json.result;
+							temp = MagicThreadListener().getPost(jpost, tstat, [brd, tid, pid]);
+							node = op ? temp[0] : temp[1];
+						}
+						HM.LoadedPosts[id] = node;
+						binded(node == 'stub' ? null : node);
+						hooLinks(GetElements(reftab).links);
+						set_style(reftab);
+					});
+				}
+				document.body.appendChild(reftab);
+				set_style(reftab);
+			}, attach ? 300 : 200);
+			a.onmouseout = function(e) {
+				clearTimeout(gTimt); gTimt = 0;
+				if (!attach)
+					mapp.classList.remove('mapped');
+			}
+			function add_mapping(mapp) {
+				if (!mapp)
+					return;
+				mapp.classList.add('mapped');
+				if (attach) {
+					mapp.classList.add('locked');
+					mapp.removeEventListener('mouseover', Chana.MagicPostView, false);
+				}
+			}
+			function set_style(r) {
+				var w = window.innerWidth, mw,
+					x = e.pageX, y = e.pageY + 30,
+					wx = w - x, y2 = y - r.offsetHeight - 45;
+				if (a.classList[1] !== 'cview') {
+					if (y2 > 0)
+						y = y2;
+					if ((wx < 600 || wx < w / 2) && r.offsetWidth > wx) {
+						mw = w - 400;
+						x = null;
+					}
+				}
+				r.setAttribute('style', 'top:'+ y +'px;max-width:'+
+					(mw || wx) +'px;'+ (x == null ? 'right:0' : 'left:'+ x) +'px'+
+					(attach ? ';z-index:'+ HM.zIndex : ''));
+			}
+			function binded(el) {
+				var load = !el ? _z.setup('td', {'class': 'stub', 'text': LC.postdel[lng]}, null) :
+					_z.setup((op ? el : el.parentNode.lastElementChild).cloneNode(true), {'id': 'load-' + id, 'class': undefined}, null);
+				attachEvents(load);
+				if (el && attach && (op ? true : el.parentNode.lastElementChild.classList[1] !== 'hinfo-stub')) {
+					BindCloseRef(reftab);
+				} else {
+					BindRemoveRef(a, reftab);
+				}
+				_z.replace(loading, load);
+				add_mapping(reftab.querySelector('a[href="'+ href +'"]'));
+			}
 		}
 		function BindCloseRef(reftab) {
 			var tr = _z.setup('tbody', {'html': '<tr><td>'}, null),
@@ -961,7 +1139,6 @@ function MagicExtension() {
 				to = 0;
 			}
 		}
-		this.closeLastPopup = RemoveAllRefs;
 		function RemoveAllRefs(e) {
 			var popups = document.getElementsByClassName('popup'),
 				i = popups.length - 1;
@@ -979,99 +1156,55 @@ function MagicExtension() {
 				}
 			}
 		}
-		this.MagicPostView = function(e) {
-			var a = e.target, attach = HM.AttachPopups, L = ParseUrl(a.href),
-				brd = L.board, tid = L.thread, pid = L.pid, op = tid === pid,
-				postid = (op ? 'post_' : 'reply') + pid, id = brd +'-'+ postid,
-				refl = _z.route(a, '.reflink a'), href = refl.getAttribute('href'),
-				reftab = _z.setup('table', {'class': (op ? 'oppost popup' : 'popup'), 'id': 'ref-'+ id,
-					'html': '<tbody><tr><td class="loading"><span class="waiting'+ Math.floor(Math.random() * 3) +
-					' icon"><img src="/images/blank.png"></span>\n'+ LC.wsec[lng] +'</td></tr></tbody>'}, null),
-				loading = reftab.querySelector('.loading'), active = document.getElementById('ref-'+ id),
-				post = HM.LoadedPosts[id] || document.getElementById(postid);
-			function add_mapping(mapp) {
-				if (!mapp)
-					return;
-				mapp.classList.add('mapped');
-				if (attach) {
-					mapp.classList.add('locked');
-					mapp.removeEventListener('mouseover', Chana.MagicPostView, false);
-				} else {
-					a.onmouseout = function(e) {
-						mapp.classList.remove('mapped');
-					}
-				}
+	}
+	
+	/*** Wakabamark Buttons Engine ***/
+	function wmarkText(TextArea, openTag, closeTag) {
+		var	ins, ql, sp, c, s, e,
+			val = TextArea.value,
+			end = TextArea.selectionEnd,
+			start = TextArea.selectionStart,
+			selected = val.substring(start, end),
+			ws = window.getSelection().toString(),
+			getext = start === end ? ws : selected,
+			cont = (typex()).exec(selected);
+			switch (closeTag.slice(0, 1)) {
+				case '+' : ins = true; break;
+				case '\n': ql  = true; break;
+				case '%' : sp  = true; break;
+				case '`' : c   = true; break;
+				case '~' : s   = true;
 			}
-			function set_style(r) {
-				var w = window.innerWidth, mw,
-					x = e.pageX, y = e.pageY + 30,
-					wx = w - x, y2 = y - r.offsetHeight - 45;
-				if (a.classList[1] !== 'cview') {
-					if (y2 > 0)
-						y = y2;
-					if ((wx < 600 || wx < w / 2) && r.offsetWidth > wx) {
-						mw = w - 400;
-						x = null;
-					}
-				}
-				r.setAttribute('style', 'top:'+ y +'px;max-width:'+
-					(mw || wx) +'px;'+ (x == null ? 'right:0' : 'left:'+ x) +'px'+
-					(attach ? ';z-index:'+ HM.zIndex : ''));
+			function typex(gmi) {
+				return new RegExp('^(\\s*)(.*?)(\\s*)$', (gmi || ''))
 			}
-			function binded(el) {
-				var load = !el ? _z.setup('td', {'class': 'stub', 'text': LC.postdel[lng]}, null) :
-					_z.setup((op ? el : el.parentNode.lastElementChild).cloneNode(true), {'id': 'load-' + id, 'class': undefined}, null);
-				attachEvents(load);
-				if (el && attach && (op ? true : el.parentNode.lastElementChild.classList[1] !== 'hinfo-stub')) {
-					BindCloseRef(reftab);
-				} else {
-					BindRemoveRef(a, reftab);
-				}
-				_z.replace(loading, load);
-				add_mapping(reftab.querySelector('a[href="'+ href +'"]'));
-			}
-			if (active) {
-				var loc = active.querySelector('.locked');
-				if (loc && loc.hash !== refl.hash) {
-					loc.className = 'reply-link cview';
-					attachEvents(active);
-				}
-				add_mapping(active.querySelector('a[href="'+ href +'"]'));
-				set_style(active);
-				return active.click();
-			} else if (post) {
-				binded(post == 'stub' ? null : post);
-			} else if (HM.URL.thread == tid) {
-				binded(null);
-			} else {
-				getDataResponse('/api/post/'+ brd +'/'+ tid +'/'+ pid +'.json?message_html&new_format'+ (op ? '&thread' : ''),
-				function(status, sText, json, xhr) {
-					var temp, node, tstat, jpost, ErrorMSG;
-					if (status !== 200) {
-						ErrorMSG = new MagicElements()['WarningMsg'];
-						_z.replace(loading, _z.setup(ErrorMSG, {
-							'text': status +' '+ sText, 'style': ''}, null));
-						setTimeout(function() {
-							reftab.remove();
-						}, 7000)
-						return;
-					} else if (json.error) {
-						node = 'stub';
-					} else {
-						tstat = op ? [json.result.threads[0].archived, json.result.threads[0].autosage] : true;
-						jpost = op ? json.result.threads[0].posts[0] : json.result;
-						temp = getHanabiraPost(jpost, tstat, [brd, tid, pid]);
-						node = op ? temp[0] : temp[1];
-					}
-					HM.LoadedPosts[id] = node;
-					binded(node == 'stub' ? null : node);
-					hooLinks(GetElements(reftab).links);
-					set_style(reftab);
-				});
-			}
-			document.body.appendChild(reftab);
-			set_style(reftab);
+		if (ins) {
+			return _z.setup(TextArea, {'value': val.substr(0, end) + openTag + val.substr(end)}, null)
+					.setSelectionRange(start + openTag.length, start + openTag.length);
 		}
+		if (ql) {
+			if (ws && ws != getext){
+				start = end = TextArea.value.length;
+				getext = ws; openTag = closeTag;
+			}
+			markedText = openTag + getext.replace(/\n/gm, closeTag);
+		} else {
+			e = c ? '`' : '';
+			if (s && (selected.slice(0, 1) === '~' || val.substring(end, end + 1) === '~'))
+				openTag = openTag.slice(0, 1), closeTag = closeTag.slice(0, 1);
+			markedText = cont === null ? (sp || c ? openTag + e + '\n' + getext + '\n' + e + closeTag :
+				selected.replace(typex('gm'), '$1'+ openTag +'$2'+ closeTag +'$3')) :
+				cont[1] + openTag + cont[2] + closeTag + cont[3];
+		}
+		eOfs = markedText.length, sOfs = 0;
+		if (cont != null && !cont[2] && !ql) {
+			sOfs = openTag.length;
+			eOfs = sOfs + selected.length;
+		}
+		_z.setup(TextArea, {'class': 'ta-inact', 'value': val.substring(0, start) + markedText + val.substring(end)}, null).focus();
+		if (!TextArea.id.isThere('code'))
+			_z.setlSVal('SafeText', JSON.stringify(TextArea.value), true);
+		TextArea.setSelectionRange(start + sOfs, start + eOfs);
 	}
 	
 	function keyMarks(e) {
@@ -1129,54 +1262,6 @@ function MagicExtension() {
 		}
 	}
 	
-	/*** Wakabamark Buttons Engine ***/
-	function wmarkText(TextArea, openTag, closeTag) {
-		var	ins, ql, sp, c, s, e, val = TextArea.value,
-			end = TextArea.selectionEnd,
-			start = TextArea.selectionStart,
-			selected = val.substring(start, end),
-			ws = window.getSelection().toString(),
-			getext = start === end ? ws : selected,
-			cont = (typex()).exec(selected);
-			switch (closeTag.slice(0, 1)) {
-				case '+' : ins = true; break;
-				case '\n': ql  = true; break;
-				case '%' : sp  = true; break;
-				case '`' : c   = true; break;
-				case '~' : s   = true;
-			}
-			function typex(gmi) {
-				return new RegExp('^(\\s*)(.*?)(\\s*)$', (gmi || ''))
-			}
-		if (ins) {
-			return _z.setup(TextArea, {'value': val.substr(0, end) + openTag + val.substr(end)}, null)
-					.setSelectionRange(start + openTag.length, start + openTag.length);
-		}
-		if (ql) {
-			if (ws && ws != getext){
-				start = end = TextArea.value.length;
-				getext = ws; openTag = closeTag;
-			}
-			markedText = openTag + getext.replace(/\n/gm, closeTag);
-		} else {
-			e = c ? '`' : '';
-			if (s && (selected.slice(0, 1) === '~' || val.substring(end, end + 1) === '~'))
-				openTag = openTag.slice(0, 1), closeTag = closeTag.slice(0, 1);
-			markedText = cont === null ? (sp || c ? openTag + e + '\n' + getext + '\n' + e + closeTag :
-				selected.replace(typex('gm'), '$1'+ openTag +'$2'+ closeTag +'$3')) :
-				cont[1] + openTag + cont[2] + closeTag + cont[3];
-		}
-		eOfs = markedText.length, sOfs = 0;
-		if (cont != null && !cont[2] && !ql) {
-			sOfs = openTag.length;
-			eOfs = sOfs + selected.length;
-		}
-		_z.setup(TextArea, {'class': 'ta-inact', 'value': val.substring(0, start) + markedText + val.substring(end)}, null).focus();
-		if (!TextArea.id.isThere('code'))
-			_z.setlSVal('SafeText', JSON.stringify(TextArea.value), true);
-		TextArea.setSelectionRange(start + sOfs, start + eOfs);
-	}
-	
 	/*** Strike Converter ***/
 	//* @ by 		DesuDesuTalk
 	function StrikeConvert(TextArea) {
@@ -1202,100 +1287,123 @@ function MagicExtension() {
 	}
 	
 	function MagicContent(scr){
-		var MaC = this;
-		this['Frame'] = {};
-		this['Container'] = document.createElement('div');
-		this.iframe = _z.setup('iframe', {'frameborder': '0', 'scrolling': (scr ? 'auto' : 'no'), 'allowfullscreen': 'true', 'mozallowfullscreen': 'true', 'webkitallowfullscreen': 'true'}, null);
-		this.flash = _z.setup('embed', {'type': 'application/x-shockwave-flash'}, null);
-		this.html5m = _z.setup('video', {'controls': ''}, null);
-		this.RegExp = {
-			'YouTube': createReg('youtu(?:be\\.com\\/(?:watch|playlist)\\?.*?(?:v=([\\w_-]*)|(list=[\\w_-]*))(?:.*?v=([\\w_-]*)|.*?(list=[\\w_-]*)+)?|\\.be\\/([\\w_-]*)(?:.*?(list=[\\w_-]*))?)(?:.*?t=([\\w_-]*))?'),
-			'Pleer.com': createReg('pleer\\.com\\/tracks\\/([\\w_-]*)'),
-			'Vimeo': createReg('vimeo\\.com\\/(?:.*?\\/)?(\\d+)(?:.*?t=(\\d+))?'),
-			'Coub': createReg('coub\\.com\\/view\\/([\\w_-]*)'),
-			'RuTube': createReg('rutube\\.ru\\/video\\/([\\w_-]*)\\/?'),
-			'M@il.ru': createReg('(?:my\\.)?mail\\.ru\\/mail\\/([\\w_-]*)\\/video\\/([\\w_-]*\\/\\d+\\.html)'),
-			'VK.com': createReg('vk\\.com\\/video(?:_ext\\.php\\?oid=)?(-?\\d+)(?:&id=|_)(\\d+).?(hash=[\\w_-]*)?(.*?hd=-?\\d+)?(.*?t=[\\w_-]*)?'),
-			'Pastebin': createReg('pastebin\\.com\\/([\\w_-]*)'),
-			'Custom': createReg
-		}
-		this.makePlayer = function(uri, embc) {
-			var frame, ext = uri.fext(), element = MaC['Container'].firstElementChild;
-			switch (embc) {
-				case 'Cb': MaC['Frame'] = _z.setup(MaC.iframe, {'src': uri.replace(MaC.RegExp['Coub'],
-						"//coub.com/embed/$1?muted=false&autostart=false&originalSize=false&hideTopBar=true&noSiteButtons=true&startWithHD=false")}, null);
-					break;
-				case 'YT': MaC['Frame'] = _z.setup(MaC.iframe, {'src': uri.replace(MaC.RegExp['YouTube'],
-						"//www.youtube.com/embed/$1$3$5?$2$4$6&autohide=1&wmode=opaque&enablejsapi=1&theme=light&html5=1&rel=0&start=$7")}, null);
-					break;
-				case 'RT': MaC['Frame'] = _z.setup(MaC.iframe, {'src': uri.replace(MaC.RegExp['RuTube'],
-						"//rutube.ru/video/embed/$1?autoStart=false&isFullTab=true&skinColor=fefefe")}, null);
-					break;
-				case 'Vm': MaC['Frame'] = _z.setup(MaC.iframe, {'src': uri.replace(MaC.RegExp['Vimeo'],
-						"//player.vimeo.com/video/$1?badge=0&color=ccc5a7#t=$2")}, null);
-					break;
-				case 'my': MaC['Frame'] = _z.setup(MaC.iframe, {'src': uri.replace(MaC.RegExp['M@il.ru'],
-						"//videoapi.my.mail.ru/videos/embed/mail/$1/$2")}, null);
-					break;
-				case 'VK': MaC['Frame'] = _z.setup(MaC.iframe, {'src': uri.replace(MaC.RegExp['VK.com'],
-						"//vk.com/video_ext.php?oid=$1&id=$2&$3$4$5")}, null);
-					break;
-				case 'Pbin': MaC['Frame'] = _z.setup(MaC.iframe, {'src': uri.replace(MaC.RegExp['Pastebin'],
-						"//pastebin.com/embed_js.php?i=$1")}, null);
-					break;
-				case 'Pleer': MaC['Frame'] = _z.setup(MaC.flash, {'class': 'prosto-pleer', 'width': '410', 'height': '40',
-						'src': uri.replace(MaC.RegExp['Pleer.com'], "//embed.pleer.com/track?id=$1")}, null);
-						MaC['Container'].className = 'pleer-container';
-					break;
-				case 'html5': frame = ext === 'pdf' ? MaC.iframe : Files.video.indexOf(ext) > 4 ? MaC.flash : MaC.html5m;
-						MaC['Frame'] = _z.setup(frame, {'src': uri}, null);
-					break;
-				default: MaC['Frame'] = _z.setup(MaC.iframe, {'src': embc}, null);
+		var cVl, MaC;
+		if (this === window) {
+			MaC = {
+				Container: document.createElement('div'),
+				Frame: {}
 			}
+			cVl = function(tg, extras) {
+				var params = {};
+				switch (tg) {
+					case 'iframe': params = {'frameborder': '0', 'scrolling': (scr ? 'auto' : 'no'), 'allowfullscreen': 'true', 'mozallowfullscreen': 'true', 'webkitallowfullscreen': 'true'}; break;
+					case 'embed':  params = {'type': 'application/x-shockwave-flash'}; break;
+					case 'video':  params = {'controls': ''};
+				}
+				for (var key in extras) {
+					params[key] = extras[key]
+				}
+				return _z.setup(tg, params, null)
+			}
+			return {
+				makePlayer: makePlayer,
+				matchPlayer: matchPlayer,
+				RegEx: GenrX
+			}
+		} else {
+			MaC = this;
+			this['Frame'] = {};
+			this['Container'] = document.createElement('div');
+			this['makePlayer'] = makePlayer;
+			this['matchPlayer'] = matchPlayer;
+			this.object = {
+				iframe: _z.setup('iframe', {'frameborder': '0', 'scrolling': (scr ? 'auto' : 'no'), 'allowfullscreen': 'true', 'mozallowfullscreen': 'true', 'webkitallowfullscreen': 'true'}, null),
+				embed: _z.setup('embed', {'type': 'application/x-shockwave-flash'}, null),
+				video: _z.setup('video', {'controls': ''}, null)
+			}
+			cVl = function(tg, extras) {
+				return _z.setup(MaC.object[tg], extras, null)
+			}
+		}
+		function makePlayer(uri, embc) {
+			var P, ext = uri.fext(), element = MaC['Container'].firstElementChild;
+			switch (embc) {
+				case 'Cb': P = cVl('iframe', {'src': uri.replace(GenrX('Coub'), "//coub.com/embed/$1?muted=false&autostart=false&originalSize=false&hideTopBar=true&noSiteButtons=true&startWithHD=false")}); break;
+				case 'YT': P = cVl('iframe', {'src': uri.replace(GenrX('YouTube'), "//www.youtube.com/embed/$1$3$5?$2$4$6&autohide=1&wmode=opaque&enablejsapi=1&theme=light&html5=1&rel=0&start=$7")}); break;
+				case 'RT': P = cVl('iframe', {'src': uri.replace(GenrX('RuTube'), "//rutube.ru/video/embed/$1?autoStart=false&isFullTab=true&skinColor=fefefe")}); break;
+				case 'Vm': P = cVl('iframe', {'src': uri.replace(GenrX('Vimeo'), "//player.vimeo.com/video/$1?badge=0&color=ccc5a7#t=$2")}); break;
+				case 'my': P = cVl('iframe', {'src': uri.replace(GenrX('M@il.ru'), "//videoapi.my.mail.ru/videos/embed/mail/$1/$2")}); break;
+				case 'VK': P = cVl('iframe', {'src': uri.replace(GenrX('VK.com'), "//vk.com/video_ext.php?oid=$1&id=$2&$3$4$5")}); break;
+				case 'Pbin': P = cVl('iframe', {'src': uri.replace(GenrX('Pastebin'), "//pastebin.com/embed_iframe.php?i=$1")}); break;
+				case 'Pleer': P = cVl('embed', {'src': uri.replace(GenrX('Pleer.com'), "//embed.pleer.com/track?id=$1"), 'class': 'prosto-pleer', 'width': '410', 'height': '40'});
+					MaC['Container'].className = 'pleer-container';
+					break;
+				default:
+					var tag = 'iframe';
+					switch (embc) {
+						case 'html5': tag = 'video'; break;
+						case 'flash': tag = 'embed'; break;
+						case 'iframe':tag = 'iframe';break;
+						default: uri = embc;
+					}
+					P = cVl(tag, {'src': uri});
+			}
+			MaC['Frame'] = P;
 			if (!element)
 				MaC['Container'].appendChild(MaC['Frame']);
 			else if (element.tagName != MaC['Frame'].tagName)
 				MaC['Container'].replaceChild(MaC['Frame'], element);
 			return MaC['Container'];
 		}
-		this.matchPlayer = function(uri, embc) {
-			var m, reg, i, result;
+		function matchPlayer(uri, embc) {
+			var m, reg, result;
 			switch (embc) {
-				case 'YT': m = MaC.RegExp['YouTube'].exec(uri); result = m && (m[1] || m[2] || m[3] || m[4] || m[5] || m[6]);
-					break;
-				case 'VK': m = MaC.RegExp['VK.com'].exec(uri); result = m && m[1] && m[2] && m[3];
-					break;
-				case 'my': m = MaC.RegExp['M@il.ru'].exec(uri); result = m && m[1] && m[2];
-					break;
+				case 'YT': m = GenrX('YouTube').exec(uri); result = m && (m[1] || m[2] || m[3] || m[4] || m[5] || m[6]); break;
+				case 'VK': m = GenrX('VK.com').exec(uri);  result = m &&  m[1] && m[2] && m[3]; break;
+				case 'my': m = GenrX('M@il.ru').exec(uri); result = m &&  m[1] && m[2]; break;
 				default: 
 					switch (embc) {
-						case 'Cb'   : reg = MaC.RegExp['Coub'];     break;
-						case 'RT'   : reg = MaC.RegExp['RuTube'];   break;
-						case 'Vm'   : reg = MaC.RegExp['Vimeo'];    break;
-						case 'Pbin' : reg = MaC.RegExp['Pastebin']; break;
-						case 'Pleer': reg = MaC.RegExp['Pleer.com'];break;
-						default:      reg = MaC.RegExp['Custom']('('+embc+')', true);
+						case 'Cb'   : reg = GenrX('Coub');     break;
+						case 'RT'   : reg = GenrX('RuTube');   break;
+						case 'Vm'   : reg = GenrX('Vimeo');    break;
+						case 'Pbin' : reg = GenrX('Pastebin'); break;
+						case 'Pleer': reg = GenrX('Pleer.com');break;
+						case 'flash':
+						case 'html5':
+						case 'iframe':reg = /(.+)/; break;
+						default     : reg = GenrX('('+embc+')');
 					}
 					m = reg.exec(uri)
 					result = m && m[1];
 			}
 			return result;
 		}
-		function createReg(reg, arg) {
-			var st = arg ? '' : '(?:https?:)?\\/\\/(?:www\\.)?';
-			return new RegExp(st + reg, 'g');
+		function GenrX($) {
+			var rX;
+			switch ($.toLowerCase()) {
+				case 'youtube'  : rX = /(?:https?:)?\/\/(?:www\.)?youtu(?:be\.com\/(?:watch|playlist)\?.*?(?:v=([\w_-]*)|(list=[\w_-]*))(?:.*?v=([\w_-]*)|.*?(list=[\w_-]*)+)?|(?:\.be|be.com\/embed)\/([\w_-]*)(?:.*?(list=[\w_-]*))?)(?:.*?t=([\w_-]*))?/; break;
+				case 'pleer.com': rX = /(?:https?:)?\/\/(?:www\.)?pleer\.com\/tracks\/([\w_-]*)/; break;
+				case 'vimeo'    : rX = /(?:https?:)?\/\/(?:www\.)?vimeo\.com\/(?:.*?\/)?(\d+)(?:.*?t=(\d+))?/; break;
+				case 'coub'     : rX = /(?:https?:)?\/\/(?:www\.)?coub\.com\/view\/([\w_-]*)/; break;
+				case 'rutube'   : rX = /(?:https?:)?\/\/(?:www\.)?rutube\.ru\/video\/([\w_-]*)\/?/; break;
+				case 'm@il.ru'  : rX = /(?:https?:)?\/\/(?:www\.)?(?:my\.)?mail\.ru\/mail\/([\w_-]*)\/video\/([\w_-]*\/\d+\.html)/; break;
+				case 'vk.com'   : rX = /(?:https?:)?\/\/(?:www\.)?vk\.com\/video(?:_ext\.php\?oid=)?(-?\d+)(?:&id=|_)(\d+).?(hash=[\w_-]*)?(.*?hd=-?\d+)?(.*?t=[\w_-]*)?/; break;
+				case 'pastebin' : rX = /(?:https?:)?\/\/(?:www\.)?pastebin\.com\/([\w_-]*)/; break;
+				default: rX = new RegExp($, '')
+			}
+			return rX;
 		}
 	}
 	function loadMediaContainer(e) {
-		var embc, cont, last, el = e.target;
-		if (el.classList[0] !== 'cm-button')
+		if (this.classList[0] !== 'cm-button')
 			return;
-		if (!el.href)
-			el = el.parentNode
-		var hash = _urlHash(el.href),
+		var embc, cont, last, el = e.target,
+			href = escapeUrl(this.href),
+			hash = _urlHash(href),
 			th = HM.LinksMap[hash], Id = th.Type +'_'+ hash,
-			TYPES = ['img', 'audio'].isThere(th.Type),
-			pcont = _z.route(el, function jumpCont(el) {
+			pTYPES = ['img', 'audio'].isThere(th.Type),
+			wTYPES = ['pdf', 'docs'].isThere(th.Type) && th.Embed != 'Pbin',
+			pcont = _z.route(this, function jumpCont(el) {
 				var pb = el.querySelector('.postbody');
 				if (pb) {
 					var prev = pb.previousElementSibling,
@@ -1305,12 +1413,12 @@ function MagicExtension() {
 					return node.previousElementSibling;
 				} else return false;
 			});
-		if ((HM.MC === 0 || ['pdf', 'docs'].isThere(th.Type) && th.Embed != 'Pbin') && !TYPES) {
+		if (this.classList[1] === 'w-open' || wTYPES || HM.MC == 0 && !pTYPES) {
 			last = mEl['ContentWindow'].lastElementChild;
 			if (last.id != 'content_'+ hash) {
-				embc = th.Embed.allReplace({'(visual%3D)true': '1$false', 'notracklist%3Dtrue': 'notracklist%3Dfalse', 
+				embc = th.Embed.allReplace({'(visual=)true': '1$false', 'notracklist%3Dtrue': 'notracklist%3Dfalse', 
 					'twittercard%3Dtrue': 'artwork%3Dsmall%2Ftransparent%3Dtrue'})
-				cont = _z.setup(Megia[th.Type].makePlayer(el.href, embc), {'class': 'content-frame '+ th.Type, 'id': 'content_'+ hash}, null);
+				cont = _z.setup(Megia[th.Type].makePlayer(href, embc), {'class': 'content-frame '+ th.Type, 'id': 'content_'+ hash}, null);
 				_z.setup(Megia[th.Type]['Frame'], {'width': '100%', 'height': '100%'}, null);
 				if (last.classList[0] === 'content-frame') {
 					mEl['ContentWindow'].replaceChild(cont, last);
@@ -1323,216 +1431,266 @@ function MagicExtension() {
 			}
 			mEl['ContentWindow'].classList.remove('hidup');
 		} else {
-			if (th.Embed === 'Pbin' || th.Type === 'audio') {
-				if (TYPES)
-					hash = th.Type;
+			if (th.Embed === 'Pbin') {
 				if (!Megia[hash])
 					Megia[hash] = new MagicContent(true)
-				if (el.previousElementSibling.id === Id) {
+				if (this.previousElementSibling.id === Id) {
 					Megia[hash]['Container'].remove();
 				} else {
-					cont = _z.setup(Megia[hash].makePlayer(el.href, th.Embed), {'class': th.Type +'-container', 'id': Id}, null);
-					_z.setup(Megia[hash]['Frame'], {'class': (TYPES ? 'au' : 'full') +'-size'}, null);
-					_z.before(el, cont)
+					cont = _z.setup(Megia[hash].makePlayer(href, th.Embed), {'class': th.Type +'-container', 'id': Id}, null);
+					_z.setup(Megia[hash]['Frame'], {'class': 'full-size'}, null);
+					_z.before(this, cont)
 				}
 			} else {
-				if (th.Type === 'img')
+				if (pTYPES)
 					Megia[th.Type] = { 'Container': pcont.querySelector('#'+ Id) }
 				if (pcont.querySelector('#'+ Id)) {
 					Megia[th.Type]['Container'].remove();
-					cont = null;
 				} else {
-					if (TYPES) {
-						cont = createImg(el.href, Id);
+					if (pTYPES) {
+						cont = createFileContent(href, hash, Id, th.Type);
 					} else {
-						cont = _z.setup(Megia[th.Type].makePlayer(el.href, th.Embed), {'class': th.Type +'-container', 'id': Id}, null);
+						cont = _z.setup(Megia[th.Type].makePlayer(href, th.Embed), {'class': th.Type +'-container', 'id': Id}, null);
 						_z.setup(Megia[th.Type]['Frame'], {'width': getVSize()[th.Type == 'scbc' ? 1 : 0], 'height': getVSize()[1]}, null);
 					}
 					pcont.appendChild(cont);
 				}
 			}
 		}
-		if (th.Type === 'video')
+		if (th.Type === 'video' && this.classList[1] !== 'w-open')
 			HM.VActive = [pcont, cont];
 		return _z.fall(e);
 	}
 	
-	function attachFile(el, type) {
-		var fileUrl = escapeUrl(el.href), hash = _urlHash(fileUrl),
-			fileName = (type === 'img' ? 'Image' : type === 'audio' ? 'Audio' : 'Video') + ': '+ getPageName(fileUrl);
-			function attach(e) {
-				_z.setup(el, {'id': 'cm-link', 'class': 'cm-button', 'rel': 'nofollow', 'href': fileUrl,
-					'text': fileName}, {'click': loadMediaContainer});
-				HM.LinksMap[hash] = lceche[hash] = {Name: fileName, Embed: 'html5', Type: type};
-				_z.setlSVal('LinksCache', JSON.stringify(lceche), true);
-			};
-			_z.setup(type, {'src': fileUrl}, {'load': attach, 'loadedmetadata': attach, 'error': function(e) { oEmbedMedia(el) }});
+	function attachFile(el, fileUrl, hash, type) {
+		var fExt = fileUrl.fext(), fileName = (type === 'img' ? 'Image' : type === 'audio' ? 'Audio' : 'Video') +': '+ getPageName(fileUrl);
+		function _attach(e) {
+			switch (type) {
+				case 'img': _exec(fExt.slice(0, 1).toUpperCase() + fExt.slice(1, fExt.length) +', '+ this.width +'×'+ this.height);
+					break;
+				case 'audio':
+					//_unc(metadata.artist) +' — '+ _unc(metadata.album) +' / '+ _unc(metadata.title) + ' ['+ metadata.tracknum +'/0]'
+					_exec()
+					break;
+				default: _exec('', 'html5');
+			}
+		}
+		function _exec(ttl, emb) {
+			_z.setup(el, {'id': 'cm-link', 'class': 'cm-button', 'rel': 'nofollow', 'text': fileName, 'title': ttl}, {'click': loadMediaContainer});
+			HM.LinksMap[hash] = UrlCache[hash] = {Name: fileName, Type: type};
+			if (emb)
+				HM.LinksMap[hash]['Embed'] = UrlCache[hash]['Embed'] = emb
+			if (ttl)
+				HM.LinksMap[hash]['Title'] = UrlCache[hash]['Title'] = ttl
+			_z.setlSVal('LinksCache', JSON.stringify(UrlCache), true);
+		}
+		_z.setup(type, {'src': fileUrl}, {'load': _attach, 'loadedmetadata': _attach, 'error': function _err(e) { oEmbedMedia(el, fileUrl, hash) }});
 	}
-	
-	function oEmbedMedia(link, type, embed, provider, endpoint, arg) {
-		var mediaUrl = escapeUrl(link.href), hash = _urlHash(mediaUrl);
-		getDataResponse((endpoint || 'http://api.embed.ly/1/oembed?url=') + mediaUrl +'&format=json', function(status, sText, data, xhr) {
+	function oEmbedMedia(el, mediaUrl, hash, type, provider, endpoint, embed) {
+		var extras, events = null;
+		getDataResponse((endpoint || 'http://api.embed.ly/1/oembed?key=9cccaccb6ddc490a97bcd2ba6c282191&url=') + encodeURIComponent(mediaUrl) +'&format=json&origin=anonymous',
+		function(status, sText, data, xhr) {
 			if (status !== 200 || !data) {
-				_z.setup(link, {'target': '_blank'}, null);
+				extras = {'target': '_blank'}
 			} else {
-				var descript = data.provider_url == 'http://pastebin`.com' ? data.description.split(' | ').pop() : (data.description || ""),
-					name = !data.title || data.title.isThere('youtube.com/devicesupport') ? getPageName(mediaUrl) :
-						data.title.allReplace({' - YouTube': '', ' - Pastebin.com': ''}, true);
-				if (!provider)
-					provider = name.toLowerCase().isThere(data.provider_name.toLowerCase()) ? '' : data.provider_name + ': ';
-				HM.LinksMap[hash] = lceche[hash] = {Name: provider + name, Title: descript};
-				if (arg || !arg && data.html && data.type != "link" && embed != 'YT') {
-					switch (data.provider_name) {
-						case 'SoundCloud':
-						case 'BandCamp':
+				var harr = el.host.split('.'), dm = harr[harr.length - 1], host = harr[harr.length - 2],
+					p_name = (provider || data.provider_name || host.slice(0, 1).toUpperCase() + host.slice(1, host.length)),
+					rw = new RegExp('(?:\\s-\\s)?(?:'+ (data.provider_name || host) +'|Википедия)(\\.'+ dm +')?(?:\\s-\\s)?', 'i'),
+					name = (data.title || '').replace(rw, '');
+					extras = {'id': 'cm-link', 'rel': 'nofollow'}; HM.LinksMap[hash] = UrlCache[hash] = {};
+					HM.LinksMap[hash].Name = UrlCache[hash].Name = extras['text'] = p_name +': '+ (name || getPageName(mediaUrl));
+				if (data.description || data.author)
+					HM.LinksMap[hash].Title = UrlCache[hash].Title = extras['title'] = (data.description || data.author);
+				if (embed || !embed && data.html && data.type != 'link') {
+					switch (p_name.toLowerCase()) {
+						case 'bandcamp':
 							type = 'scbc';
 							break;
-						case 'Google Docs':
+						case 'google docs':
 							type = 'docs';
 					}
-					if (!embed && data.html || !arg && embed)
-						embed = _stub(data.html).src;
-					_z.setup(link, {'class': 'cm-button'}, {'click': loadMediaContainer });
-					HM.LinksMap[hash].Embed = lceche[hash].Embed = embed;
-					HM.LinksMap[hash].Type = lceche[hash].Type = type;
+					if (!embed && data.html)
+						embed = _stub('iframe', data.html).src;
+					extras['class'] = 'cm-button'; 
+					events = {'click': loadMediaContainer};
+					HM.LinksMap[hash].Embed = UrlCache[hash].Embed = embed;
+					HM.LinksMap[hash].Type = UrlCache[hash].Type = type;
 				}
-				_z.setup(link, {'id': 'cm-link', 'rel': 'nofollow', 'href': mediaUrl, 'title': descript, 'text': provider + name}, null);
-				_z.setlSVal('LinksCache', JSON.stringify(lceche), true);
+				_z.setlSVal('LinksCache', JSON.stringify(UrlCache), true);
 			}
+			_z.setup(el, extras, events);
 		});
 	}
 	function hooLinks(links) {
-		_z.each(links, function(link) {
+		_z.each(links, function(link, i) {
 			if (!link.href || link.href.slice(0, 4) !== 'http')
 				return;
-			var href = escapeUrl(link.href), hash = _urlHash(link.href);
-			if (href.isThere("/res/") && href.isThere("dobrochan")) {
+			var href = escapeUrl(link.href), hash = _urlHash(link.href), extras, events;
+			if (link.host.isThere("dobrochan") && href.isThere("/res/")) {
 				var targ = ParseUrl(href), refl = _z.route(link, '.reflink a'),
 					from = ParseUrl(refl.href);
 				if (targ != null && targ.thread) {
 					var reply_id = (targ.pid || targ.thread),
 						diffb = (targ.board !== from.board) || (from.board !== HM.URL.board),
 						dataArr = [from.board, from.thread, from.pid, (diffb ? targ.board : '')];
-					if (!link.textContent.isThere(">>"))
-						_z.setup(link, {'href': href.replace(/https?:\/\/dobrochan\.\w+/, ''), 'onclick': 'Highlight(event, "'+ reply_id +'")',
-						'text': '>>'+ (diffb ? targ.board +'/' : '') + reply_id}, null);
-					_z.setup(link, {'class': 'reply-link', 'onmouseover': undefined}, {
-						'mouseover': Chanabira.MagicPostView
-					});
+					extras = {'class': 'reply-link', 'href': href.replace(/https?:\/\/dobrochan\.\w+/, ''), 'text': '>>'+ (diffb ? targ.board +'/' : '') + reply_id};
+					events = {'click': Chanabira.MagicHighlight, 'mouseover': Chanabira.MagicPostView};
+					_z.replace(link, _z.setup('a', extras, events));
 					if (!HM.RepliesMap[reply_id])
 						HM.RepliesMap[reply_id] = new Array(0);
 					if (!JSON.stringify(HM.RepliesMap[reply_id]).isThere(JSON.stringify(dataArr)))
 						HM.RepliesMap[reply_id].push(dataArr);
 				}
 			} else if (HM.oEmbedAPI) {
-				var type = 'video', endp = embed = prov = '', EXT = href.fext(), Macont = new MagicContent();
 				if (HM.LinksMap[hash]) {
-					if (HM.LinksMap[hash].Embed)
-						_z.setup(link, {'class': 'cm-button'}, {'click': loadMediaContainer});
-					_z.setup(link, {'href': href, 'id': 'cm-link', 'rel': 'nofollow',
-						'text': HM.LinksMap[hash].Name, 'title': HM.LinksMap[hash].Title}, null);
-					return;
-				}
-				if (Files.video.concat(Files.audio.concat(Files.image)).isThere(EXT)) {
-					return attachFile(link, (Files.image.isThere(EXT) ? 'img' : Files.audio.isThere(EXT) ? 'audio' : 'video'));
-				}
-				if (href.isThere("pleer.com/tracks/")) {
-					if (Macont.matchPlayer(href, 'Pleer')){
-						return _z.replace(link, Macont.makePlayer(href, 'Pleer'));}
-				}
-				if (href.isThere("youtu")) {
-					embed = 'YT'; prov = 'YouTube: ';
-				}
-				if (href.isThere("vimeo")) {
-					embed = 'Vm'; prov = 'Vimeo: ';
-				}
-				if (href.isThere("coub.com/view/")) {
-					embed = 'Cb'; prov = 'Coub: ';
-				}
-				if (href.isThere("rutube.ru/video/")) {
-					embed = 'RT'; prov = 'RuTube: ';
-				}
-				if (href.isThere("mail.ru/") && href.isThere("/video/")) {
-					embed = 'my'; prov = 'M@il.RU Видео: ';
-				}
-				if (href.isThere("vk.com/video")) {
-					link.setAttribute('href', href.replace(Macont.RegExp['VK.com'], 'https://vk.com/video$1_$2?$3$4$5'));
-					embed = 'VK'; prov = 'VK Видео: ';
-				}
-				if (href.isThere("video.yandex.ru/users/")) {
-					if ((/\/view\/(\d+)/).exec(href)) {
-						endp = '//video.yandex.ru/oembed.json?url=';
-						prov = 'Яндекс.Видео: ';
+					extras = {'id': 'cm-link', 'rel': 'nofollow', 'text': HM.LinksMap[hash].Name, 'title': HM.LinksMap[hash].Title}
+					if (HM.LinksMap[hash].Embed || HM.LinksMap[hash].Type) {
+						extras['class'] = 'cm-button';
+						events = {'click': loadMediaContainer};
 					}
+					return _z.setup(link, extras, events);
+				} else {
+					var type = 'video', endp = 'http://open.iframe.ly/api/oembed?url=', embed = prov = '', EXT = href.fext();
+					switch (true) {
+						case Files.video.concat(Files.audio.concat(Files.image)).isThere(EXT):
+							return attachFile(link, href, hash, (Files.image.isThere(EXT) ? 'img' : Files.audio.isThere(EXT) ? 'audio' : 'video'));
+							break;
+						case (link.host === 'pleer.com'):
+							if (MagicContent().matchPlayer(href, 'Pleer'))
+								return _z.replace(link, MagicContent().makePlayer(href, 'Pleer'));
+							break;
+						case link.host.isThere("youtu"):
+							prov = 'YouTube'; embed = 'YT'; endp = '';
+							break;
+						case link.host.isThere("soundcloud"):
+							prov = 'SoundCloud'; type = 'scbc'; endp = 'https://soundcloud.com/oembed?url=';
+							break;
+						case link.host.isThere("vimeo"):
+							prov = 'Vimeo'; embed = 'Vm'; endp = 'https://vimeo.com/api/oembed.json?url=';
+							break;
+						case link.host.isThere("coub"):
+							prov = 'Coub'; embed = 'Cb';
+							break;
+						case link.host.isThere("rutube"):
+							prov = 'RuTube'; embed = 'RT';
+							break;
+						case link.host.isThere("pastebin"):
+							prov = 'Pastebin'; embed = 'Pbin'; type = 'docs';
+							break;
+						case (href.isThere("mail.ru/") &&  href.isThere("/video/")):
+							prov = 'M@il.RU Видео'; embed = 'my';
+							break;
+						case link.host.isThere("video.yandex.ru"):
+							prov = 'Яндекс.Видео'; endp = '//video.yandex.ru/oembed.json?url=';
+							break;
+						case link.host.isThere("vk.com"):
+							if (href.isThere("hash"))
+								embed = 'VK';
+							if (href.isThere("video"))
+								prov = 'VK Видео';
+							if (href.isThere("ext.php"))
+								href = href.replace(MagicContent().RegEx('VK.com'), 'https://vk.com/video$1_$2?$3$4$5');
+							break;
+						case (href.isThere("/iframe/") || href.isThere("/embed/")):
+							embed = 'iframe'; endp = '';
+		 					if (!href.isThere("/html/"))
+		 						href = href.replace('embed/', '');
+							break;
+						default: endp = '';
+					}
+					oEmbedMedia(link, href, hash, type, prov, endp, (embed && MagicContent().matchPlayer(href, embed) ? embed : false));
 				}
-				if (href.isThere("pastebin.com/")) {
-					prov = 'Pastebin: '; type = 'docs'; embed = 'Pbin';
-				}
-				if (href.isThere("/iframe/") || href.isThere("/embed/")) {
-					embed = href;
-					if (!href.isThere("/html/"))
-						link.setAttribute("href", href.allReplace({'embed/': "", 'be.com': ".be"}));
-				}
-				oEmbedMedia(link, type, embed, prov, endp, Macont.matchPlayer(href, embed));
 			}
 		});
 	}
 	function hooElements(elems) {
 		_z.each(elems, function(el) {
 			switch (el.classList[0]) {
-				case 'reflink':
-					var url = ParseUrl(el.firstElementChild.href),
-						targ = _z.setup('a', {'class': 'reply-button line-sect txt-btn', 'title': LC.repl[lng]}, {
-							'click': function(e) {
-								Nagato.getForm(e, url.board, url.thread, url.pid)
-							}
+				case 'reply_':
+					var url = ParseUrl(_z.route(el, '.reflink').firstElementChild.href),
+						targ = _z.setup('a', {'id': url.board+'-'+url.thread+'-'+(url.pid||''), 'class': 'reply-button line-sect txt-btn', 'title': LC.repl[lng]}, {
+							'click': Nagato.getForm
 						});
 					_z.after(el, targ)
 					break;
 				case 'thumb':
-					var hash, a = el.parentNode;
+					var a = el.parentNode, Class = 'cm-button', Embed = 'html5', Fn = loadMediaContainer, Type, hash, finf, fext;
 					if (!a.href) {
-						var finf = _z.route(el, '.fileinfo');
-							a = _z.setup('a', {'href': finf.querySelector('a').href, 'target': "_blank"}, null);
+						finf = _z.route(el, '.fileinfo');
+						a = _z.setup('a', {'href': finf.querySelector('a').href, 'target': "_blank"}, null);
 						el.parentNode.appendChild(a); a.appendChild(el);
-						if (Files.image.isThere(a.href.fext())) {
-							return _z.setup(el, {'class': 'spr-image thumb expanded rated'}, {'click': MagicSpoirate});
-						}
-						if (Files.audio.isThere(a.href.fext())) {
-							finf.lastChild.remove();
-						}
 					}
-					if (Files.audio.isThere(a.href.fext())) {
-						return makeMagicAudio(el);
+					hash = _urlHash(a.href); fext = a.href.fext();
+					switch (true) {
+						case (fext === 'pdf'): Type = 'pdf'; Embed = 'iframe';
+							break;
+						case Files.video.isThere(fext): Type = 'video'; Embed = Files.video.indexOf(fext) > 4 ? 'flash' : 'html5';
+							if (el.getAttribute('src') === '/thumb/generic/sound.png') {
+								_z.route(a, 'em').className = 'magic-info';
+								makeMagicPlayer('movie', a, el)
+							}
+							break;
+						case Files.image.isThere(fext):
+							return _z.setup(el, {'class': 'spr-image expanded rated thumb'}, {'click': MagicSpoirate});
+							break;
+						case Files.audio.isThere(fext): Class = 'ma-button'; Fn = initMagicAudio;
+							var afInf = _z.setup(_z.route(a, 'em'), {'class': 'magic-info'}, null),
+								artalb = (/kHz(?:[\s\n]*)(.*(?:[\s\n]*)—(?:[\s\n]*).*)(?:[\s\n]*)\s\//).exec(afInf.textContent)[1],
+								mav = makeMagicPlayer('artwork', a, el);
+							if (HM.AlbumArts[artalb.hashCode().toString()])
+								mav.id = _cover(artalb);
+							if (finf)
+								finf.lastChild.remove();
+							break;
+						default:
+							var aclc = el.getAttribute('onclick')
+							if (aclc && aclc.isThere('open_url')) {
+								if (Files.arch.isThere(fext))
+									el.src = '/src/png/1405/archive-icon.png';
+								Embed = (/open_url\('([^']+)/).exec(aclc)[1];
+								Type = Embed.isThere('text') ? 'docs' : 'pdf'
+								el.removeAttribute('onclick');
+							}
 					}
-					hash = _urlHash(a.href);
-					if (Files.video.isThere(a.href.fext())) {
-						if (el.alt.fext() === 'mp4')
-							el.src = '/src/png/1501/video.png'
-						HM.LinksMap[hash] = {Embed: 'html5', Type: 'video'};
+					if (Type && Embed) {
+						HM.LinksMap[hash] = {Embed: Embed, Type: Type};
 					}
-					if (a.href.fext() === 'pdf') {
-						HM.LinksMap[hash] = {Embed: 'html5', Type: 'pdf'};
-					}
-					if (el.onclick && el.onclick.toString().isThere('open_url')) {
-						if (Files.arch.isThere(el.alt.fext()))
-							el.src = '/src/png/1405/archive-icon.png'
-						var uri = (/open_url\('([^']+)/).exec(el.onclick.toString())[1]
-						HM.LinksMap[hash] = {Embed: uri, Type: (uri.isThere('text') ? 'docs' : 'pdf')};
-						el.removeAttribute('onclick');
-					}
-					_z.setup(el, {'class': 'cm-button thumb'}, {'click': loadMediaContainer});
+					_z.setup(a, {'class': Class}, {'click': Fn});
+			}
+			function makeMagicPlayer(clss, a, el) {
+				var magicPlayer = _z.setup('div', {'class': 'magic-audio thumb '+ clss, 'html': '<div class="ma-controls"></div>'}, null);
+				_z.after(a, magicPlayer); _z.append(magicPlayer.firstElementChild, _z.setup(a, {'id': 'ma-play'}, null)); el.remove();
+				return magicPlayer;
 			}
 		});
 	}
-	
+	function genReplyMap(posts) {
+		_z.each(posts, function(post) {
+			var cid = _cid(post.id), replies_links = new Array(0);
+			if (HM.RepliesMap[cid]) {
+				_z.each(HM.RepliesMap[cid], function(Id) {
+					replies_links.push(Tamplate['ref'].allReplace({'r{brd}': Id[0], 'r{cl}': 'cview', 'r{tid}':
+					(!Id[1] ? Id[2] : Id[1]), 'r{pid}': Id[2], 'r{L}': (Id[3] ? '❪'+ Id[0].toUpperCase() +'❫' : '')}));
+				});
+				var replies_div_arr = post.getElementsByClassName('replylinks'),
+					replies_div = _z.setup('div', {'class': 'replylinks'}, null);
+				if (replies_div_arr.length == 0)
+					post.getElementsByClassName('abbrev')[0].appendChild(replies_div);
+				else
+					replies_div = replies_div_arr[0];
+				replies_div.innerHTML = LC.repl[lng] + LC.few['u-c'][lng] +': '+ replies_links.join(', ');
+				attachEvents(replies_div);
+			}
+		});
+	}
 	function attachEvents(node) {
 		_z.each(GetElements(node).hoos,
 		function(a) {
 			switch (a.classList[0]) {
 				case 'reply-link':
 					if (a.classList[2] !== 'locked')
-						a.addEventListener('mouseover', Chanabira.MagicPostView, false)
+						a.addEventListener('mouseover', Chanabira.MagicPostView, false);
+					a.addEventListener('click', Chanabira.MagicHighlight, false);
 					break;
 				case 'sp-r':
 					a.addEventListener('click', function(e) {
@@ -1549,10 +1707,7 @@ function MagicExtension() {
 					a.addEventListener('click', initMagicAudio, false)
 					break;
 				case 'reply-button':
-					var url = ParseUrl(_z.route(a, '.reflink a').href)
-					a.addEventListener('click', function(e){
-						Nagato.getForm(e, url.board, url.thread, url.pid)
-					}, false)
+					a.addEventListener('click', Nagato.getForm, false)
 			}
 		});
 	}
@@ -1567,7 +1722,7 @@ function MagicExtension() {
 		}
 	}
 	function MagicSpoirate(e) {
-		if (this.classList[3]) {
+		if (this.classList[2] === 'rated') {
 			var finf = _z.route(this, '.fileinfo > a + br'), iMg = this,
 				href = this.parentNode.href,
 				fid = this.parentNode.parentNode.id.split('_'),
@@ -1586,14 +1741,21 @@ function MagicExtension() {
 		this.classList.toggle('expanded')
 		return _z.fall(e);
 	}
-	function createImg(imgSrc, Id) {
-		var fileName = getPageName(imgSrc),
-			name = fileName.length > 17 ? fileName.substring(0, 17) + '...' : fileName,
-			image = _z.setup('div', {'id': Id, 'class': 'file', 'html': ('<div class="fileinfo">'+ LC.file[lng] +': <a target="_blank" href="'+ imgSrc +'" title="'+ fileName +'" download>'+ name +
-				'</a></div>\n<img class="spr-image thumb unexpanded" contextmenu="image-context" oncontextmenu="$(\'#image-context\').attr({src:this.src, edit:\'\'})" src="'+imgSrc +
-				'"style="border:medium none;cursor:pointer;" alt="'+ fileName +'">')}, null);
-			image.querySelector('.spr-image').addEventListener('click', MagicSpoirate, false);
-		return image;
+	function createFileContent(fileSrc, hash, Id, type) {
+		var fileName = getPageName(fileSrc),
+			fileCont = _z.setup('div', {'id': Id, 'class': 'file'}, null);
+			switch (type) {
+				case 'audio': fileCont.innerHTML = '<div class="fileinfo limited">\n<em class="magic-info">'+ fileSrc.fext().toUpperCase() +', <span>'+ (HM.LinksMap[hash]['Title'] || fileName) +
+					'</span></em>\n</div><div class="magic-audio thumb artwork"><div class="ma-controls"><a href="'+ fileSrc +'" class="ma-button'+ (HM.LinksMap[hash]['Title'] ? '' : ' load-ttl') +'" id="ma-play"></a></div></div>';
+					fileCont.querySelector('.ma-button').addEventListener('click', initMagicAudio, false);
+					break;
+				case 'img': fileCont.innerHTML = '<div class="fileinfo limited"><em>'+ HM.LinksMap[hash]['Title'] +
+					'</em></div>\n<img class="spr-image thumb unexpanded" contextmenu="image-context" oncontextmenu="$(\'#image-context\').attr({src:this.src, edit:\'\'})" src="'+ 
+					fileSrc +'"style="border:medium none;cursor:pointer;" alt="'+ fileName +'">';
+					fileCont.querySelector('.spr-image').addEventListener('click', MagicSpoirate, false);
+					break;
+			}
+		return fileCont;
 	}
 	function createImgContext(img) {
 		var fid, edit;
@@ -1734,6 +1896,7 @@ function MagicExtension() {
 	//* @ copyright 		2013+, You
 	function Yuki(h) {
 		var Yu = this, fileList = [],
+		Yum = { brd: HM.URL.board, tid: (HM.URL.thread || 0) },
 		LCY = {
 			acap: ["Attach Captcha Image", 'Прикрепить капчу'],
 			subj: ["Subject", "Тема"],
@@ -1761,15 +1924,15 @@ function MagicExtension() {
 				'ru': ['капча', 'человек.']
 			}
 		},
+		ratingselect_tamplate = '<select name="file_1_rating" class="rating_SFW" onchange="$(this).attr(\'class\', $(this).find(\'option:checked\')[0].className)"><option class="rating_SFW">SFW</option><option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select>',
 		filepreview_tamplate = '[\n<a class="yuki_clickable">убрать</a>\n]<br><img class="preview_img" src="r{img}"><br><span class="file_name">r{fname}</span><br>'+
-			'<span class="file_name">r{size}&nbsp;</span><select name="file_1_rating" class="rating_SFW" onchange="$(this).attr(\'class\', $(this).find(\'option:checked\')[0].className)">'+
-			'<option class="rating_SFW">SFW</option><option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select>',
-		replyform_tamplate = '<input id="yuki-targetThread" name="thread_id" value="'+ (HM.URL.thread || 0) +'" type="hidden"><input name="task" value="post" type="hidden">'+
+			'<span class="file_name">r{size}&nbsp;</span>'+ ratingselect_tamplate,
+		replyform_tamplate = '<input id="yuki-targetThread" name="thread_id" value="'+ Yum.tid +'" type="hidden"><input name="task" value="post" type="hidden">'+
 			'<div id="yuki-errorMsg"></div>'+
 			'<table><tbody id="yuki-dropBox" class="line-sect"><tr class="etch-text"></tr><tr class="droparrow inactive"></tr></tbody><tbody class="line-sect">'+
 			'<tr id="trname"><td><input placeholder="'+ getDefaultName() +'" name="name" size="30" value="" type="text">'+
-				'<label class="sagearrow'+ (HM.Sage ? '' : ' inactive') +'"><input id="yuki-sage" name="sage" type="checkbox" hidden><span class="line-sect txt-btn"></label>'+
-				'<label id="yuki-newThread-create" class="yuki_clickable inactive">'+ LCY.newt[lng] +'<span class="t-sec">\n/'+ HM.URL.board +
+				'<label class="sagearrow line-sect txt-btn'+ (HM.Sage ? '' : ' inactive') +'"><input id="yuki-sage" name="sage" type="checkbox" hidden></label>'+
+				'<label id="yuki-newThread-create" class="yuki_clickable inactive">'+ LCY.newt[lng] +'<span class="t-sec">\n/'+ Yum.brd +
 				'/</span></label><span>&nbsp;<a id="yuki-close-form" title="'+ LC.remv[lng] +'"><img src="/images/delete.png" alt="✖︎"></a></span></td></tr>'+
 			'<tr id="trsubject"><td><input placeholder="'+ LCY.subj[lng] +'" name="subject" size="30" maxlength="64" value="" type="text">'+
 				'<label class="submit-button">\n<span>'+ LCY.send[lng] +'</span>\n<input type="submit" value="'+ LCY.post[lng] +'"></label>\n'+
@@ -1788,18 +1951,19 @@ function MagicExtension() {
 			'</textarea></td></tr><tr id="trcaptcha"><td><span>'+
 					'<img alt="Капча" id="yuki-captcha-image" src="">&nbsp;'+
 					'<span id="yuki-attach-captcha-button" class="txt-btn yuki_clickable" title="'+ LCY.acap[lng] +'">[+]</span></span><br>'+
-					'<input id="yuki-captcha" autocomplete="off" name="captcha" type="text" hidden></td></tr>'+
+					'<input id="yuki-captcha" autocomplete="off" name="captcha" type="text" '+ (document.getElementById('captcha') ? '' : 'hidden') +'></td></tr>'+
 			'<tr id="trrempass"><td><input id="yuki-pass" name="password" size="35" value="'+ pass +'" type="password" hidden></td></tr>'+
 			'<tr id="trfile"><td id="files_parent"><div id="file_1_div"><label><span class="button">'+ LC.add[lng] +' '+ (lng ? LC.file[lng].toLowerCase() : LC.file[lng]) +
 			LC.few['u-c'][lng] +'</span><input id="dumb_file_field" type="file" hidden multiple></label>\n<span class="yukiFileSets"><label><input id="yuki-removeExif" type="checkbox" hidden><span class="checkarea"></span>\n'+
 			LCY.rmv[lng] +' Exif</label>\n<label><input id="yuki-removeFilename" type="checkbox" hidden><span class="checkarea"></span>\n'+ LCY.rmv[lng] +' '+ LCY.fnm[lng] +
 			'</label></span></div></td></tr></tbody></table><div id="yuki-files-placeholder"></div>';
-		this.$ = function(child) { return this['ReplyForm'].querySelector(child) }
+		function el$(child) { return Yu['ReplyForm'].querySelector(child) }
 		this.submitForm = yukiPleasePost;
 		this.getForm = function(e, brd, tid, pid) {
-			if (e.target.classList[0] == 'reply-button')
-				makeReplyForm(e, brd, tid, pid)
-			else
+			if (e.target.classList[0] == 'reply-button') {
+				var m = e.target.id.split('-')
+				makeReplyForm(e, m[0], m[1], m[2])
+			} else
 				makeGlobalForm(e)
 		}
 		this['ReplyForm'] = _z.setup('form', {
@@ -1811,9 +1975,9 @@ function MagicExtension() {
 			}, {
 				'submit': yukiPleasePost
 			});
-		this['TargetThread'] = this.$('#yuki-targetThread');
-		this['ErrorMassage'] = this.$('#yuki-errorMsg');
-		this['NewThreadCreate'] = _z.setup(this.$('#yuki-newThread-create'), {}, {
+		this['TargetThread'] = el$('#yuki-targetThread');
+		this['ErrorMassage'] = el$('#yuki-errorMsg');
+		this['NewThreadCreate'] = _z.setup(el$('#yuki-newThread-create'), {}, {
 			'click': function(e) {
 				var sel = this.classList[1] === 'selected';
 				if (HM.URL.thread) {
@@ -1823,11 +1987,11 @@ function MagicExtension() {
 				}
 			}
 		});
-		this['CloseForm'] = _z.setup(this.$('#yuki-close-form'), {}, {
+		this['CloseForm'] = _z.setup(el$('#yuki-close-form'), {}, {
 				'click': function(e) { Yu['ReplyForm'].remove() }
 			});
-		this['ReplyText'] = _z.setup(this.$('#yuki-replyText'), {
-				'value': JSON.parse(_z.getlSVal('SafeText', JSON.stringify(this.$('#yuki-replyText').value), true))
+		this['ReplyText'] = _z.setup(el$('#yuki-replyText'), {
+				'value': JSON.parse(_z.getlSVal('SafeText', JSON.stringify(el$('#yuki-replyText').value), true))
 			}, {
 				'click': function(e) {
 					this.classList.remove('ta-inact');
@@ -1839,8 +2003,8 @@ function MagicExtension() {
 					_z.setlSVal('SafeText', JSON.stringify(this.value), true);
 				}
 			});
-		this['FilesPlaceholder'] = this.$('#yuki-files-placeholder');
-		this['Captcha'] = _z.setup(this.$('#yuki-captcha'), {}, {
+		this['FilesPlaceholder'] = el$('#yuki-files-placeholder');
+		this['Captcha'] = _z.setup(el$('#yuki-captcha'), {}, {
 				'focus': function(e) {
 					Yu['CaptchaImage'].click()
 				},
@@ -1848,29 +2012,29 @@ function MagicExtension() {
 					CaptchaProcess(e, LC.lng[lng])
 				}
 			});
-		this['CaptchaImage'] = _z.setup(this.$('#yuki-captcha-image'), {}, {
+		this['CaptchaImage'] = _z.setup(el$('#yuki-captcha-image'), {}, {
 				'click': function(e) {
-					this.src = '/captcha/'+ Target.board +'/'+ _t() +'.png'
+					this.src = '/captcha/'+ Yum.brd +'/'+ _t() +'.png'
 				}
 			});
-		this['DumbFileField'] = _z.setup(this.$('#dumb_file_field'), {}, {
+		this['DumbFileField'] = _z.setup(el$('#dumb_file_field'), {}, {
 				'change': yukiAddFile
 			});
-			_z.setup(this.$('#yuki-removeExif'), {'checked': HM.RemoveExif}, {
+			_z.setup(el$('#yuki-removeExif'), {'checked': HM.RemoveExif}, {
 				'change': function(e) {
 					setupOptions(this, 'RemoveExif');
 				}
 			});
-			_z.setup(this.$('#yuki-removeFilename'), {'checked': HM.RemoveFileName}, {
+			_z.setup(el$('#yuki-removeFilename'), {'checked': HM.RemoveFileName}, {
 				'change': function(e) {
 					setupOptions(this, 'RemoveFileName');
 				}
 			});
-		this['Submit'] = _z.setup(this.$('input[type="submit"]'), {}, {
+		this['Submit'] = _z.setup(el$('input[type="submit"]'), {}, {
 				'click': function(e) {
 					StrikeConvert(Yu['ReplyText']) }
 			});
-		this['DropBox'] = _z.setup(this.$("#yuki-dropBox"), {}, {
+		this['DropBox'] = _z.setup(el$("#yuki-dropBox"), {}, {
 				'dragover': _z.fall,
 				'dragenter': function(e) {
 					var items = e.dataTransfer.mozItemCount || '';
@@ -1891,7 +2055,7 @@ function MagicExtension() {
 					return _z.fall(e);
 				}
 			});
-		this['Sage'] = _z.setup(this.$('#yuki-sage'), {
+		this['Sage'] = _z.setup(el$('#yuki-sage'), {
 				'checked': HM.Sage
 			}, {
 				'change': function(e) {
@@ -1899,7 +2063,7 @@ function MagicExtension() {
 					this.parentNode.classList.toggle('inactive');
 				}
 			});
-		this['AttachCaptchaButton'] = _z.setup(this.$('#yuki-attach-captcha-button'), {}, {
+		this['AttachCaptchaButton'] = _z.setup(el$('#yuki-attach-captcha-button'), {}, {
 				'click': yukiAttachCapcha
 			});
 		this['OpenBottomForm'] = _z.setup('div', {'id': 'open-bottom-form', 'class': 'hideinfo', 'html': '[\n<a>'+ LCY.ufrm[lng] +'</a>\n]'}, null);
@@ -1964,7 +2128,7 @@ function MagicExtension() {
 			}
 		}
 		function checkfilesLimit() {
-			var limit, mu = (Target.board === 'mu');
+			var limit, mu = (Yum.brd === 'mu');
 			if (fileList.length >= (mu ? 10 : 5)) {
 				_z.prepend(Yu['FilesPlaceholder'],
 					_z.setup(mEl['WarningMsg'], {'text': LCY.maxfc[lng], 'style':'display:block;text-align:center;'}, null))
@@ -1991,8 +2155,8 @@ function MagicExtension() {
 				return;
 			// Loop through the FileList and render image files as thumbnails.
 			_z.each(files, function(f) {
-				var exist, reader, renamed = false,
-					f_name = f.name, f_ext = f_name.fext()
+				var exist, frontend, reader, renamed = false, Class = btt = '',
+					f_name = f.name, f_ext = f_name.fext(), f_size = bytesMagnitude(f.size)
 				_z.each(fileList, function(obj){
 					if (obj.file.size === f.size)
 						exist = true; })
@@ -2002,43 +2166,67 @@ function MagicExtension() {
 					f_name = (makeRandId(32) + (f.name.match(/\.[^\.]+$/) || [''])[0]).toLowerCase();
 					renamed = true;
 				}
+				switch (true) {
+					case Files.audio.isThere(f_ext): Class = ' artwork'; btt = 'ma-button'
+						break;
+					case Files.video.isThere(f_ext): Class = ' movie'; btt = 'cm-button w-open';
+				}
+				frontend = _z.setup('div', {'class': 'yukiFile' + Class, 'html': Class ? '<div class="magic-info"><div>[\n<a class="yuki_clickable">убрать</a>\n]</div>\n'+
+					f_ext.toUpperCase() +', '+ f_size + '<br>\n'+ f_name +'</div><div class="magic-audio"><div class="ma-controls"><a class="'+
+					btt +'" id="ma-play"></a></div><div style="position:relative;top:135px;">'+ ratingselect_tamplate +'</div></div>' :
+					filepreview_tamplate.allReplace({'r{img}': (Files.arch.isThere(f_ext) ? '/src/png/1405/archive-icon.png' : '#transparent'),
+						'r{fname}': f_name, 'r{size}': f_size})
+					}, null)
 				fileList.push({
 					file: f,
 					f_name: f_name,
 					renamed: renamed,
-					el: _z.setup('div', {'class': 'yukiFile' + (Files.audio.isThere(f_ext) ? ' artwork' : ''), 'html': filepreview_tamplate.allReplace({
-						'r{img}': (Files.arch.isThere(f_ext) ? '/src/png/1405/archive-icon.png' : f_ext === 'webm' ? '/src/svg/1501/webm-file.svg' : '#transparent'),
-						'r{fname}': f_name, 'r{size}': bytesMagnitude(f.size)})
-					}, null)
+					el: frontend
 				});
 				attachthisFile();
 		
 				// Closure to capture the file information.
-				if (Files.audio.isThere(f_ext)) {
-					var front = fileList[fileList.length - 1].el, 
-						moz = typeof mozRTCSessionDescription !== "undefined";
-					if (['ogg', 'opus'].isThere(f_ext) && moz) {
-						var URL = window.URL || window.webkitURL, 
-						HTMLAE = new Audio(URL.createObjectURL(f))
-						HTMLAE.onloadedmetadata = function() {
-							var mozMdata = this.mozGetMetadata();
-							if (Object.keys(mozMdata).length > 0) {
-								MDPBlockParser(front, mozMdata)
+				if (Class) {
+					var URL = window.URL || window.webkitURL,
+						blob = URL.createObjectURL(f);
+					if (Files.audio.isThere(f_ext)) {
+						var moz = typeof mozRTCSessionDescription !== "undefined";
+						if (['ogg', 'opus'].isThere(f_ext) && moz) {
+							var HTMLAE = new Audio(blob);
+							HTMLAE.onloadedmetadata = function() {
+								var mozMdata = this.mozGetMetadata();
+								if (Object.keys(mozMdata).length > 0) {
+									MDPBlockParser(frontend, mozMdata)
+								}
 							}
-						}
-						HTMLAE.load()
-					} else {
-						getFileReaderData('arraybuffer', f, function(buffer) {
+							HTMLAE.load()
+						} else {
 							if (['flac', 'alac', 'm4a'].isThere(f_ext)) {
-								var AVAsset = new AV.Asset.fromBuffer(buffer);
+								var AVAsset = new AV.Asset.fromFile(f);
 								AVAsset.get('metadata', function(md) {
-									AVMetadata(front, md)
+									AVMetadata(frontend, md)
 								});
 							} else {
-								MAParser(front, new Blob([buffer]))
+								MAParser('file', f, function(metadata) {
+									if ("picture" in metadata) {
+										getFileReaderData('dataurl', metadata.picture, function(dataImage){
+											frontend.id = _cover(metadata.artist, metadata.album, dataImage)
+										})
+									}
+								});
 							}
-						})
+						}
+						Fn = function(e) {
+							return initMagicAudio(e, f, f_ext)
+						}
+					} else if (Files.video.isThere(f_ext)) {
+						var hash = _urlHash(blob);
+							Fn = loadMediaContainer;
+							HM.LinksMap[hash] = {Embed: (Files.video.indexOf(f_ext) > 4 ? 'flash' : 'html5'), Type: 'video'}
 					}
+					_z.setup(frontend.querySelector('#ma-play'), {'href': blob}, {
+						'click': Fn
+					});
 				}
 				reader = new FileReader();
 				reader.onload = (function(theFile) {
@@ -2103,10 +2291,14 @@ function MagicExtension() {
 								Yu['Captcha'].setAttribute('hidden', '');
 								submitProcess(false);
 								_z.setlSVal('SafeText', JSON.stringify(Yu['ReplyText'].value), true);
-								if (fileList.length === 0) {
-									Chanabira.updateThread(null)
-								} else {
-									setTimeout(Chanabira.updateThread, 2000);
+								if (HM.ThreadListener[Yum.tid]) {
+									if (fileList.length === 0) {
+										HM.ThreadListener[Yum.tid].updateThread(true, false)
+									} else {
+										setTimeout(function(){
+											HM.ThreadListener[Yum.tid].updateThread(true, false)
+										}, 1500);
+									}
 								}
 								fileList = [];
 							}
@@ -2137,13 +2329,13 @@ function MagicExtension() {
 							delForm.appendChild(_z.setup(mEl['WarningMsg'], {'text': msg[1], 'style': 'float:right;'}, null));
 							mEl.funct = _rmMsg;
 						} else {
-							var chek = document.querySelectorAll('.post a.delete.icon.checked > .delete_checkbox');
+							var chek = document.querySelectorAll('.post .delete.icon.checked > .delete_checkbox');
 							if (chek.length === 1) {
 								_z.setup(document.getElementById('post_'+ chek[0].name), {'class': "deleted"}, null)
 								.querySelector('.doubledash').setAttribute('style', 'display:inline-block;');
-							} else if (Target.thread()) {
+							} else if (locationThread) {
 								setTimeout(function() {
-									Chanabira.updateThread(true);
+									HM.ThreadListener.updateThread(false, true);
 								}, 2000)
 							}
 						}
@@ -2156,15 +2348,9 @@ function MagicExtension() {
 			return _z.fall(e);
 		}
 		function makeReplyForm(e, brd, tid, pid) {
-			if (Target.thread(tid) && HM.URL.thread != tid)
-				Target.tid = tid;
-			if (Target.board != brd)
-				Target.board = brd;
-			Yu['TargetThread'].value = tid;
+			Yu['TargetThread'].value = Yum.tid = tid; Yum.brd = brd;
 			Yu['CaptchaImage'].src = '/captcha/'+ brd +'/'+ _t() +'.png';
 			_z.setup(Yu['ReplyForm'], {'class': 'line-sect' + (!e ? '' : ' reply'), 'action': '/'+ brd +'/post/new.xhtml'}, null);
-			if (document.getElementById('captcha'))
-				Yu['Captcha'].removeAttribute('hidden');
 			var post = !e ? topForm : _z.route(e.target, function(el) {
 					var nodes = el.className.split(' ');
 					return nodes.isThere('post') || nodes.isThere('popup');
@@ -2317,6 +2503,88 @@ function MagicExtension() {
 	}
 	
 	/****************** MagicAudio Player *********************/
+	function initMagicAudio(e, file, type) {
+		var btn = e.target, AS = btn.href, EXT = (type || AS.fext()),
+			frontend = _z.route(btn, function(node) {
+				var classes = node.className.split(' ')
+				return classes.isThere('artwork')
+			});
+			function _stop() {
+				_z.each(document.querySelectorAll('#ma-pause'),
+					function(a) { a.id = 'ma-play' });
+				HM.Played.pause();
+			}
+			function _play() {
+				btn.id = 'ma-pause';
+				HM.Played.play();
+			}
+			function _nextTrack(e) {
+				var nxtfp, fpart = _z.route(frontend, function(node) {
+					return ['file', 'yukiFile'].isThere(node.classList[0]);
+				}).nextElementSibling;
+				_stop();
+				while (fpart) {
+					nxtfp = fpart.querySelector('.ma-button')
+					if (!['file', 'yukiFile'].isThere(fpart.classList[0]) || nxtfp)
+						break;
+					fpart = fpart.nextElementSibling
+				}
+				return nxtfp ? nxtfp.click() : null;
+			}
+			function _AVPlayer() {
+				HM.Played = file ? new AV.Player.fromFile(file) : new AV.Player.fromURL(AS);
+				if (!frontend.id) {
+					HM.Played.asset.get('metadata', function(md) {
+						AVMetadata(frontend, md)
+					});
+				}
+				HM.Played.on('end', _nextTrack)
+				HM.Played.on('error', _stop)
+				_play()
+			}
+		if (btn.id == 'ma-pause') {
+			_stop();
+		} else {
+			if (HM.Played != null)
+				_stop();
+			if (['flac', 'alac'].isThere(EXT)) {
+				_AVPlayer();
+			} else {
+				HM.Played = _z.setup(new Audio(AS), {}, {'ended': _nextTrack,
+					'loadedmetadata': function(e) {
+						var moz = typeof this.mozGetMetadata !== "undefined",
+							mozMdata = moz ? this.mozGetMetadata() : false;
+						if (!frontend.id && mozMdata && Object.keys(mozMdata).length > 0) {
+							MDPBlockParser(frontend, mozMdata)
+						} else if (!frontend.id) {
+							MAParser((file ? 'file' : 'url'), (file ? file : AS), function(metadata) {
+								if (btn.classList[1] === 'load-ttl') {
+									var ttl = _unc(metadata.artist) +' — '+ _unc(metadata.album) +' / '+ _unc(metadata.title) + ' ['+ metadata.tracknum +'/0]',
+										nttl = _z.route(btn, '.magic-info > span'), hash = _urlHash(btn.href);
+									HM.LinksMap[hash]['Title'] = UrlCache[hash]['Title'] = nttl.textContent = ttl
+									btn.classList.remove('load-ttl')
+									_z.setlSVal('LinksCache', JSON.stringify(UrlCache), true);
+								}
+								if ("picture" in metadata) {
+									getFileReaderData('dataurl', metadata.picture, function(dataImage) {
+										frontend.id = _cover(metadata.artist, metadata.album, dataImage)
+									})
+								}
+							});
+						}
+					},
+					'error': function(e) {
+						if (EXT === 'm4a') {
+							_AVPlayer();
+						} else
+							_stop();
+					}
+				});
+				_play()
+			}
+		}
+		return _z.fall(e);
+	}
 	function _cover(artist, album, dataImage) {
 		var aid, baid, aa, ALB = getKeyByValue(HM.AlbumArts, dataImage);
 		if (ALB)
@@ -2350,16 +2618,25 @@ function MagicExtension() {
 			MAF.id = _cover(metadata.artist, metadata.album, dataImage)
 		}
 	}
-	function MAParser(MAF, blob) {
-		parse_audio_metadata(blob, function(metadata) {
-			if ("picture" in metadata) {
-				getFileReaderData('dataurl', metadata.picture, function(dataImage){
-					MAF.id = _cover(metadata.artist, metadata.album, dataImage)
-				})
-			}
-		}, function(e) {
-			console.log(e)
-		});
+	function MAParser(meth, Source, callback, errback) {
+		if (typeof errback !== 'object') {
+			errback = function(e) { console.log(e) }
+		}
+		switch (meth.toLowerCase()) {
+			case 'file':
+				getFileReaderData('arraybuffer', Source, function(buffer) {
+					parse_audio_metadata(new Blob([buffer]), callback, errback);
+				});
+				break;
+			case 'url':
+				var oReq = new XMLHttpRequest();
+				oReq.open("GET", Source, true);
+				oReq.responseType = "arraybuffer";
+				oReq.onload = function() {
+					parse_audio_metadata(new Blob([this.response]), callback, errback);
+				}
+				oReq.send(null);
+		}
 	}
 	function MDPBlockParser(MAF, metadata) {
 		if ('METADATA_BLOCK_PICTURE' in metadata) {
@@ -2393,75 +2670,6 @@ function MagicExtension() {
 				MAF.id = _cover(metadata['ARTIST'], metadata['ALBUM'], 'data:'+ mime +';base64,'+ dataImage)
 			})
 		}
-	}
-	
-	function makeMagicAudio(afSrc) {
-		afSrc = afSrc.parentNode
-		var afInf = _z.route(afSrc, 'em'),
-			artalb = (/kHz\s*(.*\s—\s.*)\s\//).exec(afInf.textContent)[1],
-			magicAudio = _z.setup('div', {'class': 'magic-audio thumb artwork', 'html': '<div class="ma-controls"><a href="'+
-						afSrc.href +'" class="ma-button" id="ma-play"></a></div>'}, null);
-		attachEvents(magicAudio)
-		afInf.classList.add('magic-info');
-		if (HM.AlbumArts[artalb.hashCode().toString()])
-			magicAudio.id = _cover(artalb);
-		_z.replace(afSrc, magicAudio)
-	}
-	function initMagicAudio(e) {
-		var btn = e.target, AS = btn.href,
-			magicAudio = btn.parentNode.parentNode;
-			function _stop() {
-				_z.each(document.querySelectorAll('#ma-pause'),
-					function(a) { a.id = 'ma-play' });
-				HM.Played.pause();
-			}
-			function _nextTrack(e) {
-				var file = document.getElementById(atob(this.id)), p = file.querySelector('.ma-button'),
-					nxtf = file.nextElementSibling, nxtfp = nxtf.querySelector('.ma-button');
-				_stop();
-				if (nxtfp)
-					nxtfp.click();
-			}
-		if (btn.id == 'ma-pause') {
-			_stop();
-		} else {
-			if (HM.Played != null)
-				_stop();
-			if (['flac', 'alac'].isThere(AS.fext())) {
-				HM.Played = new AV.Player.fromURL(AS);
-				if (!magicAudio.id) {
-					HM.Played.asset.get('metadata', function(md) {
-						AVMetadata(magicAudio, md)
-					});
-				}
-				HM.Played.on('end', _nextTrack)
-			} else {
-				HM.Played = _z.setup(new Audio(AS), {}, {'ended': _nextTrack,
-					'loadedmetadata': function(e) {
-						var moz = typeof this.mozGetMetadata !== "undefined",
-							mozMdata = moz ? this.mozGetMetadata() : false;
-						if (!magicAudio.id && mozMdata && Object.keys(mozMdata).length > 0) {
-							MDPBlockParser(magicAudio, mozMdata)
-						} else if (!magicAudio.id) {
-							var oReq = new XMLHttpRequest();
-							oReq.open("GET", AS, true);
-							oReq.responseType = "arraybuffer";
-							oReq.onload = function() {
-								var blob = new Blob([oReq.response]);
-								if (blob) {
-									MAParser(magicAudio, blob)
-								}
-							}
-							oReq.send(null);
-						}
-					}
-				});
-			}
-			HM.Played.id = btoa(btn.parentNode.parentNode.parentNode.id);
-			btn.id = 'ma-pause';
-			HM.Played.play();
-		}
-		return _z.fall(e);
 	}
 	
 	/************************************************************************/
@@ -2519,7 +2727,7 @@ function MagicExtension() {
 					'rw': ['Replace Words', 'Замена слов']
 				},
 				emb: {
-					'title': ['Enable oEmbed API support', 'Включает встраивание для внешних ссылок и поддержку oEmbed API'],
+					'title': ['Enable oEmbed API support', 'Включает поддержку встраивания контента для ссылок при помощи oEmbed API'],
 					'url': ['embedded_media_links', 'vstraivanije_dla_vneshnih_ssilok'],
 					'txt': ['Embedded Media Links', 'Встраивание ссылок']
 				}},
@@ -2528,30 +2736,29 @@ function MagicExtension() {
 				Title: { apply: false, keys: '' },
 				Words: { apply: false, keys: '' }}
 		this.Keywords = JSON.parse(_z.getlSVal('Keywords', JSON.stringify(keywordsObj)))
-		this.$ = function(child) { return this['GeneralSets'].querySelector(child) }
+		function el$(child) { return MSs['GeneralSets'].querySelector(child) }
 		this['SpStyle'] = _z.setup('style', {'text': '.spoiler, .spoiler * {color:inherit!important;}'}, null);
 		this['Panel'] = _z.setup('div', {'id': 'magic-panel'}, null);
 		this['GeneralSets'] = _z.setup('table', {'html': '<tbody><tr><td class="f-sect"><span id="media-placement"><input '+
-				(HM.MC == 0 ? 'checked' : '') +' value="0" name="cont_p" type="radio">\n'+ SLC.mcw[lng] +'\n<input '+
-				(HM.MC == 1 ? 'checked' : '') +' value="1" name="cont_p" type="radio">\n'+ SLC.mcp[lng] +'\n</span></td><td class="s-sect">'+
-				SLC.cframe[lng] +'</td></tr><tr class="vs-set'+ (HM.MC == 0 ? ' hidout' : '') +'"><td class="f-sect"><input id="video-frame-size" min="1" value="'+
-				getVSize('value') +'" step="1" max="4" type="range" name="v_size"></td><td class="s-sect">'+ SLC.vsyz[lng] +'\n<span id="vsize-textbox">('+
-				getVSize('text') +')</span></td></tr><tr><td class="f-sect"><select id="max-allowed-rating"><option class="rating_SFW">SFW</option>'+
-				'<option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select></td>'+
-				'<td class="s-sect">'+ SLC.maxr[lng] +'</td></tr><tr><td class="f-sect"><label><input id="oembedapi" type="checkbox" hidden><span class="checkarea">'+
-				'</span></label></td><td class="s-sect"><a id="exemple-link" title="'+ (HM.oEmbedAPI ? SLC.emb['title'][lng] : '') +'">'+
-				(HM.oEmbedAPI ? 'Hint: '+ SLC.emb['txt'][lng] : '<u>http://www.magicpanel.div/'+ SLC.emb['url'][lng] +'</u>') +'</a></td></tr>'+
-				'<tr><td class="f-sect"><label><input id="set-show-spoilers" hidden="" type="checkbox"><span class="checkarea"></span></label></td><td class="s-sect">'+
-				LC.txtspoils[lng] +'</td></tr><tr><td class="f-sect"><label><a class="paperclip'+
-				(HM.AttachPopups ? '' : ' inactive') +'"><input id="attach-popups" type="checkbox" hidden><img src="/src/png/1411/attachpopup.png"></a></label></td><td class="s-sect">'+
-				SLC.clipopup[lng] +'</td></tr></tbody>'}, null);
+			(HM.MC == 0 ? 'checked' : '') +' value="0" name="cont_p" type="radio">\n'+ SLC.mcw[lng] +'\n<input '+
+			(HM.MC == 1 ? 'checked' : '') +' value="1" name="cont_p" type="radio">\n'+ SLC.mcp[lng] +'\n</span></td><td class="s-sect">'+
+			SLC.cframe[lng] +'</td></tr><tr class="vs-set'+ (HM.MC == 0 ? ' hidout' : '') +'"><td class="f-sect"><input id="video-frame-size" min="1" value="'+
+			getVSize('value') +'" step="1" max="4" type="range" name="v_size"></td><td class="s-sect">'+ SLC.vsyz[lng] +'\n<span id="vsize-textbox">('+
+			getVSize('text') +')</span></td></tr><tr><td class="f-sect"><select id="max-allowed-rating"><option class="rating_SFW">SFW</option>'+
+			'<option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select></td>'+
+			'<td class="s-sect">'+ SLC.maxr[lng] +'</td></tr><tr><td class="f-sect"><label><input id="oembedapi" type="checkbox" hidden><span class="checkarea">'+
+			'</span></label></td><td class="s-sect"><a id="exemple-link" title="'+ (HM.oEmbedAPI ? SLC.emb['title'][lng] : '') +'">'+
+			(HM.oEmbedAPI ? 'Hint: '+ SLC.emb['txt'][lng] : '<u>http://www.magicpanel.div/'+ SLC.emb['url'][lng] +'</u>') +'</a></td></tr>'+
+			'<tr><td class="f-sect"><label><input id="set-show-spoilers" type="checkbox" hidden><span class="checkarea"></span></label></td><td class="s-sect">'+
+			LC.txtspoils[lng] +'</td></tr><tr><td class="f-sect"><label class="paperclip line-sect txt-btn'+
+			(HM.AttachPopups ? '' : ' inactive') +'"><input id="attach-popups" type="checkbox" hidden></label></td><td class="s-sect">'+ SLC.clipopup[lng] +'</td></tr></tbody>'}, null);
 		this['HideBySets'] = _z.setup('table', {'html': '<tbody><tr><th></th><th class="s-sect">'+ SLC.hidby['hr'][lng] +'</th></tr>'+
-				'<tr><td class="o-sect"><label><input id="chx-Nametrip" type="checkbox" hidden><span class="checkarea"></span></label></td><td><span class="font-s cyan-light">'+
-				SLC.hidby['nt'][lng] +'</span><br><textarea id="type-Nametrip" class="keywords-input font-s" placeholder="Mr.Yoba, Mr.*, *Yoba, !Hyd5gFre"></textarea></td></tr>'+
-				'<tr><td class="o-sect"><label><input id="chx-Title" type="checkbox" hidden><span class="checkarea"></span></label></td><td><span class="font-s cyan-light">'+
-				SLC.hidby['tl'][lng] +'</span><br><textarea id="type-Title" class="keywords-input font-s" placeholder="Официальный™*, *ожиданий от*, Унылый тред"></textarea></td></tr>'+
-				'<tr><td class="o-sect"><label><input id="chx-Words" type="checkbox" hidden><span class="checkarea"></span></label></td><td><span class="font-s cyan-light">'+
-				SLC.hidby['rw'][lng] +'</span><br><textarea id="type-Words" class="keywords-input font-s" placeholder="белое::черное, &quot;[w]&quot;::«[w]»"></textarea></td></tr></tbody>'}, null);
+			'<tr><td class="o-sect"><label><input id="chx-Nametrip" type="checkbox" hidden><span class="checkarea"></span></label></td><td><span class="font-s cyan-light">'+
+			SLC.hidby['nt'][lng] +'</span><br><textarea id="type-Nametrip" class="keywords-input font-s" placeholder="Mr.Yoba, Mr.*, *Yoba, !Hyd5gFre"></textarea></td></tr>'+
+			'<tr><td class="o-sect"><label><input id="chx-Title" type="checkbox" hidden><span class="checkarea"></span></label></td><td><span class="font-s cyan-light">'+
+			SLC.hidby['tl'][lng] +'</span><br><textarea id="type-Title" class="keywords-input font-s" placeholder="Путеводитель*, *ожиданий от*, Унылый тред"></textarea></td></tr>'+
+			'<tr><td class="o-sect"><label><input id="chx-Words" type="checkbox" hidden><span class="checkarea"></span></label></td><td><span class="font-s cyan-light">'+
+			SLC.hidby['rw'][lng] +'</span><br><textarea id="type-Words" class="keywords-input font-s" placeholder="белое::черное, &quot;[w]&quot;::«[w]»"></textarea></td></tr></tbody>'}, null);
 		var Types = ['Nametrip', 'Title', 'Words'];
 			for (var n = 0; n < Types.length; n++) {
 				_z.setup(this['HideBySets'].querySelector('#chx-'+ Types[n]), {'checked': this.Keywords[Types[n]].apply}, {
@@ -2585,18 +2792,20 @@ function MagicExtension() {
 				if (this.Keywords[Types[n]].apply)
 					wer(this.Keywords[Types[n]].keys, Types[n])
 			}
-		this['MediaPlacement'] = _z.setup(this.$('#media-placement'), {}, {
+		this['MediaPlacement'] = _z.setup(el$('#media-placement'), {}, {
 				'change': placeMedia
 			});
-		this['VideoSize'] = _z.setup(this.$('#video-frame-size'), {}, {
+		this['VideoSize'] = _z.setup(el$('#video-frame-size'), {}, {
 				'change': setVSize,
 				'click': function(e) {
-					Megia['scbc']['Container'].scrollIntoView();
-					Megia['video']['Container'].scrollIntoView();
+					if (this.scrollIntoView) {
+						Megia['scbc']['Container'].scrollIntoView({block: "start", behavior: "smooth"});
+						Megia['video']['Container'].scrollIntoView({block: "start", behavior: "smooth"});
+					}
 				}
 			});
-		this['VSizeTextBox'] = this.$('#vsize-textbox');
-		this['Rating'] = _z.setup(this.$('#max-allowed-rating'), {
+		this['VSizeTextBox'] = el$('#vsize-textbox');
+		this['Rating'] = _z.setup(el$('#max-allowed-rating'), {
 				'value': HM.maXrating,
 				'class': 'rating_'+ HM.maXrating.replace('-', '')
 			}, {
@@ -2605,7 +2814,7 @@ function MagicExtension() {
 					this.className = this.querySelector('option:checked').className;
 				}
 			});
-		this['Popups'] = _z.setup(this.$('#attach-popups'), {
+		this['Popups'] = _z.setup(el$('#attach-popups'), {
 				'checked': HM.AttachPopups
 			}, {
 				'change': function(e) {
@@ -2613,16 +2822,16 @@ function MagicExtension() {
 					this.parentNode.classList.toggle('inactive');
 				}
 			});
-		this['Embeds'] = _z.setup(this.$('#oembedapi'), {
+		this['Embeds'] = _z.setup(el$('#oembedapi'), {
 				'checked': HM.oEmbedAPI
 			}, {
 				'change': function(e) {
 					setupOptions(this, 'oEmbedAPI');
 					if (this.checked) {
 						hooLinks(GetElements().links);
-						_z.setup(MSs.$('#exemple-link'), {'title': SLC.emb['title'][lng], 'text': 'Hint: '+ SLC.emb['txt'][lng]}, null);
+						_z.setup(el$('#exemple-link'), {'title': SLC.emb['title'][lng], 'text': 'Hint: '+ SLC.emb['txt'][lng]}, null);
 					} else {
-						_z.setup(MSs.$('#exemple-link'), {'title': undefined, 'html': '<u>http://www.magicpanel.div/'+ SLC.emb['url'][lng] +'</u>'}, null);
+						_z.setup(el$('#exemple-link'), {'title': undefined, 'html': '<u>http://www.magicpanel.div/'+ SLC.emb['url'][lng] +'</u>'}, null);
 						_z.each('#cm-link', function(link) {
 							_z.setup(link, {'id': undefined, 'class': undefined, 'title': undefined, 'text': link.href}, null);
 						});
@@ -2657,7 +2866,7 @@ function MagicExtension() {
 					e.target.classList.toggle('active');
 				}
 			});
-		this['SetShowSpoilers'] = _z.setup(this.$('#set-show-spoilers'), {
+		this['SetShowSpoilers'] = _z.setup(el$('#set-show-spoilers'), {
 				'checked': HM.DiscloseTextSpoilers
 			}, {
 				'change': function(e) {
@@ -2681,7 +2890,7 @@ function MagicExtension() {
 		function placeMedia(e) {
 			var val = e.target.value,
 				cont = HM.VActive[1],
-				vsset = MSs.$('.vs-set'); 
+				vsset = el$('.vs-set'); 
 				HM.MC = val;
 			switch (val) {
 				case '0': _hide(vsset);
@@ -2722,14 +2931,14 @@ function MagicExtension() {
 					nodes = getElementByXpath('//span[@class="'+ Class[arg][c] +'"]['+ f +']/parent::*/parent::*[not(contains(@class, "autohidden")) and not(contains(@class, "showhidden")) and not(parent::*[contains(@class, "showhidden") or contains(@class, "autohidden")])]', 7);
 					for (n = 0; n < nodes.snapshotLength; n++) {
 						var node = nodes.snapshotItem(n),
-							tag = 'td';
+							tag = 'td', x = 2;
 						if (node.classList[0] === 'oppost') {
 							node = node.parentNode;
-							tag = 'label';
+							tag = 'label'; x = 1;
 						}
 						node.classList.add('by-'+ arg); node.classList.add('autohidden');
-						node.insertAdjacentHTML('afterend', '<'+tag+' class="'+ node.classList[0] +' hinfo-stub"><label class="'+
-							Class[arg][c] +' t-sec font-s">'+ keys[i] +'</label> hidden post No.'+ _cid(node.id) +'</'+tag+'>');
+						node.insertAdjacentHTML('afterend', '<'+tag+' class="'+ node.classList[0] +' hinfo-stub"><label class="'+ Class[arg][c] +
+							' t-sec font-s">'+ keys[i] +'</label>\n<i>('+ LC.hidden[0][lng] + LC.hidden[x][lng] +')</i>\nNo.'+ _cid(node.id) +'</'+tag+'>');
 					}
 				}
 			}
@@ -2749,6 +2958,61 @@ function MagicExtension() {
 				_z.setup("script", {"src": "/src/js/1501/alac_0.1.0.js"}, null),
 				_z.setup("script", {"src": "/src/js/1501/flac_0.2.1.js"}, null)
 			]);
+			lng = Hanabira.LC_ru; UrlCache = HM.LinksMap;
+			locationThread = document.getElementById('thread_'+ HM.URL.thread);
+			hideinfo = document.getElementById('hideinfodiv');
+			showinfo = document.getElementById('hideinfotd');
+			postForm = document.getElementById('postFormDiv');
+			pfplaceh = document.getElementById('postform_placeholder');
+			topForm = document.getElementById('postform');
+			delForm = document.getElementById('delete_form');
+			deli = delForm.querySelector('input[name="password"]');
+			pass = deli.value; mEl = new MagicElements(); 
+			Nagato = new Yuki(); HM.Settings = new MagicSettings();
+			
+			_hide(postForm); hideinfo.removeAttribute('style');
+			HM.Elems = GetElements(); hooLinks(HM.Elems.links);
+			hooElements(HM.Elems.elements); genReplyMap(HM.Elems.posts);
+			_z.each(document.querySelectorAll('.postername:not(.t-sec)'), function(pname) {
+				if (!lng)
+					pname.textContent = getDefaultName(pname.textContent);
+				var oldate = pname.parentNode.lastChild;
+				oldate.previousElementSibling.insertAdjacentHTML('afterend', getDateTime(oldate.textContent))
+				oldate.remove();
+			});
+			if (locationThread) {
+				HM.ThreadListener[HM.URL.thread] = new MagicThreadListener(locationThread);
+				_z.append(delForm, [Nagato['OpenBottomForm'], HM.ThreadListener[HM.URL.thread]['NewPostLoader']]);
+				_z.after(locationThread, HM.ThreadListener[HM.URL.thread]['PostsCount']);
+				HM.ThreadListener[HM.URL.thread].updateTimer();
+			} else {
+				_z.before(delForm.querySelector('.pages'), Nagato['OpenBottomForm']);
+				_z.each(document.querySelectorAll('.thread:not(.autohidden):not(.hinfo-stub)'), function(thread) {
+					if (!thread.querySelector('img[src="/images/sticky.png"]')) {
+						var expTBtn = thread.querySelector('.abbrev a[onclick^="ExpandThread"]')
+						var CiD = _cid(thread.id)
+						HM.ThreadListener[CiD] = new MagicThreadListener(thread)
+						_z.after(thread, HM.ThreadListener[CiD]['DummyLine']);
+						if (expTBtn) {
+							_z.setup(expTBtn, {'class': 'thread-expand', 'onclick': undefined}, {
+								'click': function(e) {
+									switch (this.classList[0]) {
+										case 'thread-expand':
+											HM.ThreadListener[CiD].expandThread(e)
+											this.className = 'thread-concat';
+											break;
+										case 'thread-concat':
+											HM.ThreadListener[CiD].concatThread(e)
+											this.className = 'thread-expand';
+									}
+									return _z.fall(e)
+								}
+							});
+						}
+					}
+				});
+			}
+			
 		}
 	}
 	function insertListenerI(event) {
@@ -2761,46 +3025,27 @@ function MagicExtension() {
 	function insertListenerE(event) {
 		switch (event.animationName) {
 			case 'onReady':
-				lng = Hanabira.LC_ru;
-				hideinfo = document.getElementById('hideinfodiv');
-				showinfo = document.getElementById('hideinfotd');
-				postForm = document.getElementById('postFormDiv');
-				pfplaceh = document.getElementById('postform_placeholder');
-				topForm = document.getElementById('postform');
-				delForm = document.getElementById('delete_form'),
-				deli = delForm.querySelector('input[name="password"]'),
-				pass = deli.value, mEl = new MagicElements(), HM.Elems = GetElements(), Nagato = new Yuki(), HM.Settings = new MagicSettings();
-				Chanabira = new CharmingHanabira();
-				
-				_hide(postForm);
-				if (HM.URL.thread) {
-					_z.append(delForm, [Nagato['OpenBottomForm'], Chanabira['NewPostLoader']]);
-					_z.after(Target.thread(), Chanabira['PostsCount']);
-					Chanabira.updateTimer();
-				} else {
-					_z.before(delForm.querySelector('.pages'), Nagato['OpenBottomForm']);
-				}
-				_z.each(document.querySelectorAll('.postername:not(.t-sec)'), function(pname) {
-					if (!lng)
-						pname.textContent = getDefaultName(pname.textContent);
-					var oldate = pname.parentNode.lastChild;
-					oldate.previousElementSibling.insertAdjacentHTML('afterend', getDateTime(oldate.textContent))
-					oldate.remove();
+				_z.each(HM.Elems.images, createImgContext);
+				_z.each(document.querySelectorAll('.abbrev a[onclick^="GetFullText"]'), function(txtFBtn) {
+					_z.setup(txtFBtn, {'onclick': undefined}, {
+						'click': function(e) {
+							var pbody = _z.route(this, '.alternate')
+							pbody.classList.remove('alternate')
+							pbody.previousElementSibling.classList.add('alternate')
+							this.parentNode.remove()
+							return _z.fall(e)
+						}
+					});
 				});
+				delForm.addEventListener('submit', Nagato.submitForm, false)
 				_z.each([showinfo.firstElementChild, hideinfo.firstElementChild], function(el) {
 					_z.setup(el, {'onclick': undefined, 'href': undefined}, {'click': Nagato.getForm});
 				});
-				hideinfo.removeAttribute('style');
-				hooElements(HM.Elems.elements);
-				hooLinks(HM.Elems.links);
-				Chanabira.genReplyMap(HM.Elems.posts);
-				_z.each(HM.Elems.images, createImgContext);
 				_z.append(document.body, [
 					mEl['ContentWindow'], mEl['ContentMarker'],
 					mEl['ReverseSearch'], mEl['ImageMenu'],
 					HM.Settings['ButtonsPanel']
 				]);
-				delForm.addEventListener('submit', Nagato.submitForm, false)
 		}
 	}
 	
@@ -2831,7 +3076,7 @@ function MagicExtension() {
 				HM.DragableObj.el.style.left = HM.DragableObj.offsetX + e.pageX - HM.DragableObj.el.offsetWidth  +'px';
 			}
 		}
-	});
+	}); document.title = '/'+ HM.URL.board +'/ · '+ document.title.split(' — ').pop();
 	
 	// animation listener events
 	PrefixedEvent("AnimationStart", insertListenerS);
@@ -2862,18 +3107,9 @@ function initStore() {
 	sessionStorage.removeItem('Sage')
 }
 
-var rp_arr = "data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMjNweCIgaGVpZ2h0PSIxNHB4IiB2aWV3Qm94PSIwIDAgMjMgMTQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiPjxkZWZzPjxmaWx0ZXIgeD0iLTUwJSIgeT0iLTUwJSIgd2lkdGg9IjIwMCUiIGhlaWdodD0iMjAwJSIgZmlsdGVyVW5pdHM9Im9iamVjdEJvdW5kaW5nQm94IiBpZD0iZmlsdGVyLTEiPjxmZU9mZnNldCBkeD0iMCIgZHk9IjAiIGluPSJTb3VyY2VBbHBoYSIgcmVzdWx0PSJzaGFkb3dPZmZzZXRPdXRlcjEiPjwvZmVPZmZzZXQ+PGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMC41IiBpbj0ic2hhZG93T2Zmc2V0T3V0ZXIxIiByZXN1bHQ9InNoYWRvd0JsdXJPdXRlcjEiPjwvZmVHYXVzc2lhbkJsdXI+PGZlQ29sb3JNYXRyaXggdmFsdWVzPSIwIDAgMCAwIDAgICAwIDAgMCAwIDAgICAwIDAgMCAwIDAgIDAgMCAwIDAuNyAwIiBpbj0ic2hhZG93Qmx1ck91dGVyMSIgdHlwZT0ibWF0cml4IiByZXN1bHQ9InNoYWRvd01hdHJpeE91dGVyMSI+PC9mZUNvbG9yTWF0cml4PjxmZU1lcmdlPjxmZU1lcmdlTm9kZSBpbj0ic2hhZG93TWF0cml4T3V0ZXIxIj48L2ZlTWVyZ2VOb2RlPjxmZU1lcmdlTm9kZSBpbj0iU291cmNlR3JhcGhpYyI+PC9mZU1lcmdlTm9kZT48L2ZlTWVyZ2U+PC9maWx0ZXI+PC9kZWZzPjxnIGlkPSJQYWdlLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHNrZXRjaDp0eXBlPSJNU1BhZ2UiPjxwYXRoIGQ9Ik0xMi42NTg4OTc2LDUuOTkxNjcyMzkgTDExLjQ3MTM5NzYsOC4yOTUxNzk0MyBMMS43MjA3MDMxMiwxMi41OTc5NTY3IEwzLjAxMzc1ODY4LDguODYwMTkwNTkgTDkuMTIyNzg2NDYsNi43ODg0ODMgTDIuMTU2MTE5NzksMy44NDc1Mjc0NyBMNS40NTQ3MzA5LDIuMjUzOTA2MjUgTDEyLjY1ODg5NzYsNS45OTE2NzIzOSBaIE0yMC45MjMwMTc5LDUuOTkxNjcyMzkgTDE5LjczNTUxNzksOC4yOTUxNzk0MyBMOS45ODQ4MjM1LDEyLjU5Nzk1NjcgTDExLjI3Nzg3OTEsOC44NjAxOTA1OSBMMTcuMzg2OTA2OCw2Ljc4ODQ4MyBMMTAuNDIwMjQwMiwzLjg0NzUyNzQ3IEwxMy43MTg4NTEzLDIuMjUzOTA2MjUgTDIwLjkyMzAxNzksNS45OTE2NzIzOSBaIiBpZD0iPj4tY29weSIgZmlsbC1vcGFjaXR5PSIwLjQiIGZpbGw9IiMwMDAiIGZpbHRlcj0idXJsKCNmaWx0ZXItMSkiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiPjwvcGF0aD48cGF0aCBkPSJNMTIuNjU4ODk3Niw0Ljk5MTY3MjM5IEwxMS40NzEzOTc2LDcuMjk1MTc5NDMgTDEuNzIwNzAzMTIsMTEuNTk3OTU2NyBMMy4wMTM3NTg2OCw3Ljg2MDE5MDU5IEw5LjEyMjc4NjQ2LDUuNzg4NDgzIEwyLjE1NjExOTc5LDIuODQ3NTI3NDcgTDUuNDU0NzMwOSwxLjI1MzkwNjI1IEwxMi42NTg4OTc2LDQuOTkxNjcyMzkgWiBNMjAuOTIzMDE3OSw0Ljk5MTY3MjM5IEwxOS43MzU1MTc5LDcuMjk1MTc5NDMgTDkuOTg0ODIzNSwxMS41OTc5NTY3IEwxMS4yNzc4NzkxLDcuODYwMTkwNTkgTDE3LjM4NjkwNjgsNS43ODg0ODMgTDEwLjQyMDI0MDIsMi44NDc1Mjc0NyBMMTMuNzE4ODUxMywxLjI1MzkwNjI1IEwyMC45MjMwMTc5LDQuOTkxNjcyMzkgWiIgaWQ9Ij4+IiBzdHJva2Utb3BhY2l0eT0iMC40IiBzdHJva2U9IiM5OTkiIGZpbGw9IiNGRkYiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiPjwvcGF0aD48L2c+PC9zdmc+",
-cmove = 'data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMjBweCIgaGVpZ2h0PSIyMHB4IiB2aWV3Qm94PSIwIDAgMjAgMjAiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiPjxnIGlkPSJQYWdlLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHNrZXRjaDp0eXBlPSJNU1BhZ2UiPjxjaXJjbGUgaWQ9Ik92YWwtMSIgZmlsbC1vcGFjaXR5PSIuMTUiIGZpbGw9IiMwMDAiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiIGN4PSIzIiBjeT0iMTciIHI9IjIiPjwvY2lyY2xlPjxjaXJjbGUgaWQ9Ik92YWwtMyIgZmlsbC1vcGFjaXR5PSIuMTUiIGZpbGw9IiMwMDAiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiIGN4PSIxNyIgY3k9IjE3IiByPSIyIj48L2NpcmNsZT48Y2lyY2xlIGlkPSJPdmFsLTYiIGZpbGwtb3BhY2l0eT0iLjE1IiBmaWxsPSIjMDAwIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIiBjeD0iMTciIGN5PSIxMCIgcj0iMiI+PC9jaXJjbGU+PGNpcmNsZSBpZD0iT3ZhbC03IiBmaWxsLW9wYWNpdHk9Ii4xNSIgZmlsbD0iIzAwMCIgc2tldGNoOnR5cGU9Ik1TU2hhcGVHcm91cCIgY3g9IjEwIiBjeT0iMTAiIHI9IjIiPjwvY2lyY2xlPjxjaXJjbGUgaWQ9Ik92YWwtOCIgZmlsbC1vcGFjaXR5PSIuMTUiIGZpbGw9IiMwMDAiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiIGN4PSIxMCIgY3k9IjE3IiByPSIyIj48L2NpcmNsZT48Y2lyY2xlIGlkPSJPdmFsLTIiIGZpbGwtb3BhY2l0eT0iLjE1IiBmaWxsPSIjMDAwIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIiBjeD0iMTciIGN5PSIzIiByPSIyIj48L2NpcmNsZT48L2c+PC9zdmc+',
-artwork = 'data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iNTAwcHgiIGhlaWdodD0iNTAwcHgiIHZpZXdCb3g9IjAgMCA1MDAgNTAwIiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHhtbG5zOnNrZXRjaD0iaHR0cDovL3d3dy5ib2hlbWlhbmNvZGluZy5jb20vc2tldGNoL25zIj48ZGVmcz48bGluZWFyR3JhZGllbnQgeDE9IjUwJSIgeTE9IjAlIiB4Mj0iNTAlIiB5Mj0iMTAwJSIgaWQ9ImxpbmVhckdyYWRpZW50LTEiPjxzdG9wIHN0b3AtY29sb3I9IiNGRkYiIG9mZnNldD0iMCUiPjwvc3RvcD4KPHN0b3Agc3RvcC1jb2xvcj0iI0Q0RDRENCIgb2Zmc2V0PSIxMDAlIj48L3N0b3A+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PGcgaWQ9IlBhZ2UtMSIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCIgc2tldGNoOnR5cGU9Ik1TUGFnZSI+PGcgaWQ9IkxheWVyLTEiIHNrZXRjaDp0eXBlPSJNU0xheWVyR3JvdXAiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEsIC0xKSIgZmlsbD0idXJsKCNsaW5lYXJHcmFkaWVudC0xKSI+PHBhdGggZD0iTS0wLjc5ODY3OTg2OCwwLjAxNDQ0MDQzMzIgTDQ5OC44Mzk5MzQsMC4wMTQ0NDA0MzMyIEw0OTguODM5OTM0LDUwMC45MDk3NDcgTC0wLjc5ODY3OTg2OCw1MDAuOTA5NzQ3IEwtMC43OTg2Nzk4NjgsMC4wMTQ0NDA0MzMyIFoiIGlkPSJTaGFwZSIgc2tldGNoOnR5cGU9Ik1TU2hhcGVHcm91cCI+PC9wYXRoPjwvZz48ZyBpZD0iIzAwMDAwMGZmIiBza2V0Y2g6dHlwZT0iTVNMYXllckdyb3VwIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNDEsIDEwNikiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIwLjA5Mzc1IiBmaWxsPSIjMDAwIiBmaWxsLW9wYWNpdHk9IjAuNzciPjxwYXRoIGQ9Ik0yMTAuNDQ4MjUxLDAgQzIxMC40NjI2MjMsNjUuMTg2OTY4NiAyMTAuNDQyNTAzLDEzMC4zNzEwMzMgMjEwLjQ1OTc0OSwxOTUuNTU4MDAxIEMyMTQuMTgxOTI3LDE5NC4yMTAyODcgMjE4LjExMzkyOCwxOTMuNDk4NjcgMjIyLjA2NjA0OCwxOTMuMzk5OTE1IEMyMjEuNzE0LDE5My4zMzQ2NjcgMjI3LjA1MjY4NiwxOTMuNTU3NDkzIDIzMi43OTM2OTMsMTk1LjA3MDY4NCBDMjM3Ljc4NjM4NywxOTYuMzg2NjM5IDI0My4wMjIwNTYsMTk4LjgyMjkzNyAyNDUuODU2Mzc1LDIwMS4wNzM3NTUgQzI1MC4zODYyMjQsMjA0LjY4NDExOSAyNTQuMDIyMTc0LDIwOS41MjMxMSAyNTUuODkwNDQ5LDIxNS4wNjUwMDUgQzI1OC4yMjE0ODIsMjIxLjgzODQzMSAyNTcuNzkzMjE2LDIyOS41MjM4ODkgMjU0LjczMjExOSwyMzUuOTkyMzM3IEMyNTAuODExNjE2LDI0NC4zODY1MDYgMjQyLjk3OTIzMiwyNTAuNTQ0MTY2IDIzNC4yNTI5NSwyNTMuMTY0MDc2IEMyMjYuODExNDY3LDI1NS40NjczOSAyMTguNjcxNTM2LDI1NS4zNDUzOTkgMjExLjI3ODkxNSwyNTIuOTA4NDc1IEMyMDQuMjcxNDQ3LDI1MC41NzMyMTIgMTk3Ljg5NjMxNywyNDYuMDM2Mjk0IDE5My43ODAzNjQsMjM5LjgwMDIxMSBDMTkwLjk3Nzk1MSwyMzUuNjI5MjY3IDE4OS4zNTY4NjMsMjMwLjcwMDIzNCAxODguOTcxNzExLDIyNS42ODY5NjkgQzE4OC45NzQ1ODUsMTY5LjQ2MzQ2MyAxODguOTg4OTU3LDExMy4yMzcwNTIgMTg4Ljk2NTk2Myw1Ny4wMTA2NDExIEMxMzguNjE0NTEyLDY4Ljc1Mzc2NDMgODguMjQ1ODE2OCw4MC40MTU1NTk5IDM3Ljg5MTQ5MjUsOTIuMTM4MzUxMiBDMzIuMzkzMDE1Myw5My40MzA4NzkgMjYuODc3MjkyNSw5NC42NDIwNzkyIDIxLjM5NjA2MDksOTYuMDEwMTI1NSBDMjEuNDEzMzA2NSwxNDIuODgzODYzIDIxLjM5MzE4NjYsMTg5Ljc1NDY5NyAyMS40MDc1NTc5LDIzNi42MjU1MyBDMzEuOTQxNzU1LDIzMi44NjcwMzMgNDQuMTY2MDIyNCwyMzMuOTE4NDgzIDUzLjcwNTcyMjMsMjM5Ljg5MzE1NiBDNTguMjQ5OTQyMSwyNDIuNzIyMTk1IDYyLjE1NjA3NDIsMjQ2LjY1MjA2IDY0Ljc5MTc3OTEsMjUxLjM1NDUzOCBDNjcuMTAyNjkxNywyNTUuNDU4Njc2IDY4LjM2NzM3MDIsMjYwLjE1NTM0NSA2OC40MzM0Nzg0LDI2NC44NzUyNSBDNjguNDYyMjIxMSwyNjkuODYyMzc0IDY3LjE0ODY4LDI3NC44NDY1OTMgNjQuNjY4MTg1NSwyNzkuMTYyNzY0IEM2MC41NjM3Mjg5LDI4Ni4zNDU3MzMgNTMuNTQ0NzYzMywyOTEuNjA4NzkgNDUuNzYxMjQxOSwyOTQuMDc3NjY0IEMzNS45MDgyNDY3LDI5Ny4yNTIzNDQgMjQuNzM1OTYxOCwyOTYuMjE4MzIyIDE1LjczMzc1MDMsMjkxLjAxMzM1NiBDOC4wNjUxOTk3MywyODYuNjUwNzEyIDIuMDMyMTA4NDEsMjc5LjAyMzM0NiAwLjQ3MTM4MDE2OSwyNzAuMTcwMjU3IEMwLjM1NjQwOTM5NiwyNjkuMDgxMDQ4IDAuMDg2MjI4MDc5NywyNjguMDE1MDc1IDAuMDA1NzQ4NTM4NjUsMjY2LjkyNTg2NyBDMC4wMDU3NDg1Mzg2NSwxOTQuMjM2NDI4IDAuMDE0MzcxMzQ2NiwxMjEuNTQ2OTg5IDAsNDguODU3NTUwMiBDNjUuNjg4NTUxMiwzMy42MDg2MjY5IDEzMS4zNzEzNTQsMTguMzMwNjU4MSAxOTcuMDU5OTA1LDMuMDczMDIxMTEgQzIwMS41MjM2NDUsMi4wNTY0MjYyMiAyMDUuOTcwMTQsMC45NTI2OTQ2MzUgMjEwLjQ0ODI1MSwwIFoiIGlkPSJTaGFwZSIgc2tldGNoOnR5cGU9Ik1TU2hhcGVHcm91cCI+PC9wYXRoPjwvZz48L2c+PC9zdmc+',
-play = "data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMjRweCIgaGVpZ2h0PSIyNHB4IiB2aWV3Qm94PSIwIDAgMjQgMjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiPjxnIGlkPSJQYWdlLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHNrZXRjaDp0eXBlPSJNU1BhZ2UiPjxwYXRoIGQ9Ik0xNC4wNzQ1ODM0LDIuOTQ4MDc4NyBMMjUuMTQxNDkyLDIwLjk5NDAyOSBMMy4wMDc2NzUwMywyMC45OTQwMjkgTDE0LjA3NDU4MzQsMi45NDgwNzg3IEwxNC4wNzQ1ODM0LDIuOTQ4MDc4NyBaIiBpZD0iUGxheSIgc3Ryb2tlPSIjREREIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgZmlsbD0iI0RERCIgc2tldGNoOnR5cGU9Ik1TU2hhcGVHcm91cCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTQuMDA3Njc1LCAxMS45NDgwNzkpIHJvdGF0ZSg5MC4wMDAwMDApIHRyYW5zbGF0ZSgtMTQuMDA3Njc1LCAtMTEuOTQ4MDc5KSAiPjwvcGF0aD48L2c+PC9zdmc+",
-pause = "data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMjJweCIgaGVpZ2h0PSIyNnB4IiB2aWV3Qm94PSIwIDAgMjIgMjYiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiPjxnIGlkPSJQYWdlLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHNrZXRjaDp0eXBlPSJNU1BhZ2UiPjxwYXRoIGQ9Ik0xLDEgTDEsMjUgTDgsMjUgTDgsMSBMMSwxIEwxLDEgWiBNMTQsMSBMMTQsMjUgTDIxLDI1IEwyMSwxIEwxNCwxIEwxNCwxIFoiIGlkPSJTdG9wIiBzdHJva2U9IiNEREQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBmaWxsPSIjREREIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIj48L3BhdGg+PC9nPjwvc3ZnPg==",
-shoW = 'data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMzFweCIgaGVpZ2h0PSIzMXB4IiB2aWV3Qm94PSIwIDAgMzEgMzEiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiPjxnIGlkPSJQYWdlLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHNrZXRjaDp0eXBlPSJNU1BhZ2UiPjxjaXJjbGUgaWQ9Ik92YWwtMSIgc3Ryb2tlPSIjQUFBIiBmaWxsLW9wYWNpdHk9IjAiIGZpbGw9IiMwMDAiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiIGN4PSIxNS41IiBjeT0iMTUuNSIgcj0iMTQuNSI+PC9jaXJjbGU+PHBhdGggZD0iTTguMjQ4MDQ2ODgsMTIuNjcyMTE5MSBMMTUuNDk2Mzk4OSwxOS43NSBMMjIuOTA4NjkxNCwxMi42NzIxMTkxIiBpZD0iUGF0aC0zIiBzdHJva2U9IiNBQUEiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiPjwvcGF0aD48L2c+PC9zdmc+',
-closeW = 'data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMzFweCIgaGVpZ2h0PSIzMXB4IiB2aWV3Qm94PSIwIDAgMzEgMzEiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiPjxnIGlkPSJQYWdlLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHNrZXRjaDp0eXBlPSJNU1BhZ2UiPjxjaXJjbGUgaWQ9Ik92YWwtMSIgc3Ryb2tlPSIjREREIiBmaWxsLW9wYWNpdHk9IjAiIGZpbGw9IiMwMDAiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiIGN4PSIxNS41IiBjeT0iMTUuNSIgcj0iMTQuNSI+PC9jaXJjbGU+PHBhdGggZD0iTTExLjUsMTEuNSBMMTkuNSwxOS41IiBpZD0iTGluZSIgc3Ryb2tlPSIjREREIiBzdHJva2UtbGluZWNhcD0ic3F1YXJlIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIj48L3BhdGg+PHBhdGggZD0iTTE5LjUsMTEuNSBMMTEuNSwxOS41IiBpZD0iTGluZSIgc3Ryb2tlPSIjREREIiBzdHJva2UtbGluZWNhcD0ic3F1YXJlIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIj48L3BhdGg+PC9nPjwvc3ZnPg==',
-hideS = 'data:image/svg+xml;charset=utf-8;base64,PHN2ZyB3aWR0aD0iMjhweCIgaGVpZ2h0PSIyOHB4IiB2aWV3Qm94PSIwIDAgMjggMjgiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM6c2tldGNoPSJodHRwOi8vd3d3LmJvaGVtaWFuY29kaW5nLmNvbS9za2V0Y2gvbnMiPjxkZWZzPjxmaWx0ZXIgeD0iLTUwJSIgeT0iLTUwJSIgd2lkdGg9IjIwMCUiIGhlaWdodD0iMjAwJSIgZmlsdGVyVW5pdHM9Im9iamVjdEJvdW5kaW5nQm94IiBpZD0iZmlsdGVyLTEiPjxmZU9mZnNldCBkeD0iMCIgZHk9IjEiIGluPSJTb3VyY2VBbHBoYSIgcmVzdWx0PSJzaGFkb3dPZmZzZXRJbm5lcjEiPjwvZmVPZmZzZXQ+PGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMC41IiBpbj0ic2hhZG93T2Zmc2V0SW5uZXIxIiByZXN1bHQ9InNoYWRvd0JsdXJJbm5lcjEiPjwvZmVHYXVzc2lhbkJsdXI+PGZlQ29tcG9zaXRlIGluPSJzaGFkb3dCbHVySW5uZXIxIiBpbjI9IlNvdXJjZUFscGhhIiBvcGVyYXRvcj0iYXJpdGhtZXRpYyIgazI9Ii0xIiBrMz0iMSIgcmVzdWx0PSJzaGFkb3dJbm5lcklubmVyMSI+PC9mZUNvbXBvc2l0ZT48ZmVDb2xvck1hdHJpeCB2YWx1ZXM9IjAgMCAwIDAgMCAgIDAgMCAwIDAgMCAgIDAgMCAwIDAgMCAgMCAwIDAgMC4zNSAwIiBpbj0ic2hhZG93SW5uZXJJbm5lcjEiIHR5cGU9Im1hdHJpeCIgcmVzdWx0PSJzaGFkb3dNYXRyaXhJbm5lcjEiPjwvZmVDb2xvck1hdHJpeD48ZmVNZXJnZT48ZmVNZXJnZU5vZGUgaW49IlNvdXJjZUdyYXBoaWMiPjwvZmVNZXJnZU5vZGU+PGZlTWVyZ2VOb2RlIGluPSJzaGFkb3dNYXRyaXhJbm5lcjEiPjwvZmVNZXJnZU5vZGU+PC9mZU1lcmdlPjwvZmlsdGVyPjwvZGVmcz48ZyBpZD0iUGFnZS0xIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIiBza2V0Y2g6dHlwZT0iTVNQYWdlIj48cGF0aCBkPSJNMjYuNTg2OTg1NCw3LjU3ODY2NjY3IEMyNi41ODY5ODU0LDYuNjA4IDI2LjA2NjQwMTEsNi4xMjI2NjY2NyAyNS4wNjI0MTcsNi4xMjI2NjY2NyBDMjQuMTY5OTg2Nyw2LjEyMjY2NjY3IDIyLjY0NTQxODMsNi4yNzIgMjAuNDE0MzQyNiw2LjUzMzMzMzMzIEMyMC42Mzc0NTAyLDUuMTE0NjY2NjcgMjAuODIzMzczMiw0LjAzMiAyMC45MzQ5MjcsMy4yODUzMzMzMyBDMjEuMTIwODQ5OSwyLjE2NTMzMzMzIDIxLjIzMjQwMzcsMS41MzA2NjY2NyAyMS4yMzI0MDM3LDEuMzgxMzMzMzMgQzIxLjIzMjQwMzcsMC45NzA2NjY2NjcgMjEuMDQ2NDgwNywwLjYzNDY2NjY2NyAyMC43MTE4MTk0LDAuMzczMzMzMzMzIEMyMC4zMzk5NzM0LDAuMTQ5MzMzMzMzIDE5LjkzMDk0MjksMC4wMzczMzMzMzMzIDE5LjU1OTA5NjksMC4wMzczMzMzMzMzIEMxOC44ODk3NzQyLDAuMDM3MzMzMzMzMyAxOC40NDM1NTkxLDAuNjcyIDE4LjIyMDQ1MTUsMS44NjY2NjY2NyBDMTcuOTIyOTc0OCwzLjQzNDY2NjY3IDE3LjYyNTQ5OCw1LjExNDY2NjY3IDE3LjMyODAyMTIsNi44MzIgTDExLjIyOTc0NzcsNy40MjkzMzMzMyBDMTEuODk5MDcwNCw1LjcxMiAxMi40OTQwMjM5LDQuMjkzMzMzMzMgMTIuOTQwMjM5LDMuMTczMzMzMzMgTDEzLjQ5ODAwOCwxLjcxNzMzMzMzIEMxMy40OTgwMDgsMC41OTczMzMzMzMgMTMuMDE0NjA4MiwwIDEyLjEyMjE3OCwwIEMxMS41NjQ0MDksMCAxMS4wODEwMDkzLDAuMjk4NjY2NjY3IDEwLjcwOTE2MzMsMC44MjEzMzMzMzMgQzEwLjQxMTY4NjYsMS4yNjkzMzMzMyAxMC4wMDI2NTYsMS45NDEzMzMzMyA5LjU1NjQ0MDksMi44IEM4Ljk2MTQ4NzM4LDMuODQ1MzMzMzMgOC43MDExOTUyMiw0LjQ4IDguNzAxMTk1MjIsNC43Nzg2NjY2NyBDOC43MDExOTUyMiw1LjAwMjY2NjY3IDguNzM4Mzc5ODEsNS4xODkzMzMzMyA4Ljg0OTkzMzYsNS4zMzg2NjY2NyBMNy45MjAzMTg3Myw3LjkxNDY2NjY3IEM1LjM5MTc2NjI3LDguNCAzLjA4NjMyMTM4LDguOTIyNjY2NjcgMS4wNzgzNTMyNSw5LjUyIEMwLjMzNDY2MTM1NSw5Ljc0NCAwLDEwLjE5MiAwLDEwLjg2NCBDMCwxMi4wNTg2NjY3IDAuNDQ2MjE1MTM5LDEyLjYxODY2NjcgMS4zNzU4MzAwMSwxMi42MTg2NjY3IEMxLjQ4NzM4MzgsMTIuNjE4NjY2NyAxLjc4NDg2MDU2LDEyLjU0NCAyLjMwNTQ0NDg5LDEyLjM5NDY2NjcgQzQuNjEwODg5NzcsMTEuODM0NjY2NyA2LjEzNTQ1ODE3LDExLjQ2MTMzMzMgNi45MTYzMzQ2NiwxMS4yNzQ2NjY3IEM2LjM5NTc1MDMzLDEzLjU4OTMzMzMgNi4wMjM5MDQzOCwxNS40MTg2NjY3IDUuODM3OTgxNDEsMTYuNzI1MzMzMyBDNC4wNTMxMjA4NSwxNi44IDIuNzUxNjYwMDMsMTYuODc0NjY2NyAxLjg1OTIyOTc1LDE2LjkxMiBDMC44OTI0MzAyNzksMTcuMDI0IDAuNDA5MDMwNTQ0LDE3LjU0NjY2NjcgMC40MDkwMzA1NDQsMTguNDQyNjY2NyBDMC40MDkwMzA1NDQsMTkuNDg4IDAuODkyNDMwMjc5LDIwLjAxMDY2NjcgMS44NTkyMjk3NSwyMC4wMTA2NjY3IEMzLjIzNTA1OTc2LDIwLjAxMDY2NjcgNC4zODc3ODIyLDE5Ljk3MzMzMzMgNS4zNTQ1ODE2NywxOS44NjEzMzMzIEM1LjEzMTQ3NDEsMjIuMTAxMzMzMyA1LjA1NzEwNDkxLDIzLjc0NCA1LjA1NzEwNDkxLDI0LjgyNjY2NjcgQzUuMDU3MTA0OTEsMjUuOTQ2NjY2NyA1LjU3NzY4OTI0LDI2LjQ2OTMzMzMgNi42MTg4NTc5LDI2LjQ2OTMzMzMgQzcuNTg1NjU3MzcsMjYuNDY5MzMzMyA4LjA2OTA1NzEsMjUuOTg0IDguMDY5MDU3MSwyNC45Mzg2NjY3IEM4LjA2OTA1NzEsMjIuNTg2NjY2NyA4LjE0MzQyNjI5LDIwLjgzMiA4LjI5MjE2NDY3LDE5LjYzNzMzMzMgQzExLjI2NjkzMjMsMTkuMjY0IDEzLjYwOTU2MTgsMTguOTY1MzMzMyAxNS4zMjAwNTMxLDE4LjcwNCBDMTQuODczODM4LDIxLjA5MzMzMzMgMTQuNTM5MTc2NiwyMi44NDggMTQuMzkwNDM4MiwyNC4wMDUzMzMzIEMxNC4yNDE2OTk5LDI0LjcxNDY2NjcgMTQuMjA0NTE1MywyNS4xNjI2NjY3IDE0LjIwNDUxNTMsMjUuMzQ5MzMzMyBDMTQuMjA0NTE1MywyNi4zOTQ2NjY3IDE0LjcyNTA5OTYsMjYuOTE3MzMzMyAxNS44NDA2Mzc1LDI2LjkxNzMzMzMgQzE2LjU4NDMyOTMsMjYuOTE3MzMzMyAxNy4wMzA1NDQ1LDI2LjI0NTMzMzMgMTcuMjUzNjUyMSwyNC45MDEzMzMzIEMxNy41MTM5NDQyLDIzLjA3MiAxNy44ODU3OTAyLDIwLjg2OTMzMzMgMTguMzMyMDA1MywxOC4yOTMzMzMzIEwyMi40NTk0OTU0LDE3LjY1ODY2NjcgQzIyLjY4MjYwMjksMTcuODA4IDIyLjkwNTcxMDUsMTcuODQ1MzMzMyAyMy4yMDMxODczLDE3Ljg0NTMzMzMgQzIzLjcyMzc3MTYsMTcuODQ1MzMzMyAyNC4yODE1NDA1LDE3LjY1ODY2NjcgMjQuODAyMTI0OCwxNy4yNDggQzI1LjMyMjcwOTIsMTYuODc0NjY2NyAyNS42MjAxODU5LDE2LjM4OTMzMzMgMjUuNjIwMTg1OSwxNS44MjkzMzMzIEMyNS42MjAxODU5LDE0Ljc0NjY2NjcgMjQuOTUwODYzMiwxNC4xODY2NjY3IDIzLjYxMjIxNzgsMTQuMTg2NjY2NyBDMjMuNDYzNDc5NCwxNC4xODY2NjY3IDIzLjAxNzI2NDMsMTQuMjk4NjY2NyAyMi4yNzM1NzI0LDE0LjQ0OCBDMjEuMzgxMTQyMSwxNC42NzIgMjAuNzQ5MDA0LDE0LjgyMTMzMzMgMjAuMzc3MTU4LDE0Ljg1ODY2NjcgTDE4Ljg1MjU4OTYsMTUuMDgyNjY2NyBMMTkuODE5Mzg5MSw5LjYzMiBMMjEuNDE4MzI2Nyw5LjU1NzMzMzMzIEwyMS45Mzg5MTEsOS43ODEzMzMzMyBDMjIuOTQyODk1MSw5Ljc4MTMzMzMzIDIzLjk0Njg3OTIsOS42MzIgMjQuOTUwODYzMiw5LjI5NiBDMjYuMDI5MjE2NSw4Ljk2IDI2LjU4Njk4NTQsOC40IDI2LjU4Njk4NTQsNy41Nzg2NjY2NyBMMjYuNTg2OTg1NCw3LjU3ODY2NjY3IFogTTE2Ljc3MDI1MjMsOS45MzA2NjY2NyBMMTUuNzY2MjY4MywxNS40NTYgQzEyLjE5NjU0NzEsMTYuMDE2IDkuODkxMTAyMjYsMTYuMzE0NjY2NyA4Ljg0OTkzMzYsMTYuMzg5MzMzMyBDOS4zNzA1MTc5MywxMy45MjUzMzMzIDkuODE2NzMzMDcsMTIuMDIxMzMzMyAxMC4xODg1NzksMTAuNjc3MzMzMyBDMTMuNjgzOTMwOSwxMC4yMjkzMzMzIDE1Ljg3NzgyMiwxMC4wMDUzMzMzIDE2Ljc3MDI1MjMsOS45MzA2NjY2NyBMMTYuNzcwMjUyMyw5LjkzMDY2NjY3IFoiIGlkPSIjIiBmaWxsPSIjMTFCNkJFIiBmaWx0ZXI9InVybCgjZmlsdGVyLTEpIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIj48L3BhdGg+PC9nPjwvc3ZnPg==';
-
 var mesShadows = /* hr shadow */ 'hr{border-style:none none solid!important;border-color:rgba(0,0,0,.3)!important;box-shadow:0 1px 0 #fff!important;}'+
 /* text spoiler, banner image & captcha image sadows */ '#yuki-captcha-image,.banner,.spoiler,.spoiler a,.spoiler blockquote,.spoiler blockquote blockquote,.spoiler blockquote blockquote blockquote{transition:all .1s ease;box-shadow:0 1px 2px -1px rgba(0,0,0,.7)!important;}.spoiler a:hover,.spoiler:hover,.transparent{box-shadow:none!important;}'+
-/* popup/error posts, settings panel sadows & dropdown menu */ '.reply,.popup{border:0 none transparent!important;}.active > .dropdown-label,.dropdown-menu,.popup,#magic-panel{box-shadow:5px 5px 10px rgba(0,0,0,.4),inset 0 0 30px rgba(0,0,0,.1)!important;z-index:9;}'+
+/* popup/error posts, settings panel sadows & dropdown menu */ '.reply:not(.highlight),.popup{border:0 none transparent!important;}.active > .dropdown-label,.dropdown-menu,.popup,#magic-panel{box-shadow:5px 5px 10px rgba(0,0,0,.4),inset 0 0 30px rgba(0,0,0,.1)!important;z-index:9;}'+
 /* reply post sadows */ '.highlight,.reply{padding:2px 1em 2px 2px!important;box-shadow:inset 0 1px 30px -9px #fff,0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);}.line-sect.reply{padding:2px 4px!important;}'+
 /* new reply post sadows */ '.reply.new{box-shadow:inset 0 1px 30px -9px rgba(255, 85, 0, 0.8),0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);}'+
 /* post images/files & audio players shadows */ '.thumb,.yukiFile,.scbc-container,.prosto-pleer,.audio-container video{box-shadow:1px 2px 2px -1px rgba(0,0,0,.4),-1px 0 4px -1px rgba(0,0,0,.2),inset 0 0 30px rgba(0,0,0,.1)!important;}'+
@@ -2887,22 +3123,22 @@ var mesAnimations = '.reply{animation:pview .3s normal;-webkit-animation:pview .
 @keyframes pview{0%{transform:scale(0,0);opacity:0;}25%{transform:scale(.3,.3);opacity:.1;}50%{transform:scale(.9,.9);opacity:.3;}75%{transform:scale(1.02,1.02);opacity:.7;}100%{transform:scale(1,1);opacity:1;}}\
 @-webkit-keyframes pview{0%{-webkit-transform:scale(0,0);opacity:0;}25%{-webkit-transform:scale(.3,.3);opacity:.1;}50%{-webkit-transform:scale(.9,.9);opacity:.3;}75%{-webkit-transform:scale(1.02,1.02);opacity:.7;}100%{-webkit-transform:scale(1,1);opacity:1;}}';
 
-var MagicStyle = '.hidout,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google,.reply_,#postform,#hideinfodiv hr,.reply #yuki-newThread-create,.submit-button.process input,.pleer-container + br,.artwork > select,.artwork > .file_name + br,.magic-info + br,.autohidden,.showhidden + .hinfo-stub{display:none!important;}\
+var MagicStyle = '.hidout,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google,.reply_,#postform,#hideinfodiv hr,.reply #yuki-newThread-create,.submit-button.process input,.pleer-container + br,.artwork select,.magic-info + br,.autohidden,.showhidden + .hinfo-stub{display:none!important;}\
 .unexpanded,.rated{max-width:200px!important;max-height:200px!important;}.expanded{width:100%;height:auto;}#hideinfodiv{margin:5px;}.sp-r.rate{color:darkred;}#yuki-dropBox tr,.f-sect,.hideinfo{text-align:center!important;}\
-.dpop,#wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}.artwork{background:url('+artwork+')no-repeat scroll center center / 100% auto;}\
-.yuki_clickable,.txt-btn,.wmark-button,.button,.el-li{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}\
+.dpop,#wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}.artwork{background:url(/src/svg/1505/ma-artwork.svg)no-repeat scroll center center / 100% auto;}.movie{background:url(/src/svg/1505/cm-movie.svg)no-repeat scroll center center / 100% auto;}\
+.yuki_clickable,.txt-btn,.wmark-button,.button,.el-li,.icon{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}\
 .replylinks,.button{line-height:2em;font-size:75%;clear:both;}#post-count,.txt-btn{color:#999;}.mapped,.mapped:hover{cursor:default;color:#666!important;}.hidup{top:-9999px!important;}\
 .userdelete:after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.cm-button{text-decoration:none;}.s-sect{text-align:left;padding-left:2em;color:#777;}\
 #yuki-captcha,#yuki-pass{width:295px;}#yuki-captcha-image{vertical-align:middle;margin:2px;}#yuki-dropBox{width:7em;height:18em;border:3px dashed rgba(99,99,99,.3);padding:2px;}\
-#convert-strike,.doubledash,.topformtr #yuki-replyForm #yuki-close-form,.dropdown-menu{visibility:hidden;}.sagearrow{background:url(/src/svg/1409/Sage.svg)no-repeat center bottom;position:relative;right:24px;top:2px;}\
+#convert-strike,.doubledash,.topformtr #yuki-replyForm #yuki-close-form,.dropdown-menu{visibility:hidden;}.sagearrow{background:url(/src/svg/1409/Sage.svg)no-repeat center bottom;position:relative;right:24px;top:6px;}.paperclip{background:url(/src/png/1411/attachpopup.png)no-repeat center;}\
 #yuki-errorMsg{text-align:center;color:#FFF;background-color:#E04000;}.wmark-button{color:#fefefe;text-shadow:0 1px 0 rgba(0,0,0,.4);}.wmark-button .spoiler{text-shadow:none;}#allowed-posts{font-size:14px;}\
 .rating_SFW{background:green;}.rating_R15{background:yellow;}.rating_R18{background:orange;}.rating_R18G{background:red;}.line-sect,.yukiFile,.cpop,.mpanel-btn{display:inline-block;}#warning-massage{color:#ff3428;}\
 .yukiFile,.yukiFileSets{font-size:66%;}.yukiFile{text-align:center;width:210px;background-color:#fefefe;-webkit-border-radius:5px;margin:5px;padding:2px;}.reply.new{background-color:rgba(212,115,94,.1);}\
-#yuki-files-placeholder > *{vertical-align:top;}.yukiFile img{max-width:150px;margin:5px 0;}.yukiFile span{max-width:200px;word-wrap:break-word;}.au-size{width:350px;height:80px;background-image:url(/src/png/1405/waveform.png);}\
+#yuki-files-placeholder > *{vertical-align:top;}.yukiFile img{max-width:150px;margin:5px 0;}.yukiFile span{max-width:200px;word-wrap:break-word;}\
 #yuki-replyForm{text-align:left;padding:4px 8px;}.selected:before{content:"✓ ";color:green;}.reply-button,.cpop{margin-left:.4em;}#oembedapi + .checkarea,#set-show-spoilers + .checkarea{font-size:20px!important;}\
-#yuki-dropBox tr{display:block;}.droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em;}.artwork > .file_name{display:block;background-color:rgba(255,255,255,.8);padding:2px 0;}\
-.cpop.ty{background-image:url(/src/svg/1411/closepopup.svg);}.cpop.all{background-image:url(/src/svg/1411/closeallpopups.svg);}.dpop{float:right;background-image:url('+cmove+');cursor:move;}.sagearrow span{cursor:default;}\
-.cpop{width:14px;height:14px;}.dpop,.sagearrow span{width:20px;height:20px;}.reply-button{width:23px;height:14px;background:url('+rp_arr+')no-repeat center center;}.artwork > .preview_img{height:150px;}\
+#yuki-dropBox tr{display:block;}.droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em;}.yukiFile > .magic-audio{width:210px;height:210px;}.yukiFile > .magic-info{width:200px;}\
+.cpop.ty{background-image:url(/src/svg/1411/closepopup.svg);}.cpop.all{background-image:url(/src/svg/1411/closeallpopups.svg);}.dpop{float:right;background-image:url(/src/svg/1505/cmove.svg);cursor:move;}.sagearrow{cursor:default;}\
+.cpop{width:14px;height:14px;}.dpop,.sagearrow,.paperclip{width:20px;height:20px;}.reply-button{width:23px;height:14px;background:url(/src/svg/1505/reply-arrow.svg)no-repeat center center;}\
 #magic-buttons-panel{z-index:9;position:fixed;right:1em;bottom:1em;}.mpanel-btn{padding:0 9px;width:28px;height:28px;opacity:.2;filter:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'grayscale\'><feColorMatrix type=\'matrix\' values=\'.3 .3 .3 0 0 .3 .3 .3 0 0 .3 .3 .3 0 0 0 0 0 1 0\'/></filter></svg>#grayscale");-webkit-filter:grayscale(100%);}\
 .ta-inact::-moz-selection{background:rgba(99,99,99,.3);}.ta-inact::selection{background:rgba(99,99,99,.3);}#int-upd{bottom:2px;position:relative;}#allowed-posts a{text-decoration:none;text-shadow:none;font-weight:normal;}\
 .mpanel-btn:hover,.mpanel-btn.active{opacity:1;filter:none;-webkit-filter:grayscale(0%);}#magic-panel tr{height:3em;}#vsize-textbox{color:#bbb;font-family:Trebuchet;}\
@@ -2914,16 +3150,17 @@ var MagicStyle = '.hidout,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google
 .content-frame,.scbc-container{background-color:#fefefe;}.video-container,.content-frame.video{background-color:#000;}.video-container,.scbc-container{margin:0 9px;display:inline-block!important;}\
 .content-frame{position:absolute;top:10%;left:12%;right:18%;bottom:20%;box-shadow:5px 5px 10px rgba(0,0,0,.4);z-index:3000;}#shadow-box{position:absolute;background-color:rgba(33,33,33,.8);z-index:2999;}\
 .docs-container > iframe,.content-frame.docs > iframe,.full-size,#shadow-box,.content-window,.preview_img{width:100%;height:100%;}.content-frame.img{background-color:transparent;}\
-#close-content-window,#show-content-window{transition:.5s ease;opacity:.6;width:31px;height:31px;background-image:url('+closeW+');cursor:pointer;position:absolute;top:20px;right:20px;z-index:3000;}\
+#close-content-window,#show-content-window{transition:.5s ease;opacity:.6;width:31px;height:31px;background-image:url(/src/svg/1505/close-circle.svg);cursor:pointer;position:absolute;top:20px;right:20px;z-index:3000;}\
 .docs-container,.content-frame.docs,.docs-container > iframe{overflow:auto;resize:both;background-color:#fefefe;}.content-frame.pdf{top:1%;left:17%;right:20%;bottom:1%;}\
-#show-content-window{right:52%;position:fixed;background-image:url('+shoW+');border-radius:100%;}#close-content-window:hover,#show-content-window:hover{opacity:1;}\
-#ma-play{background:url('+play+')no-repeat scroll center;}#ma-pause{background:url('+pause+')no-repeat scroll center;}.magic-audio{width:200px;height:200px;}input:focus,select:focus,textarea:focus,button:focus{outline:none;}\
+#show-content-window{right:52%;position:fixed;background-image:url(/src/svg/1505/show-circle.svg);border-radius:100%;}#close-content-window:hover,#show-content-window:hover{opacity:1;}\
+#ma-play{background:url(/src/svg/1505/ma-play.svg)no-repeat scroll center;}#ma-pause{background:url(/src/svg/1505/ma-pause.svg)no-repeat scroll center;}.magic-audio{width:200px;height:200px;}input:focus,select:focus,textarea:focus,button:focus{outline:none;}\
 .ma-controls,.ma-controls a{display:block;width:50px;height:50px;}.ma-controls{position:relative;top:37%;left:37%;border:2px solid #ddd;border-radius:100%;background-color:#333;opacity:.8;}\
 .font-s{font-size:12px;}.keywords-input{width:300px;height:55px;resize:none;}.o-sect{padding:0 1em;}.cyan-light{color:rgba(90,152,155,.8);}\
-#hide-set{background:url('+hideS+')no-repeat scroll center;}#general-set{background:url(/src/png/1409/list4.png)no-repeat scroll center center / 80%;}\
+#hide-set{background:url(/src/svg/1505/hide-menu-btn.svg)no-repeat scroll center;}#general-set{background:url(/src/png/1409/list4.png)no-repeat scroll center center / 80%;}.dummy-line{position:absolute;text-align:center;width:100%;}\
 .dropdown,.dropdown-menu{padding-left:0;list-style:outside none none;}.active > .dropdown-label,.active > .dropdown-menu{visibility:visible;background-clip:padding-box;background-color:#fefefe;}.active > .dropdown-label{border-radius:4px 4px 0 0;}.dropdown-label{padding:4px 8px;border-radius:2px;font-variant:small-caps;font-size:14px;}.dropdown-menu{color:#777;position:absolute;min-width:150px;font-size:14px;line-height:1.8;}\
 .dropdown-item{padding:0 10px;}.dropdown-item:hover{background-color:rgba(0,0,0,.1);}.dropdown-menu{border-radius:0 0 4px 4px;}.dropdown-label:before{content:"⟨ ";}.dropdown-label:after{content:" ⟩";}#int-val{width:50px;margin:0 4px;}\
 .blink{-webkit-animation-name:blinker;-webkit-animation-duration:1s;-webkit-animation-timing-function:linear;-webkit-animation-iteration-count:infinite;animation-name:blinker;animation-duration:1s;animation-timing-function:linear;animation-iteration-count:infinite;}\
+.highlight{border-style:dashed!important;border-width:2px!important;border-color:#F50!important;}.postcontent{float:left;}br + .postbody{clear:both;}\
 @-webkit-keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}@keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}\
 @keyframes onReady{50% {opacity:0;}} @-webkit-keyframes onReady{50% {opacity:0;}}'+ mesShadows + mesAnimations;
 
