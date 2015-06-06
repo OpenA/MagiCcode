@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.4.2
+// @version 		1.4.3
 // @grant   		none
 // ==/UserScript==
 
@@ -163,7 +163,7 @@
 function MagicExtension() {
 	var HM = {
 		MC: _z.getlSVal('EmbedIn', 1), ThreadListener: {},
-		Sage: false, zIndex: 0, DragableObj: null, Played: null, LastKey: null,
+		zIndex: 0, DragableObj: null, Played: null, LastKey: null,
 		LoadedPosts: {}, VActive: [], RepliesMap: {}, AlbumArts: {}, URL: ParseUrl(),
 		LinksMap: JSON.parse(_z.getlSVal('LinksCache', '{}', true)),
 		oEmbedAPI: _z.getlSVal('oEmbedAPI', true),
@@ -174,6 +174,7 @@ function MagicExtension() {
 		AttachPopups: _z.getlSVal('AttachPopups', true),
 		RemoveFileName: _z.getlSVal('RemoveFileName', false),
 		DiscloseTextSpoilers: _z.getlSVal('DiscloseTextSpoilers', false),
+		Keywords: JSON.parse(_z.getlSVal('Keywords', JSON.stringify({Nametrip:{},Title:{},Words:{}}))),
 		User: JSON.parse(_z.getlSVal('User', '{}'))
 	},
 	Megia = {
@@ -268,7 +269,7 @@ function MagicExtension() {
 		]
 	}
 
-	var delForm, locationThread, UrlCache = HM.LinksMap, unread_count = 0,
+	var locationThread, UrlCache = HM.LinksMap, unread_count = 0,
 		lng = (LC.lng.indexOf(HM.User.language) > -1 ? LC.lng.indexOf(HM.User.language) : 1),
 		Chanabira = new CharmingHanabira(), mEl = new MagicElements(), Nagato = new Yuki();
 		HM.Settings = new MagicSettings();
@@ -530,8 +531,12 @@ function MagicExtension() {
 	
 	function markAsRead(e) {
 		unread_count--;
-		this.removeEventListener('click', markAsRead, false);
-		this.classList.remove('new');
+		_z.each([this, this.previousElementSibling, this.nextElementSibling], function(rp) {
+			if (rp) {
+				rp.removeEventListener('click', markAsRead, false);
+				rp.classList.remove('new');
+			}
+		});
 		Tinycon.setBubble(unread_count);
 	}
 	
@@ -540,6 +545,7 @@ function MagicExtension() {
 		var MListen = this, CiD, Inner, thread_updating, play_notify,
 			Timer = { id: 0, offset: 0, ql: UpdateInterval(0) },
 			Count = { dif: 0, new: 0, del: 0, mod: 0 },
+			WarningMsg = _z.setup('strong', {'id': 'warning-massage', 'class': 'blink'}, null),
 			ExpCache = new Array(0),
 			Notif = _z.setup(new Audio('/src/mp3/1406/musbox.mp3'), {}, {
 				'play': function(e) { play_notify = true },
@@ -656,10 +662,9 @@ function MagicExtension() {
 			var result; _z.each([
 				['Title', subj], ['Nametrip', name]],
 				function(type) {
-					var m, i, f, kwods = HM.Settings.Keywords[type[0]],
-						keys = kwods.keys.split(', ');
+					var kwods = HM.Keywords[type[0]];
 					if (kwods.apply) {
-						for (i = 0; i < keys.length; i++) {
+						for (var m, f, i = 0, keys = kwods.keys.split(', '); i < keys.length; i++) {
 							m = /^\*(.+)\*$|^\*(.+)|(.+)\*$/.exec(keys[i]);
 							f = m ? (m[1] || m[2] || m[3]) : keys[i];
 							if (type[1].isThere(f)) {
@@ -724,19 +729,18 @@ function MagicExtension() {
 			statusButton(UpdBtn, 0)
 			getDataResponse('/api/thread/'+ HM.URL.board +'/'+ CiD +'/new.json?new_format&message_html&last_post='+ _cid(Inner.last().id),
 			function(status, sText, json, xhr) {
-				var i, temp, el, pCount, len, errorMsg;
+				var i, temp, el, pCount, len, error;
 				if (status !== 200 || json.error) {
-					errorMsg = !json.error ? status +' '+ sText : json.error.message +' '+ json.error.code;
-					_z.replace(UpdBtn, _z.setup(mEl['WarningMsg'], {
-						'text': errorMsg, 'style': ''}, null));
-					mEl.funct = function(e) {
-						if (mEl['iteration'] >= 8) {
-							_z.replace(mEl['WarningMsg'], UpdBtn);
-							mEl['iteration'] = 0;
+					error = _z.setup(WarningMsg, {'text': (!json.error ? status +' '+ sText : json.error.message +' '+ json.error.code)}, null);
+					error.dozZe = function(e) {
+						if (this.iterations >= 8) {
+							_z.replace(this, UpdBtn);
 							if (rexk)
 								updateTimer();
+							this.iterations = 0;
 						}
 					}
+					_z.replace(UpdBtn, error);
 				} else {
 					pCount = json.result.posts_count;
 					el = json.result.posts;
@@ -752,14 +756,14 @@ function MagicExtension() {
 					} else if (typeof e === 'number')
 						Timer.offset += e;
 				}
-				if (rexk && !errorMsg) {
+				if (rexk && !error) {
 					if (Inner.posts.length != pCount + Count.mod) {
 						updateCount(pCount)
 						return getHanabiraFullThread(UpdBtn);
 					}
 					updateTimer();
 				}
-				if (e && !errorMsg) {
+				if (e && !error) {
 					MListen['PostsCount'].textContent = pCount + LC.omit[lng] + (Count.mod > 0 ? ' ( +'+ Count.mod + LC.pmod[lng] +' )' : '');
 					genReplyMap(Inner.posts);
 				}
@@ -828,7 +832,7 @@ function MagicExtension() {
 				wrap = _z.setup((op ? 'div' : 'table'), {'id': 'post_'+ postId, 'class': (op ? 'oppost' : 'replypost') +' post'}, null),
 				delicon = '<span class="delete icon"><input type="checkbox" id="delbox_r{post_id}" class="delete_checkbox" onclick="this.parentNode.classList.toggle(\'checked\')" value="'+ 
 					postJson.thread_id +'" name="r{post_id}"><img src="/images/blank.png" title="'+ MLLC.mrk_to_del[lng] +'" alt="✕"></span>\n',
-				html = (op ? '' : '<tbody><tr><td class="doubledash">&gt;&gt;</td><td id="replyr{post_id}" class="reply new '+ (hidden ? 'by-'+ hidden[0] +' autohidden' : '') +'">') +
+				html = (op ? '' : '<tbody><tr><td class="doubledash">&gt;&gt;</td><td id="replyr{post_id}" class="reply new'+ (hidden ? ' by-'+ hidden[0] +' autohidden' : '') +'">') +
 					'<a name="ir{post_id}"></a><label>'+ 
 						(op ? '<a class="hide icon" onclick="hide_thread(event, \'r{board}\',r{post_id});" href="/api/thread/r{board}/r{post_id}/hide.redir"><img src="/images/blank.png" title="'+ LC.hide[lng] +'" alt="﹅"></a>\n'+
 							delicon + '<a class="unsigned icon" onclick="sign_thread(event, \'r{board}\',r{post_id});"><img src="/images/blank.png" title="'+ LC.subscrb[lng] +'" alt="✩"></a>\n' : delicon) +
@@ -845,12 +849,13 @@ function MagicExtension() {
 			}
 			wrap.insertAdjacentHTML('afterbegin', html.allReplace({'r{board}': board, 'r{thread_id}': threadId, 'r{post_id}': postId}) + 
 				(len > 1 ? '<br style="clear:both;">' : '') +'<div class="postbody">'+ postJson.message_html +'</div><div class="abbrev"></div>' +
-				(op ? '' : '</td>'+ (hidden ? '<td class="reply hinfo-stub"><label class="'+ (hidden[0] === 'Title' ? 'replytitle' : 'postername') +
-					' t-sec font-s">'+ hidden[1] +'</label>\n<i>('+ LC.hidden[0][lng] + LC.hidden[2][lng] +')</i>\nNo.'+ postId +'</td>' : '') +'</tr></tbody>'));
+				(op ? '' : '</td>'+ (hidden ? '<td class="reply hinfo-stub new"><label class="'+ (hidden[0] === 'Title' ? 'replytitle' : 'postername') +
+					' t-sec font-s">'+ hidden[1] +'</label>\n<i class="sinf">('+ LC.hidden[0][lng] + LC.hidden[2][lng] +')</i>\n<span class="sinf">No.'+
+					postId +'</span></td>' : '') +'</tr></tbody>'));
 			if (!mapArr) {
 				unread_count++;
 				if (!op)
-					wrap.querySelector('.reply.new').addEventListener('click', markAsRead, false);
+					_z.each(wrap.querySelectorAll('.reply.new'), function(newp){ newp.addEventListener('click', markAsRead, false) });
 				if (HM.SoundNotify && !play_notify)
 					Notif.play();
 			}
@@ -951,14 +956,17 @@ function MagicExtension() {
 		function MagicHighlight(e) {
 			clearTimeout(gTimt); gTimt = 0;
 			var uri = ParseUrl(e.target.href),
-				post = document.getElementById('reply'+ uri.pid);
+				post = document.getElementById('post_'+ uri.pid);
 			if (post) {
-				var phl = post.className.split(' ').isThere('highlight');
+				var phl = post.className.split(' ').isThere('highlighted');
 				if (!phl) {
-					var prevhlight = document.querySelector('.highlight');
+					var prevhlight = document.getElementsByClassName('highlighted')[0],
+						hanalight = document.getElementsByClassName('highlight')[0];
 					if (prevhlight)
-						prevhlight.classList.remove('highlight');
-					post.classList.add('highlight');
+						prevhlight.classList.remove('highlighted');
+					if (hanalight)
+						hanalight.className = 'reply';
+					post.classList.add('highlighted');
 				}
 				post.scrollIntoView({block: (e.target.classList[1] === 'cview' ? 'end' : 'start'), behavior: 'smooth'});
 			} else if (HM.URL.thread !== uri.thread)
@@ -966,16 +974,28 @@ function MagicExtension() {
 			return _z.fall(e);
 		}
 		function MagicPostView(e) {
-			var a = e.target, attach = HM.AttachPopups, L = ParseUrl(a.href),
-				brd = L.board, tid = L.thread, pid = L.pid, op = tid === pid,
-				postid = (op ? 'post_' : 'reply') + pid, id = brd +'-'+ postid,
-				refl = _z.route(a, '.reflink a'), href = refl.getAttribute('href'),
-				reftab = _z.setup('table', {'class': (op ? 'oppost popup' : 'popup'), 'id': 'ref-'+ id,
-					'html': '<tbody><tr><td class="loading"><span class="waiting'+ Math.floor(Math.random() * 3) +
-					' icon"><img src="/images/blank.png"></span>\n'+ LC.wsec[lng] +'</td></tr></tbody>'}, null),
-				loading = reftab.querySelector('.loading'), active = document.getElementById('ref-'+ id),
-				post = HM.LoadedPosts[id] || document.getElementById(postid);
+			var a = e.target, attach = HM.AttachPopups;
 			clearTimeout(gTimt); gTimt = setTimeout(function() {
+				var L = ParseUrl(a.href), brd = L.board, tid = L.thread, pid = L.pid, op = tid === pid,
+					postid = (op ? 'post_' : 'reply') + pid, id = brd +'-'+ postid,
+					refl = _z.route(a, '.reflink a'), href = refl.getAttribute('href'),
+					reftab = _z.setup('table', {'class': (op ? 'oppost popup' : 'popup'), 'id': 'ref-'+ id,
+						'html': '<tbody><tr><td class="loading"><span class="waiting'+ Math.floor(Math.random() * 3) +
+						' icon"><img src="/images/blank.png"></span>\n'+ LC.wsec[lng] +'</td></tr></tbody>'}, null),
+					loading = reftab.querySelector('.loading'), active = document.getElementById('ref-'+ id),
+					post = HM.LoadedPosts[id] || document.getElementById(postid);
+				function binded(el) {
+					var load = !el ? _z.setup('td', {'class': 'stub', 'text': LC.postdel[lng]}, null) :
+						_z.setup((op ? el : el.parentNode.lastElementChild).cloneNode(true), {'id': 'load-' + id, 'class': undefined}, null);
+					attachEvents(load);
+					if (el && attach && (op ? true : el.parentNode.lastElementChild.classList[1] !== 'hinfo-stub')) {
+						BindCloseRef(reftab);
+					} else {
+						BindRemoveRef(a, reftab);
+					}
+					_z.replace(loading, load);
+					add_mapping(reftab.querySelector('a[href="'+ href +'"]'));
+				}
 				if (active) {
 					var loc = active.querySelector('.locked');
 					if (loc && loc.hash !== refl.hash) {
@@ -994,17 +1014,15 @@ function MagicExtension() {
 					function(status, sText, json, xhr) {
 						var temp, node, tstat, jpost, ErrorMSG;
 						if (status !== 200) {
-							ErrorMSG = new MagicElements()['WarningMsg'];
-							_z.replace(loading, _z.setup(ErrorMSG, {
-								'text': status +' '+ sText, 'style': ''}, null));
-							setTimeout(function() {
-								reftab.remove();
-							}, 7000)
-							return;
+							ErrorMSG = _z.setup('strong', {'id': 'warning-massage', 'class': 'blink', 'text': status +' '+ sText}, null);
+							ErrorMSG.dozZe = function(e) {
+								if (this.iterations >= 7)
+									reftab.remove();
+							}
+							return _z.replace(loading, ErrorMSG);
 						} else if (json.error) {
 							node = 'stub';
 						} else {
-							ssf = {id:0}
 							tstat = op ? [json.result.threads[0].archived, json.result.threads[0].autosage] : true;
 							jpost = op ? json.result.threads[0].posts[0] : json.result;
 							temp = MagicThreadListener().getPost(jpost, tstat, [brd, tid, pid]);
@@ -1048,18 +1066,6 @@ function MagicExtension() {
 				r.setAttribute('style', 'top:'+ y +'px;max-width:'+
 					(mw || wx) +'px;'+ (x == null ? 'right:0' : 'left:'+ x) +'px'+
 					(attach ? ';z-index:'+ HM.zIndex : ''));
-			}
-			function binded(el) {
-				var load = !el ? _z.setup('td', {'class': 'stub', 'text': LC.postdel[lng]}, null) :
-					_z.setup((op ? el : el.parentNode.lastElementChild).cloneNode(true), {'id': 'load-' + id, 'class': undefined}, null);
-				attachEvents(load);
-				if (el && attach && (op ? true : el.parentNode.lastElementChild.classList[1] !== 'hinfo-stub')) {
-					BindCloseRef(reftab);
-				} else {
-					BindRemoveRef(a, reftab);
-				}
-				_z.replace(loading, load);
-				add_mapping(reftab.querySelector('a[href="'+ href +'"]'));
 			}
 		}
 		function BindCloseRef(reftab) {
@@ -1866,7 +1872,7 @@ function MagicExtension() {
 			'<div id="yuki-errorMsg"></div>'+
 			'<table><tbody id="yuki-dropBox" class="line-sect"><tr class="etch-text"></tr><tr class="droparrow inactive"></tr></tbody><tbody class="line-sect">'+
 			'<tr id="trname"><td><input placeholder="'+ getDefaultName() +'" name="name" size="30" value="" type="text">'+
-				'<label class="sagearrow line-sect txt-btn'+ (HM.Sage ? '' : ' inactive') +'"><input id="yuki-sage" name="sage" type="checkbox" hidden></label>'+
+				'<label class="sagearrow line-sect txt-btn inactive"><input id="yuki-sage" name="sage" type="checkbox" hidden></label>'+
 				'<label id="yuki-newThread-create" class="yuki_clickable inactive">'+ LCY.newt[lng] +'<span class="t-sec">\n/'+ Yum.brd +
 				'/</span></label><span>&nbsp;<a id="yuki-close-form" title="'+ LC.remv[lng] +'"><img src="/images/delete.png" alt="✖︎"></a></span></td></tr>'+
 			'<tr id="trsubject"><td><input placeholder="'+ LCY.subj[lng] +'" name="subject" size="30" maxlength="64" value="" type="text">'+
@@ -1891,12 +1897,18 @@ function MagicExtension() {
 			'<tr id="trfile"><td id="files_parent"><div id="file_1_div"><label><span class="button">'+ LC.add[lng] +' '+ (lng ? LC.file[lng].toLowerCase() : LC.file[lng]) +
 			LC.few['u-c'][lng] +'</span><input id="dumb_file_field" type="file" hidden multiple></label>\n<span class="yukiFileSets"><label><input id="yuki-removeExif" type="checkbox" hidden><span class="checkarea"></span>\n'+
 			LCY.rmv[lng] +' Exif</label>\n<label><input id="yuki-removeFilename" type="checkbox" hidden><span class="checkarea"></span>\n'+ LCY.rmv[lng] +' '+ LCY.fnm[lng] +
-			'</label></span></div></td></tr></tbody></table><div id="yuki-files-placeholder"></div>';
-		function el$(child) { return Yu['ReplyForm'].querySelector(child) }
+			'</label></span></div></td></tr></tbody></table><div id="yuki-files-placeholder"></div>',
+		WarningMsg = _z.setup('strong', {'id': 'warning-massage', 'class': 'blink'}, null);
+		WarningMsg.dozZe = function(e) {
+			if (this.iterations >= 4) {
+				this.remove();
+				this.iterations = 0;
+			}
+		}
 		this.submitForm = yukiPleasePost;
 		this.getForm = function(e, brd, tid, pid) {
-			var m = e.target.id.split('-')
-				makeReplyForm(e, m[0], m[1], m[2])
+			var m = e.target.id.split('-');
+				makeReplyForm(e, m[0], m[1], m[2]);
 		}
 		this['ReplyForm'] = _z.setup('form', {
 				'id': "yuki-replyForm",
@@ -1987,23 +1999,19 @@ function MagicExtension() {
 					return _z.fall(e);
 				}
 			});
-		this['Sage'] = _z.setup(el$('#yuki-sage'), {
-				'checked': HM.Sage
-			}, {
+		this['Sage'] = _z.setup(el$('#yuki-sage'), {}, {
 				'change': function(e) {
-					setupOptions(this, 'Sage', true);
 					this.parentNode.classList.toggle('inactive');
 				}
 			});
 		this['AttachCaptchaButton'] = _z.setup(el$('#yuki-attach-captcha-button'), {}, {
 				'click': yukiAttachCapcha
 			});
-		this['GlobalFormArea'] = _z.setup('div', {'id': 'global-form-area', 'class': 'postarea hidout', 'html': '<table><tbody><tr><td id="hide-global-form" class="hideinfo">[\n<a>'+
+		this['GlobalFormArea'] = _z.setup('div', {'id': 'global-form-area', 'class': 'postarea hidout', 'html': '<table><tbody><tr><td id="hide-global-form" class="hideinfo">[\n<a id="hgf-btn">'+
 			LCY.hfrm[lng] +'</a>\n]</a></td></tr><tr><td id="global-form-sect"></td></tr><tr><td id="board-rules-sect"></td></tr></tbody></table>'}, null);
-		this['OpenTopForm'] = _z.setup('div', {'id': 'open-top-form', 'class': 'hideinfo', 'html': '[\n<a>'+ LCY.ufrm[lng] +'</a>\n]'}, null);
-		this['OpenBottomForm'] = _z.setup(Yu['OpenTopForm'].cloneNode(true), {'id': 'open-bottom-form'}, null);
+		this['OpenTopForm'] = _z.setup('div', {'id': 'open-top-form', 'class': 'hideinfo', 'html': '[\n<a id="otf-btn">'+ LCY.ufrm[lng] +'</a>\n]'}, null);
+		this['OpenBottomForm'] = _z.setup('div', {'id': 'open-bottom-form', 'class': 'hideinfo', 'html': '[\n<a id="obf-btn">'+ LCY.ufrm[lng] +'</a>\n]'}, null);
 		this['HideGlobalForm'] = gfa$('#hide-global-form'); this['GlobalFormSect'] = gfa$('#global-form-sect'); this['BoardRulesSect'] = gfa$('#board-rules-sect');
-		function gfa$(child) { return Yu['GlobalFormArea'].querySelector(child) }
 		_z.each([Yu['OpenTopForm'], Yu['OpenBottomForm'], Yu['HideGlobalForm']], function(el) { el.firstElementChild.addEventListener('click', makeGlobalForm, false) });
 		_z.each(this['ReplyForm'].querySelectorAll('.wmark-button'), function(btn) {
 			var Fn = wmarkText, O, C;
@@ -2028,6 +2036,8 @@ function MagicExtension() {
 				Fn(Yu['ReplyText'], O, C)
 			}, false);
 		});
+		function el$(child) { return Yu['ReplyForm'].querySelector(child) }
+		function gfa$(child) { return Yu['GlobalFormArea'].querySelector(child) }
 		function yukiAttachCapcha(e) {
 			var el = e.target, exist;
 			if (checkfilesLimit())
@@ -2067,9 +2077,7 @@ function MagicExtension() {
 		function checkfilesLimit() {
 			var limit, mu = (Yum.brd === 'mu');
 			if (fileList.length >= (mu ? 10 : 5)) {
-				_z.prepend(Yu['FilesPlaceholder'],
-					_z.setup(mEl['WarningMsg'], {'text': LCY.maxfc[lng], 'style':'display:block;text-align:center;'}, null))
-				mEl.funct = _rmMsg;
+				_z.prepend(Yu['FilesPlaceholder'], _z.setup(WarningMsg, {'text': LCY.maxfc[lng], 'style':'display:block;text-align:center;'}, null));
 				limit = true;
 			}
 			return limit;
@@ -2263,8 +2271,7 @@ function MagicExtension() {
 						if (this.responseURL === action) {
 							var rText = this.responseText,
 								msg = (/<center><h2>(.+)<\/h2><\/center>/).exec(rText);
-							delForm.appendChild(_z.setup(mEl['WarningMsg'], {'text': msg[1], 'style': 'float:right;'}, null));
-							mEl.funct = _rmMsg;
+							form.appendChild(_z.setup(WarningMsg, {'text': msg[1], 'style': 'float:right;'}, null));
 						} else {
 							var chek = document.querySelectorAll('.post .delete.icon.checked > .delete_checkbox');
 							if (chek.length === 1) {
@@ -2307,14 +2314,14 @@ function MagicExtension() {
 			}
 		}
 		function makeGlobalForm(e) {
-			switch (e.target.parentNode.id) {
-				case 'open-top-form':
-					_DWG(document.getElementsByClassName('theader')[0], 'OpenTopForm', 'OpenBottomForm')
+			switch (e.target.id) {
+				case 'otf-btn':
+					_DWG(document.getElementsByClassName('theader')[0], 'OpenTopForm', 'OpenBottomForm');
 					break;
-				case 'open-bottom-form':
-					_DWG(e.target.parentNode, 'OpenBottomForm', 'OpenTopForm')
+				case 'obf-btn':
+					_DWG(Yu['OpenBottomForm'], 'OpenBottomForm', 'OpenTopForm');
 					break;
-				case 'hide-global-form':
+				case 'hgf-btn':
 					_z.each([Yu['OpenBottomForm'], Yu['OpenTopForm']], _show);
 					_hide(Yu['GlobalFormArea']);
 					break;
@@ -2412,12 +2419,6 @@ function MagicExtension() {
 			output[posT + 1] = orig[posO + 1];
 			output = new Uint8Array(outData, 0, posT + 2);
 			return "data:image/Jpeg;base64," + arrayBufferDataUri(output);
-		}
-		function _rmMsg(e) {
-			if (mEl['iteration'] >= 4) {
-				mEl['WarningMsg'].remove();
-				mEl['iteration'] = 0;
-			}
 		}
 		function _t(last) { 
 			return (new Date).getTime() - (last ? parseInt(last) : 0);
@@ -2613,8 +2614,6 @@ function MagicExtension() {
 				m_macro: ['Make Image Macro', 'Создать макро'],
 				fnd_src_wth: ["Find Source with", "Найти оригинал в"]
 			}
-		this.funct = function(e){};
-		this['iteration'] = 0;
 		this['ImageMenu'] = _z.setup('menu', {'type': 'context', 'id': 'image-context', 'src': '', 'edit': '', 'html': 
 			'<menuitem icon="/images/edit.gif" label="'+ tLC.m_macro[lng] +'" onclick="window.open($(this).parent().attr(\'edit\'), \'_blank\')"></menuitem><menu label="'+ tLC.fnd_src_wth[lng] +'" icon="">'+
 			'<menuitem icon="/src/png/1407/google_14_icon.png" label="Google" onclick="window.open(\'//www.google.com/searchbyimage?image_url=\'+ $(this).parent().parent().attr(\'src\'), \'_blank\')"></menuitem>'+
@@ -2642,7 +2641,6 @@ function MagicExtension() {
 					_hide(this)
 				}
 			});
-		this['WarningMsg'] = _z.setup('strong', {'id': 'warning-massage', 'class': 'blink'}, null);
 	}
 	
 	function MagicSettings(h) {
@@ -2664,12 +2662,7 @@ function MagicExtension() {
 					'title': ['Enable oEmbed API support', 'Включает поддержку встраивания контента для ссылок при помощи oEmbed API'],
 					'url': ['embedded_media_links', 'vstraivanije_dla_vneshnih_ssilok'],
 					'txt': ['Embedded Media Links', 'Встраивание ссылок']
-				}},
-			keywordsObj = {
-				Nametrip: { apply: false, keys: '' },
-				Title: { apply: false, keys: '' },
-				Words: { apply: false, keys: '' }}
-		this.Keywords = JSON.parse(_z.getlSVal('Keywords', JSON.stringify(keywordsObj)))
+				}}
 		this.wer = wer; this.spDisclosing = spDisclosing;
 		function el$(child) { return MSs['GeneralSets'].querySelector(child) }
 		this['SpStyle'] = _z.setup('style', {'text': '.spoiler, .spoiler * {color:inherit!important;}'}, null);
@@ -2695,17 +2688,17 @@ function MagicExtension() {
 			'<tr><td class="o-sect"><label><input id="chx-Words" type="checkbox" hidden><span class="checkarea"></span></label></td><td><span class="font-s cyan-light">'+
 			SLC.hidby['rw'][lng] +'</span><br><textarea id="type-Words" class="keywords-input font-s" placeholder="белое::черное, &quot;::“$1”"></textarea></td></tr></tbody>'}, null);
 		for (var n = 0, Types = ['Nametrip', 'Title', 'Words']; n < Types.length; n++) {
-			_z.setup(this['HideBySets'].querySelector('#chx-'+ Types[n]), {'checked': this.Keywords[Types[n]].apply}, {
+			_z.setup(this['HideBySets'].querySelector('#chx-'+ Types[n]), {'checked': HM.Keywords[Types[n]].apply}, {
 				'change': function(e) {
 					var type = this.id.split('-')[1]
-					MSs.Keywords[type].apply = this.checked
-					_z.setlSVal('Keywords', JSON.stringify(MSs.Keywords))
+					HM.Keywords[type].apply = this.checked
+					_z.setlSVal('Keywords', JSON.stringify(HM.Keywords))
 					if (this.checked) {
 						_z.each(document.querySelectorAll('.by-'+type+'.showhidden'), function(hel) {
 							hel.classList.remove('showhidden')
 							hel.classList.add('autohidden')
 						});
-						wer(MSs.Keywords[type].keys, type)
+						wer(HM.Keywords[type].keys, type)
 					} else {
 						_z.each(document.querySelectorAll('.by-'+type+'.autohidden'), function(hel) {
 							hel.classList.remove('autohidden')
@@ -2714,12 +2707,12 @@ function MagicExtension() {
 					}
 				}
 			});
-			_z.setup(this['HideBySets'].querySelector('#type-'+ Types[n]), {'value': this.Keywords[Types[n]].keys}, {
+			_z.setup(this['HideBySets'].querySelector('#type-'+ Types[n]), {'value': HM.Keywords[Types[n]].keys}, {
 				'blur': function(e) {
 					var type = this.id.split('-')[1]
-					MSs.Keywords[type].keys = this.value
-					_z.setlSVal('Keywords', JSON.stringify(MSs.Keywords))
-					if (MSs.Keywords[type].apply)
+					HM.Keywords[type].keys = this.value
+					_z.setlSVal('Keywords', JSON.stringify(HM.Keywords))
+					if (HM.Keywords[type].apply)
 						wer(this.value, type)
 				}
 			});
@@ -2887,7 +2880,8 @@ function MagicExtension() {
 						}
 						node.classList.add('by-'+ arg); node.classList.add('autohidden');
 						node.insertAdjacentHTML('afterend', '<'+tag+' class="'+ node.classList[0] +' hinfo-stub"><label class="'+ Class[arg][c] +
-							' t-sec font-s">'+ keys[i] +'</label>\n<i>('+ LC.hidden[0][lng] + LC.hidden[x][lng] +')</i>\nNo.'+ _cid(node.id) +'</'+tag+'>');
+							' t-sec font-s">'+ keys[i] +'</label>\n<i'+ (x > 1 ? ' class="sinf"' : '') +'>('+ LC.hidden[0][lng] + LC.hidden[x][lng] +
+							')</i>\n<span'+ (x > 1 ? ' class="sinf"' : '') +'>No.'+ _cid(node.id) +'</span></'+tag+'>');
 					}
 				}
 			}
@@ -2907,8 +2901,8 @@ function MagicExtension() {
 				_z.setup("script", {"src": "/src/js/1501/flac_0.2.1.js"}, null)
 			]);
 			locationThread = document.getElementById('thread_'+ HM.URL.thread);
-			delForm = document.getElementById('delete_form');
 			var hideinfodiv = document.getElementById('hideinfodiv'),
+				delForm = document.getElementById('delete_form'),
 				rules = document.getElementsByClassName('rules')[0];
 			
 			HM.Settings.spDisclosing();
@@ -2922,11 +2916,11 @@ function MagicExtension() {
 				oldate.remove();
 			});
 			for (var n = 0, Types = ['Nametrip', 'Title', 'Words']; n < Types.length; n++) {
-				if (HM.Settings.Keywords[Types[n]].apply)
-					HM.Settings.wer(HM.Settings.Keywords[Types[n]].keys, Types[n])
+				if (HM.Keywords[Types[n]].apply)
+					HM.Settings.wer(HM.Keywords[Types[n]].keys, Types[n])
 			}
 			if (hideinfodiv) {
-				_z.replace(hideinfodiv, Nagato['OpenTopForm'])
+				_z.after(hideinfodiv, Nagato['OpenTopForm']);
 				Nagato['BoardRulesSect'].appendChild(rules)
 			}
 			if (locationThread) {
@@ -2985,8 +2979,11 @@ function MagicExtension() {
 	function insertListenerI(event) {
 		switch (event.animationName) {
 			case 'blinker':
-				mEl['iteration']++;
-				mEl.funct(event)
+				if (!event.target.iterations)
+					event.target.iterations = 0;
+				event.target.iterations++;
+				if (event.target.dozZe)
+					event.target.dozZe();
 		}
 	}
 	function insertListenerE(event) {
@@ -3050,8 +3047,8 @@ function initScripts() {
 	
 var mesShadows = /* hr shadow */ 'hr{border-style:none none solid!important;border-color:rgba(0,0,0,.3)!important;box-shadow:0 1px 0 #fff!important;}'+
 /* text spoiler, banner image & captcha image sadows */ '#yuki-captcha-image,.banner,.spoiler,.spoiler a,.spoiler blockquote,.spoiler blockquote blockquote,.spoiler blockquote blockquote blockquote{transition:all .1s ease;box-shadow:0 1px 2px -1px rgba(0,0,0,.7)!important;}.spoiler a:hover,.spoiler:hover,.transparent{box-shadow:none!important;}'+
-/* popup/error posts, settings panel sadows & dropdown menu */ '.reply:not(.highlight),.popup{border:0 none transparent!important;}.active > .dropdown-label,.dropdown-menu,.popup,#magic-panel{box-shadow:5px 5px 10px rgba(0,0,0,.4),inset 0 0 30px rgba(0,0,0,.1)!important;z-index:9;}'+
-/* reply post sadows */ '.highlight,.reply{padding:2px 1em 2px 2px!important;box-shadow:inset 0 1px 30px -9px #fff,0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);}.line-sect.reply{padding:2px 4px!important;}'+
+/* popup/error posts, settings panel sadows & dropdown menu */ '.reply,.popup{border:0 none transparent!important;}.active > .dropdown-label,.dropdown-menu,.popup,#magic-panel{box-shadow:5px 5px 10px rgba(0,0,0,.4),inset 0 0 30px rgba(0,0,0,.1)!important;z-index:9;}'+
+/* reply post sadows */ '.oppost.highlighted,.reply,.highlight{padding:2px 1em 2px 2px!important;box-shadow:inset 0 1px 30px -9px #fff,0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);}.line-sect.reply{padding:2px 4px!important;}'+
 /* new reply post sadows */ '.reply.new{box-shadow:inset 0 1px 30px -9px rgba(255, 85, 0, 0.8),0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);}'+
 /* post images/files & audio players shadows */ '.thumb,.yukiFile,.scbc-container,.prosto-pleer,.audio-container video{box-shadow:1px 2px 2px -1px rgba(0,0,0,.4),-1px 0 4px -1px rgba(0,0,0,.2),inset 0 0 30px rgba(0,0,0,.1)!important;}'+
 /* error massage, theader & text input shadows */ '#yuki-errorMsg,.theader,.passvalid,input[type="text"],input[type="password"],input[type="number"],textarea,.docs-container{box-shadow:inset 0 1px 2px rgba(0,0,0,.3)!important;-webkit-border-radius:5px;border-style:none!important;}input[type="text"],input[type="number"],input[type="password"],textarea{-webkit-border-radius:3px!important;padding:4px!important;}'+
@@ -3101,7 +3098,7 @@ var MagicStyle = '.hidout,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google
 .dropdown,.dropdown-menu{padding-left:0;list-style:outside none none;}.active > .dropdown-label,.active > .dropdown-menu{visibility:visible;background-clip:padding-box;background-color:#fefefe;}.active > .dropdown-label{border-radius:4px 4px 0 0;}.dropdown-label{padding:4px 8px;border-radius:2px;font-variant:small-caps;font-size:14px;}.dropdown-menu{color:#777;position:absolute;min-width:150px;font-size:14px;line-height:1.8;}\
 .dropdown-item{padding:0 10px;}.dropdown-item:hover{background-color:rgba(0,0,0,.1);}.dropdown-menu{border-radius:0 0 4px 4px;}.dropdown-label:before{content:"⟨ ";}.dropdown-label:after{content:" ⟩";}#int-val{width:50px;margin:0 4px;}\
 .blink{-webkit-animation-name:blinker;-webkit-animation-duration:1s;-webkit-animation-timing-function:linear;-webkit-animation-iteration-count:infinite;animation-name:blinker;animation-duration:1s;animation-timing-function:linear;animation-iteration-count:infinite;}\
-.highlight{border-style:dashed!important;border-width:2px!important;border-color:#F50!important;}.postcontent{float:left;}br + .postbody{clear:both;}\
+.oppost.highlighted,.highlighted .reply{border-style:dashed!important;border-width:2px!important;border-color:#F50!important;}.postcontent{float:left;}br + .postbody{clear:both;}.sinf{color:#666;font-size:.8em;}\
 @-webkit-keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}@keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}\
 @keyframes onReady{50% {opacity:0;}} @-webkit-keyframes onReady{50% {opacity:0;}}'+ mesShadows + mesAnimations;
 	
