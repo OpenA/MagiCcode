@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.4.3
+// @version 		1.4.4
 // @grant   		none
 // ==/UserScript==
 
@@ -2316,7 +2316,7 @@ function MagicExtension() {
 		function makeGlobalForm(e) {
 			switch (e.target.id) {
 				case 'otf-btn':
-					_DWG(document.getElementsByClassName('theader')[0], 'OpenTopForm', 'OpenBottomForm');
+					_DWG(document.getElementById('postform_placeholder'), 'OpenTopForm', 'OpenBottomForm');
 					break;
 				case 'obf-btn':
 					_DWG(Yu['OpenBottomForm'], 'OpenBottomForm', 'OpenTopForm');
