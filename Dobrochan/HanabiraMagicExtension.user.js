@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.4.4
+// @version 		1.4.6
 // @grant   		none
 // ==/UserScript==
 
@@ -174,7 +174,7 @@ function MagicExtension() {
 		AttachPopups: _z.getlSVal('AttachPopups', true),
 		RemoveFileName: _z.getlSVal('RemoveFileName', false),
 		DiscloseTextSpoilers: _z.getlSVal('DiscloseTextSpoilers', false),
-		Keywords: JSON.parse(_z.getlSVal('Keywords', JSON.stringify({Nametrip:{},Title:{},Words:{}}))),
+		Keywords: JSON.parse(_z.getlSVal('Keywords', JSON.stringify({Nametrip:{},Title:{},Words:{},conceal:false}))),
 		User: JSON.parse(_z.getlSVal('User', '{}'))
 	},
 	Megia = {
@@ -182,9 +182,6 @@ function MagicExtension() {
 		'scbc': new MagicContent(),
 		'docs': new MagicContent(true),
 		'pdf': new MagicContent(true)
-	},
-	Tamplate = {
-		ref: '<a class="reply-link r{cl}" href="/r{brd}/res/r{tid}.xhtml#ir{pid}">&gt;&gt;r{L}r{pid}</a>'
 	},
 	Files = {
 		audio: ['wav', 'm4a', 'm4r', 'aac', 'ogg', 'mp3', 'opus', 'flac', 'alac'],
@@ -194,7 +191,13 @@ function MagicExtension() {
 	KeyCodes = {
 		symbs: ['"', '*', '(', '`', '%', '~'],
 		codew: ['{', '[', '(', '\'', '"'],
-		quots: ['^', '>']},
+		quots: ['^', '>'],
+		balance: function(k) {
+			var O = ['"', '(', '[', '{'],
+				C = ['"', ')', ']', '}'],
+				idx = O.indexOf(k) || C.indexOf(k);
+			return [(O[idx] || k), (C[idx] || k)]
+		}},
 	LC = {
 		lng: ['en', 'ru'],
 		file: ["File", "Файл"],
@@ -268,11 +271,10 @@ function MagicExtension() {
 			["(Sat)", "(Cб)"]
 		]
 	}
-
+	
 	var locationThread, UrlCache = HM.LinksMap, unread_count = 0,
 		lng = (LC.lng.indexOf(HM.User.language) > -1 ? LC.lng.indexOf(HM.User.language) : 1),
 		Chanabira = new CharmingHanabira(), mEl = new MagicElements(), Nagato = new Yuki();
-		HM.Settings = new MagicSettings();
 	
 	/***--[ Utilites ]--***/
 	Array.prototype.isThere = matchIndex
@@ -363,8 +365,6 @@ function MagicExtension() {
 	}
 	function _stub(tag, html) {
 		var stb = _z.setup('div', {'html': html}, null);
-		if (!stb.querySelector(tag))
-			console.log(html)
 		return stb.querySelector(tag);
 	}
 	function _bitonum(arr, hex) {
@@ -393,7 +393,7 @@ function MagicExtension() {
 			if (this.readyState !== 4)
 				return;
 			if (this.status === 304) {
-				console.log('304 ' + this.statusText);
+				console.warn('304 ' + this.statusText);
 			} else {
 				try {
 					var json = JSON.parse(this.responseText);
@@ -411,11 +411,11 @@ function MagicExtension() {
 		var reader = new FileReader();
 		reader.onload = function() {
 			if (this.readyState < 1) {
-				console.log('No data has been loaded yet.');
+				console.warn('No data has been loaded yet.');
 				return;
 			}
 			if (this.error) {
-				console.log(this.error);
+				console.warn(this.error);
 			} else {
 				try {
 					var data = this.result;
@@ -451,19 +451,19 @@ function MagicExtension() {
 	}
 	
 	function getElementByXpath(path, value) {
-		var v = (value || 0)
 		var TYPE = [
-			'ANY_TYPE',
-			'NUMBER_TYPE',
-			'STRING_TYPE',
-			'BOOLEAN_TYPE',
-			'UNORDERED_NODE_ITERATOR_TYPE',
-			'ORDERED_NODE_ITERATOR_TYPE',
-			'UNORDERED_NODE_SNAPSHOT_TYPE',
-			'ORDERED_NODE_SNAPSHOT_TYPE',
-			'ANY_UNORDERED_NODE_TYPE',
-			'FIRST_ORDERED_NODE_TYPE']
-		return document.evaluate(path, document.body, null, XPathResult[TYPE[v]], null);
+				'ANY_TYPE',
+				'NUMBER_TYPE',
+				'STRING_TYPE',
+				'BOOLEAN_TYPE',
+				'UNORDERED_NODE_ITERATOR_TYPE',
+				'ORDERED_NODE_ITERATOR_TYPE',
+				'UNORDERED_NODE_SNAPSHOT_TYPE',
+				'ORDERED_NODE_SNAPSHOT_TYPE',
+				'ANY_UNORDERED_NODE_TYPE',
+				'FIRST_ORDERED_NODE_TYPE'],
+			V = TYPE[value] || TYPE[TYPE.indexOf(value)] || TYPE[0];
+		return document.evaluate(path, document.body, null, XPathResult[V], null);
 	}
 	
 	function cleanStringForXpath(str) {
@@ -582,8 +582,8 @@ function MagicExtension() {
 				}, null);
 			this['UpdateStat'] = el$('#update-stat');
 			this['DummyLine'] = _z.setup('div', {'class': 'dummy-line', 'html': '<a class="dummy-load">'+ MLLC.loadnew[lng] +'</a>'}, null);
-			this['PostsCount'] = _z.setup('label', {'id': 'post-count', 'class': 'etch-text', 'text': Inner.posts.length + LC.omit[lng]}, null);
-			this['AllowedPosts'] = _z.setup('span', {'id': 'allowed-posts', 'class': 'etch-text', 'text': ' | '+ LC.allw[lng]}, null);
+			this['PostsCount'] = _z.setup('label', {'id': 'post-count', 'class': 'etch-text f-left', 'text': Inner.posts.length + LC.omit[lng]}, null);
+			this['AllowedPosts'] = _z.setup('label', {'id': 'allowed-posts', 'class': 'etch-text', 'html': '<span class="rl-inf">\n&nbsp;|&nbsp;'+ LC.allw[lng] +':&nbsp;\n</span>'}, null);
 			this['LoadButton'] = _z.setup(this['UpdateStat'].firstChild, {}, {
 					'click': function(e) { updateThread(e, true) }
 				});
@@ -657,24 +657,6 @@ function MagicExtension() {
 			var i = (jPC + Count.mod) - Inner.posts.length - Count.dif,
 				n = i > 0 ? i : 0, d = i < 0 ? i : 0;
 				Count.dif += i; Count.new += n; Count.del += d;
-		}
-		function checkIfHidden(subj, name) {
-			var result; _z.each([
-				['Title', subj], ['Nametrip', name]],
-				function(type) {
-					var kwods = HM.Keywords[type[0]];
-					if (kwods.apply) {
-						for (var m, f, i = 0, keys = kwods.keys.split(', '); i < keys.length; i++) {
-							m = /^\*(.+)\*$|^\*(.+)|(.+)\*$/.exec(keys[i]);
-							f = m ? (m[1] || m[2] || m[3]) : keys[i];
-							if (type[1].isThere(f)) {
-								result = [type[0], keys[i]]
-								break;
-							}
-						}
-					}
-				});
-			return result;
 		}
 		function updateTimer() {
 			clearTimeout(Timer.id);
@@ -774,21 +756,20 @@ function MagicExtension() {
 		function getHanabiraFullThread(UpdBtn, ExpandMap) {
 			getDataResponse('/api/thread/'+ HM.URL.board +'/'+ CiD +'/all.json?new_format&message_html',
 			function(status, sText, json, xhr) {
-				var i, jsonPosts = json.result.posts, pCount = json.result.posts_count;
+				var jsonPosts = json.result.posts, pCount = json.result.posts_count;
 				function pnid(n) { return !Inner.posts[n] ? 99999999 : _cid(Inner.posts[n].id) }
 				function jpid(n) { return !jsonPosts[n] ? 99999999 : jsonPosts[n].display_id }
 				if (jsonPosts.length == Inner.posts.length) {
 					Count.dif = Count.del = 0;
 					Count.mod = Inner.posts.length - pCount;
 				} else {
-					for (i = 0; i < (Inner.posts.length + Count.new); i++) {
+					for (var i = 0, derefl, temp; i < (Inner.posts.length + Count.new); i++) {
 						if (pnid(i) < jpid(i)) {
 							_z.setup(Inner.posts[i], {'class': "deleted"}, null)
 							.querySelector('.doubledash').setAttribute('style', 'display:inline-block;');
 						}
 						if (pnid(i) > jpid(i)) {
-							var derefl = Tamplate['ref'].allReplace({'r{brd}': HM.URL.board, 'r{tid}': CiD, 'r{pid}': jpid(i), 'r{L}': '', 'r{cl}': 'nview'}),
-								temp = getHanabiraPost(jsonPosts[i], [json.result.archived, json.result.autosage]), s;
+							var derefl, temp = getHanabiraPost(jsonPosts[i], [json.result.archived, json.result.autosage]);
 							if (!Inner.posts[i])
 								Thread.appendChild(temp[0]);
 							else
@@ -796,10 +777,11 @@ function MagicExtension() {
 							if (ExpandMap) {
 								ExpandMap.push(temp[0])
 							} else {
-								s = MListen['AllowedPosts'].querySelector('.reply-link') ? ', ' : ': ';
+								derefl = _z.setup('a', {'class': 'reply-link nview celrly', 'href': '/'+ HM.URL.board +'/res/'+ CiD +'.xhtml#i'+ jpid(i), 'text': '>>'+ jpid(i)}, {
+									'click': Chanabira.MagicHighlight, 'mouseover': Chanabira.MagicPostView
+								});
 								_z.after(MListen['PostsCount'], MListen['AllowedPosts'])
-								MListen['AllowedPosts'].insertAdjacentHTML('beforeend', s + derefl);
-								attachEvents(MListen['AllowedPosts'])
+								_z.before(MListen['AllowedPosts'].lastElementChild, derefl);
 							}
 						}
 						if (pnid(i) < jpid(i)) {
@@ -828,11 +810,10 @@ function MagicExtension() {
 				files = postJson.files,
 				len = files.length,
 				op = postJson.op,
-				hidden = checkIfHidden(postJson.subject, postJson.name),
 				wrap = _z.setup((op ? 'div' : 'table'), {'id': 'post_'+ postId, 'class': (op ? 'oppost' : 'replypost') +' post'}, null),
 				delicon = '<span class="delete icon"><input type="checkbox" id="delbox_r{post_id}" class="delete_checkbox" onclick="this.parentNode.classList.toggle(\'checked\')" value="'+ 
 					postJson.thread_id +'" name="r{post_id}"><img src="/images/blank.png" title="'+ MLLC.mrk_to_del[lng] +'" alt="✕"></span>\n',
-				html = (op ? '' : '<tbody><tr><td class="doubledash">&gt;&gt;</td><td id="replyr{post_id}" class="reply new'+ (hidden ? ' by-'+ hidden[0] +' autohidden' : '') +'">') +
+				html = (op ? '' : '<tbody><tr><td class="doubledash">&gt;&gt;</td><td id="replyr{post_id}" class="reply new">') +
 					'<a name="ir{post_id}"></a><label>'+ 
 						(op ? '<a class="hide icon" onclick="hide_thread(event, \'r{board}\',r{post_id});" href="/api/thread/r{board}/r{post_id}/hide.redir"><img src="/images/blank.png" title="'+ LC.hide[lng] +'" alt="﹅"></a>\n'+
 							delicon + '<a class="unsigned icon" onclick="sign_thread(event, \'r{board}\',r{post_id});"><img src="/images/blank.png" title="'+ LC.subscrb[lng] +'" alt="✩"></a>\n' : delicon) +
@@ -848,14 +829,11 @@ function MagicExtension() {
 				html += getHanabiraFile(files[i], postJson.post_id, board, threadId, postId, (len === 1));
 			}
 			wrap.insertAdjacentHTML('afterbegin', html.allReplace({'r{board}': board, 'r{thread_id}': threadId, 'r{post_id}': postId}) + 
-				(len > 1 ? '<br style="clear:both;">' : '') +'<div class="postbody">'+ postJson.message_html +'</div><div class="abbrev"></div>' +
-				(op ? '' : '</td>'+ (hidden ? '<td class="reply hinfo-stub new"><label class="'+ (hidden[0] === 'Title' ? 'replytitle' : 'postername') +
-					' t-sec font-s">'+ hidden[1] +'</label>\n<i class="sinf">('+ LC.hidden[0][lng] + LC.hidden[2][lng] +')</i>\n<span class="sinf">No.'+
-					postId +'</span></td>' : '') +'</tr></tbody>'));
+				(len > 1 ? '<br style="clear:both;">' : '') +'<div class="postbody">'+ postJson.message_html +'</div><div class="abbrev"></div>' + (op ? '' : '</td></tr></tbody>'));
 			if (!mapArr) {
 				unread_count++;
 				if (!op)
-					_z.each(wrap.querySelectorAll('.reply.new'), function(newp){ newp.addEventListener('click', markAsRead, false) });
+					wrap.querySelector('.reply.new').addEventListener('click', markAsRead, false);
 				if (HM.SoundNotify && !play_notify)
 					Notif.play();
 			}
@@ -949,7 +927,8 @@ function MagicExtension() {
 	//* @ original code 	http://dobrochan.com/js/hanabira-0.5.1311-.js
 	//* @ copyright 		Dobrochan
 	function CharmingHanabira(h) {
-		var Chana = this, gTimt = 0;
+		var Chana = this, gTimt = 0,
+			post_stub = _z.setup('td', {'class': 'die stub', 'text': LC.postdel[lng]}, null);
 		this.closeLastPopup = RemoveAllRefs;
 		this.MagicPostView = MagicPostView;
 		this.MagicHighlight = MagicHighlight;
@@ -977,7 +956,7 @@ function MagicExtension() {
 			var a = e.target, attach = HM.AttachPopups;
 			clearTimeout(gTimt); gTimt = setTimeout(function() {
 				var L = ParseUrl(a.href), brd = L.board, tid = L.thread, pid = L.pid, op = tid === pid,
-					postid = (op ? 'post_' : 'reply') + pid, id = brd +'-'+ postid,
+					postid = 'post_'+ pid, id = brd +'-'+ pid,
 					refl = _z.route(a, '.reflink a'), href = refl.getAttribute('href'),
 					reftab = _z.setup('table', {'class': (op ? 'oppost popup' : 'popup'), 'id': 'ref-'+ id,
 						'html': '<tbody><tr><td class="loading"><span class="waiting'+ Math.floor(Math.random() * 3) +
@@ -985,30 +964,29 @@ function MagicExtension() {
 					loading = reftab.querySelector('.loading'), active = document.getElementById('ref-'+ id),
 					post = HM.LoadedPosts[id] || document.getElementById(postid);
 				function binded(el) {
-					var load = !el ? _z.setup('td', {'class': 'stub', 'text': LC.postdel[lng]}, null) :
-						_z.setup((op ? el : el.parentNode.lastElementChild).cloneNode(true), {'id': 'load-' + id, 'class': undefined}, null);
+					var load = (el.querySelector('.reply:not(.autohidden)') || el).cloneNode(true)
 					attachEvents(load);
-					if (el && attach && (op ? true : el.parentNode.lastElementChild.classList[1] !== 'hinfo-stub')) {
+					if (attach && load.classList[1] !== 'stub') {
 						BindCloseRef(reftab);
 					} else {
 						BindRemoveRef(a, reftab);
 					}
-					_z.replace(loading, load);
+					_z.replace(loading, _z.setup(load, {'id': 'load-' + id, 'class': el.cast}, null));
 					add_mapping(reftab.querySelector('a[href="'+ href +'"]'));
 				}
 				if (active) {
 					var loc = active.querySelector('.locked');
 					if (loc && loc.hash !== refl.hash) {
-						loc.className = 'reply-link cview';
+						loc.className = 'reply-link cview celrly';
 						attachEvents(active);
 					}
 					add_mapping(active.querySelector('a[href="'+ href +'"]'));
 					set_style(active);
 					return active.click();
 				} else if (post) {
-					binded(post == 'stub' ? null : post);
+					binded(post);
 				} else if (HM.URL.thread == tid) {
-					binded(null);
+					binded(post_stub);
 				} else {
 					getDataResponse('/api/post/'+ brd +'/'+ tid +'/'+ pid +'.json?message_html&new_format'+ (op ? '&thread' : ''),
 					function(status, sText, json, xhr) {
@@ -1021,15 +999,16 @@ function MagicExtension() {
 							}
 							return _z.replace(loading, ErrorMSG);
 						} else if (json.error) {
-							node = 'stub';
+							node = post_stub;
 						} else {
 							tstat = op ? [json.result.threads[0].archived, json.result.threads[0].autosage] : true;
 							jpost = op ? json.result.threads[0].posts[0] : json.result;
 							temp = MagicThreadListener().getPost(jpost, tstat, [brd, tid, pid]);
-							node = op ? temp[0] : temp[1];
+							node = temp[0];
+							node.cast = 'stored';
 						}
 						HM.LoadedPosts[id] = node;
-						binded(node == 'stub' ? null : node);
+						binded(node);
 						hooLinks(GetElements(reftab).links);
 						set_style(reftab);
 					});
@@ -1170,7 +1149,7 @@ function MagicExtension() {
 	}
 	
 	function keyMarks(e) {
-		var TextArea, TA;
+		var TextArea, TA, K;
 		if (e.target.tagName === 'TEXTAREA') {
 			TextArea = e.target;
 			TA = true;
@@ -1194,17 +1173,15 @@ function MagicExtension() {
 			}
 		if (YRT && TA && KeyCodes.symbs.isThere(key)) {
 			if (active) {
-				key = KeyCodes.symbs.indexOf(key) >= 4 ? key + key : key;
-				wmarkText(TextArea, key, (key === '(' ? ')' : key))
+				K = KeyCodes.symbs.indexOf(key) >= 4 ? [key + key, key + key] : KeyCodes.balance(key);
+				wmarkText(TextArea, K[0], K[1]);
 				return _z.fall(e);
 			}
 		}
 		if (CED && TA && KeyCodes.codew.isThere(key)) {
 			if (autoselect()) {
-				wmarkText(TextArea, key,
-					(key === '(' ? ')' :
-					 key === '{' ? '}' :
-					 key === '[' ? ']' : key))
+				K = KeyCodes.balance(key);
+				wmarkText(TextArea, K[0], K[1]);
 				return _z.fall(e);
 			}
 		}
@@ -1606,20 +1583,21 @@ function MagicExtension() {
 	}
 	function genReplyMap(posts) {
 		_z.each(posts, function(post) {
-			var cid = _cid(post.id), replies_links = new Array(0);
+			var cid = _cid(post.id);
 			if (HM.RepliesMap[cid]) {
-				_z.each(HM.RepliesMap[cid], function(Id) {
-					replies_links.push(Tamplate['ref'].allReplace({'r{brd}': Id[0], 'r{cl}': 'cview', 'r{tid}':
-					(!Id[1] ? Id[2] : Id[1]), 'r{pid}': Id[2], 'r{L}': (Id[3] ? '❪'+ Id[0].toUpperCase() +'❫' : '')}));
-				});
-				var replies_div_arr = post.getElementsByClassName('replylinks'),
-					replies_div = _z.setup('div', {'class': 'replylinks'}, null);
-				if (replies_div_arr.length == 0)
-					post.getElementsByClassName('abbrev')[0].appendChild(replies_div);
-				else
-					replies_div = replies_div_arr[0];
-				replies_div.innerHTML = LC.repl[lng] + LC.few['u-c'][lng] +': '+ replies_links.join(', ');
-				attachEvents(replies_div);
+				if (!post.repliesNode) {
+					post.repliesNode = _z.setup('div', {'class': 'replylinks', 'html': '<span class="rl-inf">'+  LC.repl[lng] + LC.few['u-c'][lng] +':&nbsp;\n</span>'}, null);
+					post.getElementsByClassName('abbrev')[0].appendChild(post.repliesNode);
+				}
+				for (var i = 0; i < HM.RepliesMap[cid].length; i++) {
+					var relink, Id = HM.RepliesMap[cid][i];
+					if (!post.repliesNode.querySelector('.celrly[href$="#i'+ Id[2] +'"]')) {
+						relink = _z.setup('a', {'class': 'reply-link cview celrly', 'href': '/'+ Id[0] +'/res/'+ (!Id[1] ? Id[2] : Id[1]) +'.xhtml#i'+ Id[2], 'text':
+							'\n>>'+ (Id[3] ? '❪'+ Id[0].toUpperCase() +'❫' : '') + Id[2] }, {'click': Chanabira.MagicHighlight, 'mouseover': Chanabira.MagicPostView});
+						relink.hidden = (document.getElementById('post_'+ Id[2]) || {hidden:false}).hidden;
+						_z.before(post.repliesNode.lastElementChild, relink);
+					}
+				}
 			}
 		});
 	}
@@ -2266,7 +2244,7 @@ function MagicExtension() {
 					if (this.readyState !== 4)
 						return;
 					if (this.status === 304) {
-						console.log('304 ' + this.statusText);
+						console.warn('304 ' + this.statusText);
 					} else {
 						if (this.responseURL === action) {
 							var rText = this.responseText,
@@ -2445,7 +2423,7 @@ function MagicExtension() {
 				return classes.isThere('artwork')
 			});
 			function _stop() {
-				_z.each(document.querySelectorAll('#ma-pause'),
+				_z.each('#ma-pause',
 					function(a) { a.id = 'ma-play' });
 				HM.Played.pause();
 			}
@@ -2555,7 +2533,7 @@ function MagicExtension() {
 	}
 	function MAParser(meth, Source, callback, errback) {
 		if (typeof errback !== 'object') {
-			errback = function(e) { console.log(e) }
+			errback = function(e) { console.warn(e) }
 		}
 		switch (meth.toLowerCase()) {
 			case 'file':
@@ -2662,10 +2640,16 @@ function MagicExtension() {
 					'title': ['Enable oEmbed API support', 'Включает поддержку встраивания контента для ссылок при помощи oEmbed API'],
 					'url': ['embedded_media_links', 'vstraivanije_dla_vneshnih_ssilok'],
 					'txt': ['Embedded Media Links', 'Встраивание ссылок']
-				}}
-		this.wer = wer; this.spDisclosing = spDisclosing;
+				}},
+			StyleSet = {
+				spoiler: _z.setup('style', {'text': '.spoiler, .spoiler * {color:inherit!important;}'}, null),
+				hinfostub: _z.setup('style', {'text': '.stub.hinfo:not(.stored), .autohidden + .dummy-line + br, .autohidden + .dummy-line + br + hr{display:none;}'}, null),
+				true: function(style) { document.body.appendChild(StyleSet[style]) },
+				false: function(style) { StyleSet[style].remove() }
+			}
+			StyleSet[HM.DiscloseTextSpoilers]('spoiler');
+			StyleSet[(HM.Keywords.conceal || false)]('hinfostub');
 		function el$(child) { return MSs['GeneralSets'].querySelector(child) }
-		this['SpStyle'] = _z.setup('style', {'text': '.spoiler, .spoiler * {color:inherit!important;}'}, null);
 		this['Panel'] = _z.setup('div', {'id': 'magic-panel'}, null);
 		this['GeneralSets'] = _z.setup('table', {'html': '<tbody><tr><td class="f-sect"><span id="media-placement"><input '+
 			(HM.MC == 0 ? 'checked' : '') +' value="0" name="cont_p" type="radio">\n'+ SLC.mcw[lng] +'\n<input '+
@@ -2680,48 +2664,102 @@ function MagicExtension() {
 			'<tr><td class="f-sect"><label><input id="set-show-spoilers" type="checkbox" hidden><span class="checkarea"></span></label></td><td class="s-sect">'+
 			LC.txtspoils[lng] +'</td></tr><tr><td class="f-sect"><label class="paperclip line-sect txt-btn'+
 			(HM.AttachPopups ? '' : ' inactive') +'"><input id="attach-popups" type="checkbox" hidden></label></td><td class="s-sect">'+ SLC.clipopup[lng] +'</td></tr></tbody>'}, null);
-		this['HideBySets'] = _z.setup('table', {'html': '<tbody><tr><th></th><th class="s-sect">'+ SLC.hidby['hr'][lng] +'</th></tr>'+
-			'<tr><td class="o-sect"><label><input id="chx-Nametrip" type="checkbox" hidden><span class="checkarea"></span></label></td><td><span class="font-s cyan-light">'+
-			SLC.hidby['nt'][lng] +'</span><br><textarea id="type-Nametrip" class="keywords-input font-s" placeholder="Mr.Yoba, Mr.*, *Yoba, !Hyd5gFre"></textarea></td></tr>'+
+		this['HideBySets'] = _z.setup('table', {'html': '<tbody><tr><th><label id="stamps-concealing" class="yuki_clickable i-block'+ (HM.Keywords.conceal ? ' inactive' : '') +
+			'"><input type="checkbox" hidden></label></th><th class="s-sect">'+ SLC.hidby['hr'][lng] +
+			'</th></tr><tr><td class="o-sect"><label><input id="chx-Nametrip" type="checkbox" hidden><span class="checkarea"></span></label></td><td><span class="font-s cyan-light">'+
+			SLC.hidby['nt'][lng] +'</span><br><textarea id="txt-Nametrip" class="keywords-input font-s" placeholder="Saeki-fag, Saeki*, *fag, !Hyd5gFre, Saeki-fag::Anonymous"></textarea></td></tr>'+
 			'<tr><td class="o-sect"><label><input id="chx-Title" type="checkbox" hidden><span class="checkarea"></span></label></td><td><span class="font-s cyan-light">'+
-			SLC.hidby['tl'][lng] +'</span><br><textarea id="type-Title" class="keywords-input font-s" placeholder="Путеводитель*, *ожиданий от*, Унылый тред"></textarea></td></tr>'+
+			SLC.hidby['tl'][lng] +'</span><br><textarea id="txt-Title" class="keywords-input font-s" placeholder="Путеводитель*, *ожиданий от*, Унылый тред, Rozen Maiden::$1@[color:Orchid; font-family:Georgia]"></textarea></td></tr>'+
 			'<tr><td class="o-sect"><label><input id="chx-Words" type="checkbox" hidden><span class="checkarea"></span></label></td><td><span class="font-s cyan-light">'+
-			SLC.hidby['rw'][lng] +'</span><br><textarea id="type-Words" class="keywords-input font-s" placeholder="белое::черное, &quot;::“$1”"></textarea></td></tr></tbody>'}, null);
+			SLC.hidby['rw'][lng] +'</span><br><textarea id="txt-Words" class="keywords-input font-s" placeholder="*Сап добрач*, белое::черное, зеленый::$1@[color:green], &quot;::“$1”"></textarea></td></tr></tbody>'}, null);
+		_z.setup(this['HideBySets'].querySelector('#stamps-concealing input'), {'checked': HM.Keywords.conceal}, {
+			'change': function(e) {
+				HM.Keywords.conceal = this.checked;
+				if (this.checked) {
+					_z.each(document.getElementsByClassName('hinfo'), function(hs) {
+						var Id = _cid(hs.id);
+						(document.getElementById('post_'+ Id) || {}).hidden = true;
+						_z.each('.celrly[href$="#i'+Id+'"]', function(t_refl) {
+							t_refl.hidden = true;
+						});
+					});
+				} else {
+					_z.each('.post[hidden], .celrly[hidden]', function(el) { el.hidden = false; });
+				}
+				StyleSet[this.checked]('hinfostub');
+				this.parentNode.classList.toggle('inactive');
+				_z.setlSVal('Keywords', JSON.stringify(HM.Keywords));
+			}
+		});
 		for (var n = 0, Types = ['Nametrip', 'Title', 'Words']; n < Types.length; n++) {
 			_z.setup(this['HideBySets'].querySelector('#chx-'+ Types[n]), {'checked': HM.Keywords[Types[n]].apply}, {
 				'change': function(e) {
-					var type = this.id.split('-')[1]
-					HM.Keywords[type].apply = this.checked
-					_z.setlSVal('Keywords', JSON.stringify(HM.Keywords))
+					var type = this.id.split('-')[1];
+						HM.Keywords[type].apply = this.checked;
 					if (this.checked) {
-						_z.each(document.querySelectorAll('.by-'+type+'.showhidden'), function(hel) {
-							hel.classList.remove('showhidden')
-							hel.classList.add('autohidden')
-						});
-						wer(HM.Keywords[type].keys, type)
+						wer(HM.Keywords[type].keys, type);
 					} else {
-						_z.each(document.querySelectorAll('.by-'+type+'.autohidden'), function(hel) {
-							hel.classList.remove('autohidden')
-							hel.classList.add('showhidden')
-						});
+						cearWe(type);
 					}
+					_z.setlSVal('Keywords', JSON.stringify(HM.Keywords));
 				}
 			});
-			_z.setup(this['HideBySets'].querySelector('#type-'+ Types[n]), {'value': HM.Keywords[Types[n]].keys}, {
+			_z.setup(this['HideBySets'].querySelector('#txt-'+ Types[n]), {'value': HM.Keywords[Types[n]].keys}, {
 				'blur': function(e) {
-					var type = this.id.split('-')[1]
-					HM.Keywords[type].keys = this.value
-					_z.setlSVal('Keywords', JSON.stringify(HM.Keywords))
-					if (HM.Keywords[type].apply)
-						wer(this.value, type)
+					var type = this.id.split('-')[1];
+					if (HM.Keywords[type].keys !== this.value) {
+						HM.Keywords[type].keys = this.value;
+						if (HM.Keywords[type].apply) {
+							cearWe(type);
+							wer(this.value, type);
+						}
+						_z.setlSVal('Keywords', JSON.stringify(HM.Keywords));
+					}
+					
 				}
 			});
+			if (HM.Keywords[Types[n]].apply)
+				wer(HM.Keywords[Types[n]].keys, Types[n])
 		}
 		this['MediaPlacement'] = _z.setup(el$('#media-placement'), {}, {
-				'change': placeMedia
+				'change': function(e) {
+					var val = e.target.value,
+						cont = HM.VActive[1],
+						vsset = el$('.vs-set'); 
+						HM.MC = val;
+					switch (val) {
+						case '0': _hide(vsset);
+							if (cont) {
+								mEl['ContentWindow'].appendChild(_z.setup(cont, {'class': 'content-frame video', 'id': 'content_'+cont.id.split('_')[1]}, null));
+								_z.setup(Megia['video']['Frame'], {'width': '100%', 'height': '100%'}, null);
+								_show(mEl['ContentMarker']);
+							}; break;
+						case '1': _show(vsset);
+							if (cont) {
+								_z.prepend(HM.VActive[0], _z.setup(cont, {'class': 'video-container', 'id': 'video_'+cont.id.split('_')[1]}, null));
+								_z.setup(Megia['video']['Frame'], {'class': '', 'width': getVSize()[0], 'height': getVSize()[1]}, null);
+								_hide(mEl['ContentMarker']);
+								mEl['ContentWindow'].classList.add('hidup');
+							}
+					}
+					_z.setlSVal('EmbedIn', val)
+				}
 			});
 		this['VideoSize'] = _z.setup(el$('#video-frame-size'), {}, {
-				'change': setVSize,
+				'change': function(slider) {
+					var p = slider.target.value;
+						_z.setlSVal('VideoSize', p);
+					function size(w, h) {
+						MSs['VSizeTextBox'].textContent = '('+w+'×'+h+')';
+						Megia['video']['Frame'].width = w;
+						Megia['video']['Frame'].height = h;
+						Megia['scbc']['Frame'].width = h;
+						Megia['scbc']['Frame'].height = h;
+					}
+					p == 1 ? size(360, 270) : p == 2 ? size(480, 360) :
+					p == 3 ? size(720, 480) : p == 4 ? size(854, 576) : size(0, 0);
+					lastScrollElem = null;
+				},
 				'click': function(e) {
 					switch (lastScrollElem) {
 						case 'video': _scrollTo('scbc'); break;
@@ -2805,177 +2843,186 @@ function MagicExtension() {
 			}, {
 				'change': function(e) {
 					setupOptions(this, 'DiscloseTextSpoilers');
-					spDisclosing();
+					StyleSet[this.checked]('spoiler');
 				}
 			});
-		function setVSize(slider) {
-			var p = slider.target.value;
-				_z.setlSVal('VideoSize', p);
-			function size(w, h) {
-				MSs['VSizeTextBox'].textContent = '('+w+'×'+h+')';
-				Megia['video']['Frame'].width = w;
-				Megia['video']['Frame'].height = h;
-				Megia['scbc']['Frame'].width = h;
-				Megia['scbc']['Frame'].height = h;
-			}
-			p == 1 ? size(360, 270) : p == 2 ? size(480, 360) :
-			p == 3 ? size(720, 480) : p == 4 ? size(854, 576) : size(0, 0);
-			lastScrollElem = null;
+		function cearWe(type) {
+			_z.each('.autohidden.by-'+ type, function(hel) {
+				var Id = _cid(hel.id);
+				document.getElementById('hidden-'+ Id).remove();
+				if (HM.Keywords.conceal) {
+					(document.getElementById('post_'+ Id) || {}).hidden = false;
+					_z.each('.celrly[href$="#i'+Id+'"]', function(t_refl) {
+						t_refl.hidden = false;
+					});
+				}
+				hel.classList.remove('autohidden');
+				hel.classList.remove('by-'+ type);
+			});
+			_z.each('.text-original.rw-'+ type, function(ot) {
+				var txt = ot.textContent;
+				ot.previousSibling.textContent = txt.slice(0, 1) === '\n' ? txt.slice(1, txt.length) : txt;
+				_z.remove([ot.nextElementSibling, ot]);
+			});
 		}
-		function placeMedia(e) {
-			var val = e.target.value,
-				cont = HM.VActive[1],
-				vsset = el$('.vs-set'); 
-				HM.MC = val;
-			switch (val) {
-				case '0': _hide(vsset);
-					if (cont) {
-						mEl['ContentWindow'].appendChild(_z.setup(cont, {'class': 'content-frame video', 'id': 'content_'+cont.id.split('_')[1]}, null));
-						_z.setup(Megia['video']['Frame'], {'width': '100%', 'height': '100%'}, null);
-						_show(mEl['ContentMarker']);
-					}; break;
-				case '1': _show(vsset);
-					if (cont) {
-						_z.prepend(HM.VActive[0], _z.setup(cont, {'class': 'video-container', 'id': 'video_'+cont.id.split('_')[1]}, null));
-						_z.setup(Megia['video']['Frame'], {'class': '', 'width': getVSize()[0], 'height': getVSize()[1]}, null);
-						_hide(mEl['ContentMarker']);
-						mEl['ContentWindow'].classList.add('hidup');
+	}
+	
+	function wer(val, arg) {
+		var i, n, f, m, c, nodes, keys = val.split(', '),
+			ABС = 'ABCDEFGHIJKLMNOPQRSTUVWXYZАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ',
+			tlc = 'translate(., "'+ ABС +'", "'+ ABС.toLowerCase() +'")',
+			reg = /^(?:\*(.+)\*|\*(.+)|(.+)\*|(.+)\:\:(.+))$/,
+			Class = {
+				'Nametrip': ['postername', 'postertrip'],
+				'Title': ['replytitle'],
+				'Words': ['message'] }
+		for (i = 0; i < keys.length; i++) {
+			if (keys[i] === '')
+				continue;
+			m = reg.exec(keys[i]);
+			c = keys[i].slice(0, 1) === '!' && arg === 'Nametrip' ? 1 : 0;
+			if (m && m[4] && m[5]) {
+				nodes = getElementByXpath('//*[@class="'+ Class[arg][c] +'"]//text()[contains('+ tlc +','+ cleanStringForXpath(m[4].toLowerCase()) +') and not(parent::code or parent::*[contains(@class, "text-original") or contains(@class, "text-modifed") or @class="text-styled"])]', 7);
+				for (n = 0; n < nodes.snapshotLength; n++) {
+					var text = nodes.snapshotItem(n),
+						cin = escapeRegExp(m[4]),
+						sm = m[5].match(/^(.*)@\[([^\]]+)\]$/),
+						twod = (sm ? sm[1] : m[5]),
+						md = twod.match(/^(.*)?(\$1)(.*)?$/);
+					if (md) {
+						var S = KeyCodes.balance(cin);
+						cin = md[1] || md[3] ? S[0] +'([^'+ S[1] +']*)'+ S[1] : '('+ cin +')';
 					}
-			}
-			_z.setlSVal('EmbedIn', val)
-		}
-		function wer(val, arg) {
-			var i, n, f, m, c, nodes, keys = val.split(', '),
-				reg = arg === 'Words' ? /^(.+)\:\:(.+)$/ : /^\*(.+)\*$|^\*(.+)|(.+)\*$/,
-				Class = {
-					'Nametrip': ['postername', 'postertrip'],
-					'Title': ['replytitle'],
-					'Words': ['message'] }
-			for (i = 0; i < keys.length; i++) {
-				if (keys[i] === '')
-					continue;
-				m = reg.exec(keys[i]);
-				c = keys[i].slice(0, 1) === '!' && arg === 'Nametrip' ? 1 : 0;
-				if (arg === 'Words') {
-					nodes = getElementByXpath('//div[@class="'+ Class[arg][c] +'"]//text()[contains(.,'+ cleanStringForXpath(m[1]) +')]', 7);
-					for (n = 0; n < nodes.snapshotLength; n++) {
-						var text = nodes.snapshotItem(n),
-							cin = escapeRegExp(m[1]);
-						if (m[2].isThere('$1'))
-							cin = cin +'([^'+ cin +']*)'+ cin;
-						f = new RegExp(cin, 'g')
-						text.textContent = text.textContent.replace(f, m[2])
+					f = new RegExp(cin, 'gi')
+					_z.after(text, [
+						_z.setup('span', {'class': 'text-original rw-'+ arg, 'text': text.textContent}),
+						_z.setup('span', {'class': 'text-modifed rw-'+ arg, 'html': text.textContent.replace(f,
+							(sm && sm[2] ? '<span class="text-styled" style="'+ sm[2] +'">'+ twod +'</span>' : twod))})
+					]);
+					text.textContent = '';
+				}
+			} else {
+				f = m && m[1] ? 'contains('+ tlc +', '+ cleanStringForXpath(m[1].toLowerCase()) +')' :
+					m && m[2] ? 'substring('+ tlc +', string-length(.) - string-length('+ cleanStringForXpath(m[2]) +') +1) = '+ cleanStringForXpath(m[2].toLowerCase()):
+					m && m[3] ? 'starts-with('+ tlc +', '+ cleanStringForXpath(m[3].toLowerCase()) +')' : tlc +' = '+ cleanStringForXpath(keys[i].toLowerCase());
+				nodes = getElementByXpath('//*[@class="'+ Class[arg][c] +'" and '+ f +']/parent::*[not(contains(@class, "hinfo"))]/parent::*[not(contains(@class, "autohidden") or parent::*[contains(@class, "autohidden")])]', 7);
+				for (n = 0; n < nodes.snapshotLength; n++) {
+					var node = nodes.snapshotItem(n), x = 2,
+						sinf = ' class="sinf"', tag = 'td',
+						Id = _cid(node.id);
+					if (node.classList.contains('oppost')) {
+						node = node.parentNode; x = 1;
+						tag = 'label';
+						sinf = '';
 					}
-				} else {
-					f = m && m[1] ? 'contains(.,"'+m[1]+'")' :
-						m && m[2] ? '"'+m[2]+'" = substring(., string-length(.) - string-length("'+m[2]+'") +1)' :
-						m && m[3] ? 'starts-with(.,"'+m[3]+'")' : 'text()="'+ keys[i] +'"';
-					nodes = getElementByXpath('//span[@class="'+ Class[arg][c] +'"]['+ f +']/parent::*/parent::*[not(contains(@class, "autohidden")) and not(contains(@class, "showhidden")) and not(parent::*[contains(@class, "showhidden") or contains(@class, "autohidden")])]', 7);
-					for (n = 0; n < nodes.snapshotLength; n++) {
-						var node = nodes.snapshotItem(n),
-							tag = 'td', x = 2;
-						if (node.classList[0] === 'oppost') {
-							node = node.parentNode;
-							tag = 'label'; x = 1;
-						}
-						node.classList.add('by-'+ arg); node.classList.add('autohidden');
-						node.insertAdjacentHTML('afterend', '<'+tag+' class="'+ node.classList[0] +' hinfo-stub"><label class="'+ Class[arg][c] +
-							' t-sec font-s">'+ keys[i] +'</label>\n<i'+ (x > 1 ? ' class="sinf"' : '') +'>('+ LC.hidden[0][lng] + LC.hidden[x][lng] +
-							')</i>\n<span'+ (x > 1 ? ' class="sinf"' : '') +'>No.'+ _cid(node.id) +'</span></'+tag+'>');
+					if (HM.Keywords.conceal) {
+						(document.getElementById('post_'+ Id) || {}).hidden = true;
+						_z.each('.celrly[href$="#i'+ Id +'"]', function(t_refl) {
+							t_refl.hidden = true;
+						});
+						node.click();
+						Tinycon.setBubble(unread_count);
+					} else if (node.classList.contains('new')) {
+						node.previousElementSibling.addEventListener('click', markAsRead, false);
+						node.previousElementSibling.classList.add('new');
 					}
+					node.className = node.className +' autohidden by-'+ arg;
+					node.insertAdjacentHTML('beforebegin', '<'+ tag +' id="hidden-'+ Id +'" class="'+ node.classList[0] +' stub hinfo"><label class="'+ Class[arg][c] +' t-sec font-s">'+
+						keys[i] +'</label>\n<i'+ sinf +'>('+ LC.hidden[0][lng] + LC.hidden[x][lng] +')</i>\n<span'+ sinf +'>No.'+ Id +'</span></'+ tag +'>');
+					
 				}
 			}
-		}
-		function spDisclosing() {
-			if (HM.DiscloseTextSpoilers)
-				document.body.appendChild(MSs['SpStyle']);
-			else
-				MSs['SpStyle'].remove()
 		}
 	}
 	
 	function insertListenerS(event) {
 		switch (event.animationName) {
-			case 'onReady': _z.append(document.head, [
-				_z.setup("script", {"src": "/src/js/1501/alac_0.1.0.js"}, null),
-				_z.setup("script", {"src": "/src/js/1501/flac_0.2.1.js"}, null)
-			]);
-			locationThread = document.getElementById('thread_'+ HM.URL.thread);
-			var hideinfodiv = document.getElementById('hideinfodiv'),
-				delForm = document.getElementById('delete_form'),
-				rules = document.getElementsByClassName('rules')[0];
-			
-			HM.Settings.spDisclosing();
-			HM.Elems = GetElements(); hooLinks(HM.Elems.links);
-			hooElements(HM.Elems.elements); genReplyMap(HM.Elems.posts);
-			_z.each(document.querySelectorAll('.postername:not(.t-sec)'), function(pname) {
-				if (!lng)
-					pname.textContent = getDefaultName(pname.textContent);
-				var oldate = pname.parentNode.lastChild;
-				oldate.previousElementSibling.insertAdjacentHTML('afterend', getDateTime(oldate.textContent))
-				oldate.remove();
-			});
-			for (var n = 0, Types = ['Nametrip', 'Title', 'Words']; n < Types.length; n++) {
-				if (HM.Keywords[Types[n]].apply)
-					HM.Settings.wer(HM.Keywords[Types[n]].keys, Types[n])
-			}
-			if (hideinfodiv) {
-				_z.after(hideinfodiv, Nagato['OpenTopForm']);
-				Nagato['BoardRulesSect'].appendChild(rules)
-			}
-			if (locationThread) {
-				HM.ThreadListener[HM.URL.thread] = new MagicThreadListener(locationThread);
-				_z.append(delForm, [Nagato['OpenBottomForm'], HM.ThreadListener[HM.URL.thread]['NewPostLoader']]);
-				_z.after(locationThread, HM.ThreadListener[HM.URL.thread]['PostsCount']);
-				HM.ThreadListener[HM.URL.thread].updateTimer();
-			} else {
-				if (hideinfodiv)
-					_z.before(delForm.querySelector('.pages'), Nagato['OpenBottomForm']);
-				_z.each(document.querySelectorAll('.thread:not(.autohidden):not(.hinfo-stub)'), function(thread) {
-					if (!thread.querySelector('img[src="/images/sticky.png"]')) {
-						var expTBtn = thread.querySelector('.abbrev a[onclick^="ExpandThread"]')
-						var CiD = _cid(thread.id)
-						HM.ThreadListener[CiD] = new MagicThreadListener(thread)
-						_z.after(thread, HM.ThreadListener[CiD]['DummyLine']);
-						if (expTBtn) {
-							_z.setup(expTBtn, {'class': 'thread-expand', 'onclick': undefined}, {
-								'click': function(e) {
-									switch (this.classList[0]) {
-										case 'thread-expand':
-											HM.ThreadListener[CiD].expandThread(e)
-											this.className = 'thread-concat';
-											break;
-										case 'thread-concat':
-											HM.ThreadListener[CiD].concatThread(e)
-											this.className = 'thread-expand';
+			case 'onReady':
+				switch (event.target.className) {
+					case 'reply new':
+					case 'stored':
+						for (var n = 0, Types = ['Nametrip', 'Title', 'Words']; n < Types.length; n++) {
+							if (HM.Keywords[Types[n]].apply)
+								wer(HM.Keywords[Types[n]].keys, Types[n])
+						}
+						break;
+					case 'userdelete':
+						_z.append(document.head, [
+							_z.setup("script", {"src": "/src/js/1501/alac_0.1.0.js"}, null),
+							_z.setup("script", {"src": "/src/js/1501/flac_0.2.1.js"}, null)
+						]);
+						locationThread = document.getElementById('thread_'+ HM.URL.thread);
+						var hideinfodiv = document.getElementById('hideinfodiv'),
+							delForm = document.getElementById('delete_form'),
+							rules = document.getElementsByClassName('rules')[0];
+						
+						HM.Elems = GetElements(); hooLinks(HM.Elems.links);
+						hooElements(HM.Elems.elements); genReplyMap(HM.Elems.posts);
+						_z.each('.postername:not(.t-sec)', function(pname) {
+							if (!lng)
+								pname.textContent = getDefaultName(pname.textContent);
+							var oldate = pname.parentNode.lastChild;
+							oldate.previousElementSibling.insertAdjacentHTML('afterend', getDateTime(oldate.textContent))
+							oldate.remove();
+						});
+						if (hideinfodiv) {
+							_z.after(hideinfodiv, Nagato['OpenTopForm']);
+							Nagato['BoardRulesSect'].appendChild(rules)
+						}
+						if (locationThread) {
+							HM.ThreadListener[HM.URL.thread] = new MagicThreadListener(locationThread);
+							_z.append(delForm, [Nagato['OpenBottomForm'], HM.ThreadListener[HM.URL.thread]['NewPostLoader']]);
+							_z.after(locationThread, HM.ThreadListener[HM.URL.thread]['PostsCount']);
+							HM.ThreadListener[HM.URL.thread].updateTimer();
+						} else {
+							if (hideinfodiv)
+								_z.before(delForm.querySelector('.pages'), Nagato['OpenBottomForm']);
+							_z.each('.thread:not(.stub)', function(thread) {
+								if (!thread.querySelector('img[src="/images/sticky.png"]')) {
+									var expTBtn = thread.querySelector('.abbrev a[onclick^="ExpandThread"]')
+									var CiD = _cid(thread.id)
+									HM.ThreadListener[CiD] = new MagicThreadListener(thread)
+									_z.after(thread, HM.ThreadListener[CiD]['DummyLine']);
+									if (expTBtn) {
+										_z.setup(expTBtn, {'class': 'thread-expand', 'onclick': undefined}, {
+											'click': function(e) {
+												switch (this.classList[0]) {
+													case 'thread-expand':
+														HM.ThreadListener[CiD].expandThread(e)
+														this.className = 'thread-concat';
+														break;
+													case 'thread-concat':
+														HM.ThreadListener[CiD].concatThread(e)
+														this.className = 'thread-expand';
+												}
+												return _z.fall(e)
+											}
+										});
 									}
-									return _z.fall(e)
 								}
 							});
 						}
-					}
-				});
-			}
-			_z.each(HM.Elems.images, createImgContext);
-			_z.each(document.querySelectorAll('.abbrev a[onclick^="GetFullText"]'), function(txtFBtn) {
-				_z.setup(txtFBtn, {'onclick': undefined}, {
-					'click': function(e) {
-						var pbody = _z.route(this, '.alternate')
-						pbody.classList.remove('alternate')
-						pbody.previousElementSibling.classList.add('alternate')
-						this.parentNode.remove()
-						return _z.fall(e)
-					}
-				});
-			});
-			delForm.addEventListener('submit', Nagato.submitForm, false)
-			_z.append(document.body, [
-				mEl['ContentWindow'], mEl['ContentMarker'],
-				mEl['ReverseSearch'], mEl['ImageMenu'],
-				HM.Settings['ButtonsPanel']
-			]);
+						_z.each('.abbrev a[onclick^="GetFullText"]', function(txtFBtn) {
+							_z.setup(txtFBtn, {'onclick': undefined}, {
+								'click': function(e) {
+									var pbody = _z.route(this, '.alternate')
+									pbody.classList.remove('alternate')
+									pbody.previousElementSibling.classList.add('alternate')
+									this.parentNode.remove()
+									return _z.fall(e)
+								}
+							});
+						});
+						delForm.addEventListener('submit', Nagato.submitForm, false)
+						_z.append(document.body, [
+							mEl['ContentWindow'], mEl['ContentMarker'],
+							mEl['ReverseSearch'], mEl['ImageMenu'],
+							new MagicSettings()['ButtonsPanel']
+						]);
+				}
 		}
 	}
+	
 	function insertListenerI(event) {
 		switch (event.animationName) {
 			case 'blinker':
@@ -3046,12 +3093,12 @@ function initScripts() {
 	window.BlobViewer = BlobViewer
 	
 var mesShadows = /* hr shadow */ 'hr{border-style:none none solid!important;border-color:rgba(0,0,0,.3)!important;box-shadow:0 1px 0 #fff!important;}'+
-/* text spoiler, banner image & captcha image sadows */ '#yuki-captcha-image,.banner,.spoiler,.spoiler a,.spoiler blockquote,.spoiler blockquote blockquote,.spoiler blockquote blockquote blockquote{transition:all .1s ease;box-shadow:0 1px 2px -1px rgba(0,0,0,.7)!important;}.spoiler a:hover,.spoiler:hover,.transparent{box-shadow:none!important;}'+
+/* text spoiler, banner image & captcha image sadows */ '#yuki-captcha-image,.banner,.spoiler,.spoiler *{transition:all .1s ease;box-shadow:0 1px 2px -1px rgba(0,0,0,.7)!important;}.spoiler a:hover,.spoiler:hover,.transparent{box-shadow:none!important;}'+
 /* popup/error posts, settings panel sadows & dropdown menu */ '.reply,.popup{border:0 none transparent!important;}.active > .dropdown-label,.dropdown-menu,.popup,#magic-panel{box-shadow:5px 5px 10px rgba(0,0,0,.4),inset 0 0 30px rgba(0,0,0,.1)!important;z-index:9;}'+
 /* reply post sadows */ '.oppost.highlighted,.reply,.highlight{padding:2px 1em 2px 2px!important;box-shadow:inset 0 1px 30px -9px #fff,0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);}.line-sect.reply{padding:2px 4px!important;}'+
 /* new reply post sadows */ '.reply.new{box-shadow:inset 0 1px 30px -9px rgba(255, 85, 0, 0.8),0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);}'+
 /* post images/files & audio players shadows */ '.thumb,.yukiFile,.scbc-container,.prosto-pleer,.audio-container video{box-shadow:1px 2px 2px -1px rgba(0,0,0,.4),-1px 0 4px -1px rgba(0,0,0,.2),inset 0 0 30px rgba(0,0,0,.1)!important;}'+
-/* error massage, theader & text input shadows */ '#yuki-errorMsg,.theader,.passvalid,input[type="text"],input[type="password"],input[type="number"],textarea,.docs-container{box-shadow:inset 0 1px 2px rgba(0,0,0,.3)!important;-webkit-border-radius:5px;border-style:none!important;}input[type="text"],input[type="number"],input[type="password"],textarea{-webkit-border-radius:3px!important;padding:4px!important;}'+
+/* error massage, theader & text input shadows */ '#yuki-errorMsg,.theader,.passvalid,input[type="text"],input[type="password"],input[type="number"],textarea,.docs-container,.message code pre{box-shadow:inset 0 1px 2px rgba(0,0,0,.3)!important;-webkit-border-radius:5px;border-style:none!important;}input[type="text"],input[type="number"],input[type="password"],textarea{-webkit-border-radius:3px!important;padding:4px!important;}'+
 /* input buttons style */ 'input[type="button"],input[type="submit"],.button{transition:all .3s ease;box-shadow:0 1px 3px -1px rgba(0,0,0,.5),0 0 2px rgba(0,0,0,.2) inset;padding:3px 6px;color:#999;border:0 none;background-color:#fff;}input[type="button"]:hover,input[type="submit"]:hover,.button:hover{background-color:rgba(255,255,255,.5);}input[type="button"]:active,input[type="submit"]:active,.button:active{box-shadow:0 0 2px rgba(255,255,255,.3),0 0 2px rgba(0,0,0,.2) inset;background-color:rgba(255,255,255,.2);}'+
 /* input checkbox style */ '.checkarea{box-shadow:inset 1px 1px 2px rgba(0,0,0,.3),0 0 2px #fff;border-radius:3px;padding:0 4px;background-color:#fff;font-size:14px;}.checkarea:before{content:"✗";color:transparent;}input[type="checkbox"]:checked + .checkarea:before{color:grey;}'+
 /* text shadows */ '.etch-text,.mapped,.mapped:hover{font-variant:small-caps;font-weight:bold;color:transparent!important;text-shadow:0 1px 1px rgba(255,255,255,.8),-1px 0 0 #666;}'+
@@ -3061,35 +3108,35 @@ var mesAnimations = '.reply{animation:pview .3s normal;-webkit-animation:pview .
 @keyframes pview{0%{transform:scale(0,0);opacity:0;}25%{transform:scale(.3,.3);opacity:.1;}50%{transform:scale(.9,.9);opacity:.3;}75%{transform:scale(1.02,1.02);opacity:.7;}100%{transform:scale(1,1);opacity:1;}}\
 @-webkit-keyframes pview{0%{-webkit-transform:scale(0,0);opacity:0;}25%{-webkit-transform:scale(.3,.3);opacity:.1;}50%{-webkit-transform:scale(.9,.9);opacity:.3;}75%{-webkit-transform:scale(1.02,1.02);opacity:.7;}100%{-webkit-transform:scale(1,1);opacity:1;}}';
 
-var MagicStyle = '.hidout,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google,#postform_placeholder,.reply #yuki-newThread-create,.submit-button.process input,.pleer-container + br,.artwork select,.magic-info + br,.autohidden,.showhidden + .hinfo-stub{display:none!important;}\
+var MagicStyle = '.hidout,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google,#postform_placeholder,.reply #yuki-newThread-create,.submit-button.process input,.pleer-container + br,.artwork select,.magic-info + br,.autohidden,.autohidden + .dummy-line,.text-original, .reply-link[hidden] + .rl-inf{display:none!important;}\
 .unexpanded,.rated{max-width:200px!important;max-height:200px!important;}.expanded{width:100%;height:auto;}.hideinfo{margin:5px;}.sp-r.rate{color:darkred;}#yuki-dropBox tr,.f-sect,.hideinfo{text-align:center!important;}\
 .dpop,#wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}.artwork{background:url(/src/svg/1505/ma-artwork.svg)no-repeat scroll center center / 100% auto;}.movie{background:url(/src/svg/1505/cm-movie.svg)no-repeat scroll center center / 100% auto;}\
 .yuki_clickable,.txt-btn,.wmark-button,.button,.el-li,.icon{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}\
 .replylinks,.button{line-height:2em;font-size:75%;clear:both;}#post-count,.txt-btn{color:#999;}.mapped,.mapped:hover{cursor:default;color:#666!important;}.hidup{top:-9999px!important;}\
-.userdelete:after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.cm-button{text-decoration:none;}.s-sect{text-align:left;padding-left:2em;color:#777;}\
+.userdelete:after,.stored:not(.stub):after,.reply.new:not(.stub):after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.cm-button{text-decoration:none;}.s-sect{text-align:left;padding-left:2em;color:#777;}\
 #yuki-captcha,#yuki-pass{width:295px;}#yuki-captcha-image{vertical-align:middle;margin:2px;}#yuki-dropBox{width:7em;height:18em;border:3px dashed rgba(99,99,99,.3);padding:2px;}\
 #convert-strike,.doubledash,#global-form-sect #yuki-close-form,.dropdown-menu{visibility:hidden;}.sagearrow{background:url(/src/svg/1409/Sage.svg)no-repeat center bottom;position:relative;right:24px;top:6px;}.paperclip{background:url(/src/png/1411/attachpopup.png)no-repeat center;}\
-#yuki-errorMsg{text-align:center;color:#FFF;background-color:#E04000;}.wmark-button{color:#fefefe;text-shadow:0 1px 0 rgba(0,0,0,.4);}.wmark-button .spoiler{text-shadow:none;}#allowed-posts{font-size:14px;}\
+#yuki-errorMsg{text-align:center;color:#FFF;background-color:#E04000;}.wmark-button{color:#fefefe;text-shadow:0 1px 0 rgba(0,0,0,.4);}.wmark-button .spoiler{text-shadow:none;}\
 .rating_SFW{background:green;}.rating_R15{background:yellow;}.rating_R18{background:orange;}.rating_R18G{background:red;}.line-sect,.yukiFile,.cpop,.mpanel-btn{display:inline-block;}#warning-massage{color:#ff3428;}\
 .yukiFile,.yukiFileSets{font-size:66%;}.yukiFile{text-align:center;width:210px;background-color:#fefefe;-webkit-border-radius:5px;margin:5px;padding:2px;}.reply.new{background-color:rgba(212,115,94,.1);}\
 #yuki-files-placeholder > *{vertical-align:top;}.yukiFile img{max-width:150px;margin:5px 0;}.yukiFile span{max-width:200px;word-wrap:break-word;}\
 #yuki-replyForm{text-align:left;padding:4px 8px;}.selected:before{content:"✓ ";color:green;}.reply-button,.cpop{margin-left:.4em;}#oembedapi + .checkarea,#set-show-spoilers + .checkarea{font-size:20px!important;}\
 #yuki-dropBox tr{display:block;}.droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em;}.yukiFile > .magic-audio{width:210px;height:210px;}.yukiFile > .magic-info{width:200px;}\
 .cpop.ty{background-image:url(/src/svg/1411/closepopup.svg);}.cpop.all{background-image:url(/src/svg/1411/closeallpopups.svg);}.dpop{float:right;background-image:url(/src/svg/1505/cmove.svg);cursor:move;}.sagearrow{cursor:default;}\
-.cpop{width:14px;height:14px;}.dpop,.sagearrow,.paperclip{width:20px;height:20px;}.reply-button{width:23px;height:14px;background:url(/src/svg/1505/reply-arrow.svg)no-repeat center center;}\
+.cpop{width:14px;height:14px;}.dpop,.sagearrow,.paperclip,#stamps-concealing{width:20px;height:20px;}.reply-button{width:23px;height:14px;background:url(/src/svg/1505/reply-arrow.svg)no-repeat center center;}\
 #magic-buttons-panel{z-index:9;position:fixed;right:1em;bottom:1em;}.mpanel-btn{padding:0 9px;width:28px;height:28px;opacity:.2;filter:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'grayscale\'><feColorMatrix type=\'matrix\' values=\'.3 .3 .3 0 0 .3 .3 .3 0 0 .3 .3 .3 0 0 0 0 0 1 0\'/></filter></svg>#grayscale");-webkit-filter:grayscale(100%);}\
-.ta-inact::-moz-selection{background:rgba(99,99,99,.3);}.ta-inact::selection{background:rgba(99,99,99,.3);}#int-upd{bottom:2px;position:relative;}#allowed-posts a{text-decoration:none;text-shadow:none;font-weight:normal;}\
+.ta-inact::-moz-selection{background:rgba(99,99,99,.3);}.ta-inact::selection{background:rgba(99,99,99,.3);}#int-upd{bottom:2px;position:relative;}#allowed-posts a{text-decoration:none;text-shadow:none;font-weight:normal;font-size:14px;}\
 .mpanel-btn:hover,.mpanel-btn.active{opacity:1;filter:none;-webkit-filter:grayscale(0%);}#magic-panel tr{height:3em;}#vsize-textbox{color:#bbb;font-family:Trebuchet;}\
 #magic-panel{position:fixed;right:5px;bottom:5px;max-width:450px;height:300px;border-radius:8px;padding:9px;padding-bottom:3em;background-color:#fefefe;}.sp-r{text-align:right;font-size:18px;}\
 .deleted,.t-sec{opacity:.6;}.inactive{opacity:.4;}img[src="#transparent"]{opacity:0;}.wmark-button,.reply-button{vertical-align:middle;}.content-window{position:fixed;left:0;top:0;z-index:2999}\
 .submit-button span{display:none;}.submit-button.process{font-size:13px;font-style:italic;color:#777;}@keyframes process{0%{width:0;}100%{width:1em;}}@-webkit-keyframes process{0%{width:0;}100%{width:1em;}}\
 .submit-button.process span{display:inline;}.process:after{content:"....";display:inline-block;overflow:hidden;animation:process 3s linear .1s infinite;-webkit-animation:process 3s linear .1s infinite;}\
-.magic-info,.sp-r{width:190px;background-color:rgba(255,255,255,.8);padding:5px;opacity:.6}.magic-info:hover,.sp-r:hover{z-index:1;opacity:1;}.magic-info,.magic-info + br,#magic-picture,.sp-r{position:absolute;}\
+.magic-info,.sp-r{width:190px;background-color:rgba(255,255,255,.8);padding:5px;opacity:.6}.magic-info:hover,.sp-r:hover{z-index:1;opacity:1;}.magic-info,.magic-info + br,.sp-r{position:absolute;}\
 .content-frame,.scbc-container{background-color:#fefefe;}.video-container,.content-frame.video{background-color:#000;}.video-container,.scbc-container{margin:0 9px;display:inline-block!important;}\
 .content-frame{position:absolute;top:10%;left:12%;right:18%;bottom:20%;box-shadow:5px 5px 10px rgba(0,0,0,.4);z-index:3000;}#shadow-box{position:absolute;background-color:rgba(33,33,33,.8);z-index:2999;}\
 .docs-container > iframe,.content-frame.docs > iframe,.full-size,#shadow-box,.content-window,.preview_img{width:100%;height:100%;}.content-frame.img{background-color:transparent;}\
 #close-content-window,#show-content-window{transition:.5s ease;opacity:.6;width:31px;height:31px;background-image:url(/src/svg/1505/close-circle.svg);cursor:pointer;position:absolute;top:20px;right:20px;z-index:3000;}\
-.docs-container,.content-frame.docs,.docs-container > iframe{overflow:auto;resize:both;background-color:#fefefe;}.content-frame.pdf{top:1%;left:17%;right:20%;bottom:1%;}\
+.docs-container,.content-frame.docs,.docs-container > iframe,.message code pre{padding:6px 8px;overflow:auto;resize:both;background-color:#fefefe;}.content-frame.pdf{top:1%;left:17%;right:20%;bottom:1%;}\
 #show-content-window{right:52%;position:fixed;background-image:url(/src/svg/1505/show-circle.svg);border-radius:100%;}#close-content-window:hover,#show-content-window:hover{opacity:1;}\
 #ma-play{background:url(/src/svg/1505/ma-play.svg)no-repeat scroll center;}#ma-pause{background:url(/src/svg/1505/ma-pause.svg)no-repeat scroll center;}.magic-audio{width:200px;height:200px;}input:focus,select:focus,textarea:focus,button:focus{outline:none;}\
 .ma-controls,.ma-controls a{display:block;width:50px;height:50px;}.ma-controls{position:relative;top:37%;left:37%;border:2px solid #ddd;border-radius:100%;background-color:#333;opacity:.8;}\
@@ -3098,7 +3145,8 @@ var MagicStyle = '.hidout,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google
 .dropdown,.dropdown-menu{padding-left:0;list-style:outside none none;}.active > .dropdown-label,.active > .dropdown-menu{visibility:visible;background-clip:padding-box;background-color:#fefefe;}.active > .dropdown-label{border-radius:4px 4px 0 0;}.dropdown-label{padding:4px 8px;border-radius:2px;font-variant:small-caps;font-size:14px;}.dropdown-menu{color:#777;position:absolute;min-width:150px;font-size:14px;line-height:1.8;}\
 .dropdown-item{padding:0 10px;}.dropdown-item:hover{background-color:rgba(0,0,0,.1);}.dropdown-menu{border-radius:0 0 4px 4px;}.dropdown-label:before{content:"⟨ ";}.dropdown-label:after{content:" ⟩";}#int-val{width:50px;margin:0 4px;}\
 .blink{-webkit-animation-name:blinker;-webkit-animation-duration:1s;-webkit-animation-timing-function:linear;-webkit-animation-iteration-count:infinite;animation-name:blinker;animation-duration:1s;animation-timing-function:linear;animation-iteration-count:infinite;}\
-.oppost.highlighted,.highlighted .reply{border-style:dashed!important;border-width:2px!important;border-color:#F50!important;}.postcontent{float:left;}br + .postbody{clear:both;}.sinf{color:#666;font-size:.8em;}\
+.oppost.highlighted,.highlighted .reply{border-style:dashed!important;border-width:2px!important;border-color:#F50!important;}.postcontent,.rl-inf,.f-left{float:left;}br + .postbody{clear:both;}.sinf{color:#666;font-size:.8em;}.celrly:not([hidden]) + .celrly:before, .celrly + * + .celrly:before{content:",   ";color:#666!important;cursor:default;}.celrly:not([hidden]) ~ .rl-inf{display:inline!important;}\
+#stamps-concealing{background:url(/src/png/1506/p-stub-hide.png)no-repeat scroll center;}.i-block{display:inline-block;}\
 @-webkit-keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}@keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}\
 @keyframes onReady{50% {opacity:0;}} @-webkit-keyframes onReady{50% {opacity:0;}}'+ mesShadows + mesAnimations;
 	
