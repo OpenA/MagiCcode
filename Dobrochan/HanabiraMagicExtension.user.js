@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.4.6
+// @version 		1.4.7
 // @grant   		none
 // ==/UserScript==
 
@@ -3002,6 +3002,7 @@ function MagicExtension() {
 								}
 							});
 						}
+						_z.each(HM.Elems.images, createImgContext);
 						_z.each('.abbrev a[onclick^="GetFullText"]', function(txtFBtn) {
 							_z.setup(txtFBtn, {'onclick': undefined}, {
 								'click': function(e) {
