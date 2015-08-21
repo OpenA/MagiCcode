@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.4.8
+// @version 		1.4.9
 // @grant   		none
 // ==/UserScript==
 
@@ -560,20 +560,14 @@ function MagicExtension() {
 		}
 	}
 	
-	function markAsRead(e) {
-		if (e) {
+	function markAsRead(new_post) {
+		if (new_post) {
 			unread_count--;
-			_z.each([this, this.previousElementSibling, this.nextElementSibling], function(rp) {
-				if (rp) {
-					rp.classList.remove('new');
-					rp.removeEventListener('click', markAsRead, false);
-				}
-			});
+			new_post.classList.remove('new');
 			Tinycon.setBubble(unread_count);
 		} else {
-			_z.each('.reply.new', function(masRp) {
-				masRp.classList.remove('new')
-				masRp.removeEventListener('click', markAsRead, false)
+			_z.each('.replypost.new', function(replypost_new) {
+				replypost_new.classList.remove('new');
 			});
 			Tinycon.setBubble(0);
 			unread_count = 0;
@@ -848,10 +842,10 @@ function MagicExtension() {
 				files = postJson.files,
 				len = files.length,
 				op = postJson.op,
-				wrap = _z.setup((op ? 'div' : 'table'), {'id': 'post_'+ postId, 'class': (op ? 'oppost' : 'replypost') +' post'}, PDownListener),
+				wrap = _z.setup((op ? 'div' : 'table'), {'id': 'post_'+ postId, 'class': (op ? 'oppost' : 'replypost new') +' post'}, {'click': PDownListener}),
 				delicon = '<span class="delete icon"><input type="checkbox" id="delbox_r{post_id}" class="delete_checkbox" onclick="this.parentNode.classList.toggle(\'checked\')" value="'+ 
 					postJson.thread_id +'" name="r{post_id}"><img src="/images/blank.png" title="'+ MLLC.mrk_to_del[lng] +'" alt="✕"></span>\n',
-				html = (op ? '' : '<tbody><tr><td class="doubledash">&gt;&gt;</td><td id="replyr{post_id}" class="reply new">') +
+				html = (op ? '' : '<tbody><tr><td class="doubledash">&gt;&gt;</td><td id="replyr{post_id}" class="reply">') +
 					'<a name="ir{post_id}"></a><label>'+ 
 						(op ? '<a class="hide icon" onclick="hide_thread(event, \'r{board}\',r{post_id});" href="/api/thread/r{board}/r{post_id}/hide.redir"><img src="/images/blank.png" title="'+ LC.hide[lng] +'" alt="﹅"></a>\n'+
 							delicon + '<a class="unsigned icon" onclick="sign_thread(event, \'r{board}\',r{post_id});"><img src="/images/blank.png" title="'+ LC.subscrb[lng] +'" alt="✩"></a>\n' : delicon) +
@@ -870,8 +864,6 @@ function MagicExtension() {
 				(len > 1 ? '<br style="clear:both;">' : '') +'<div class="postbody">'+ postJson.message_html +'</div><div class="abbrev"></div>' + (op ? '' : '</td></tr></tbody>'));
 			if (!mapArr) {
 				unread_count++;
-				if (!op)
-					wrap.querySelector('.reply.new').addEventListener('click', markAsRead, false);
 				if (HM.SoundNotify && !play_notify)
 					Notif.play();
 			}
@@ -2709,7 +2701,7 @@ function MagicExtension() {
 				}},
 			StyleSet = {
 				spoiler: _z.setup('style', {'text': '.spoiler, .spoiler * {color:inherit!important;}'}),
-				hinfostub: _z.setup('style', {'text': '.stub.hinfo:not(.stored), .stub.hinfo ~ *:not(.thread){display:none;}'}),
+				hinfostub: _z.setup('style', {'text': '.stub.hinfo:not(.stored), .autohidden + br, .autohidden + br + hr, .autohidden + .dummy-line + br, .autohidden + .dummy-line + br + hr{display:none;}'}),
 				true: function(style) { document.body.appendChild(StyleSet[style]) },
 				false: function(style) { StyleSet[style].remove() }
 			}
@@ -2977,9 +2969,6 @@ function MagicExtension() {
 						});
 						node.click();
 						Tinycon.setBubble(unread_count);
-					} else if (node.classList.contains('new')) {
-						node.previousElementSibling.addEventListener('click', markAsRead, false);
-						node.previousElementSibling.classList.add('new');
 					}
 					node.className = node.className +' autohidden by-'+ arg;
 					node.insertAdjacentHTML('beforebegin', '<'+ tag +' id="hidden-'+ Id +'" class="'+ node.classList[0] +' stub hinfo"><label class="'+ Class[arg][c] +' t-sec font-s">'+
@@ -2993,7 +2982,7 @@ function MagicExtension() {
 		switch (event.animationName) {
 			case 'onReady':
 				switch (event.target.className) {
-					case 'reply new':
+					case 'reply':
 					case 'stored':
 						for (var n = 0, Types = ['Nametrip', 'Title', 'Words']; n < Types.length; n++) {
 							if (HM.Keywords[Types[n]].apply)
@@ -3087,6 +3076,8 @@ function MagicExtension() {
 	function PDownListener(e) {
 		var Phis = this, Id = _cid(this.id), map = HM.PostConstructor[Id].location_map,
 			RPForm, _Params;
+		if (this.classList.contains('new'))
+			markAsRead(this);
 		switch (e.target.classList[0]) {
 			case 'reply-link': Chanabira.MagicHighlight(e); break;
 			case 'ma-button': initMagicAudio(e); break;
@@ -3245,7 +3236,7 @@ var mesShadows = /* hr shadow */ 'hr{border-style:none none solid!important;bord
 /* text spoiler, banner image & captcha image sadows */ '#yuki-captcha-image,.banner,.spoiler,.spoiler a,.message code{transition:all .1s ease;box-shadow:0 1px 2px -1px rgba(0,0,0,.7)!important;}.spoiler a:hover,.spoiler:hover,.transparent{box-shadow:none!important;}'+
 /* popup/error posts, settings panel sadows & dropdown menu */ '.reply,.popup{border:0 none transparent!important;}.active > .dropdown-label,.dropdown-menu,.popup,#magic-panel{box-shadow:5px 5px 10px rgba(0,0,0,.4),inset 0 0 30px rgba(0,0,0,.1);}'+
 /* reply post sadows */ '.oppost.highlighted,.reply,.highlight{padding:2px 1em 2px 2px!important;box-shadow:inset 0 1px 30px -9px #fff,0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);}.line-sect.reply{padding:2px 4px!important;}'+
-/* new reply post sadows */ '.reply.new{box-shadow:inset 0 1px 30px -9px rgba(255, 85, 0, 0.8),0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);}'+
+/* new reply post sadows */ '.new .reply{box-shadow:inset 0 1px 30px -9px rgba(255, 85, 0, 0.8),0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);}'+
 /* post images/files & audio players shadows */ '.thumb,.magic-picture.onpost-qview,.yukiFile,.scbc-container,.prosto-pleer,.audio-container video{box-shadow:1px 2px 2px -1px rgba(0,0,0,.4),-1px 0 4px -1px rgba(0,0,0,.2),inset 0 0 30px rgba(0,0,0,.1)!important;}'+
 /* error massage, theader & text input shadows */ '#yuki-errorMsg,.theader,.passvalid,input[type="text"],input[type="password"],input[type="number"],textarea,.docs-container,.message code pre{box-shadow:inset 0 1px 2px rgba(0,0,0,.3)!important;-webkit-border-radius:5px;border-style:none!important;}input[type="text"],input[type="number"],input[type="password"],textarea{-webkit-border-radius:3px!important;padding:4px!important;}'+
 /* input buttons style */ 'input[type="button"],input[type="submit"],.button{transition:all .3s ease;box-shadow:0 1px 3px -1px rgba(0,0,0,.5),0 0 2px rgba(0,0,0,.2) inset;padding:3px 6px;color:#999;border:0 none;background-color:#fff;}input[type="button"]:hover,input[type="submit"]:hover,.button:hover{background-color:rgba(255,255,255,.5);}input[type="button"]:active,input[type="submit"]:active,.button:active{box-shadow:0 0 2px rgba(255,255,255,.3),0 0 2px rgba(0,0,0,.2) inset;background-color:rgba(255,255,255,.2);}'+
@@ -3253,7 +3244,7 @@ var mesShadows = /* hr shadow */ 'hr{border-style:none none solid!important;bord
 /* text shadows */ '.etch-text,.mapped,.mapped:hover{font-variant:small-caps;font-weight:bold;color:transparent!important;text-shadow:0 1px 1px rgba(255,255,255,.8),-1px 0 0 #666;}'+
 /* video-container shadows */ '.video-container,.content-frame{box-shadow:0 0 2px rgba(0,0,0,.2),0 0 4px rgba(0,0,0,.4),0 9px 9px -8px rgba(0,0,0,.8);}'+
 /* yuki-form previews shadows */ '.yukiFile img{box-shadow:0 4px 8px 0 rgba(0,0,0,.2);}';
-var mesAnimations = '.reply{animation:pview .3s ease-out;-webkit-animation:pview .3s ease-out;}.popup{animation:pview .2s linear;-webkit-animation:pview .2s linear;}\
+var mesAnimations = '.new .reply,#yuki-replyForm.reply{animation:pview .3s ease-out;-webkit-animation:pview .3s ease-out;}.popup{animation:pview .2s linear;-webkit-animation:pview .2s linear;}\
 .turn-on{animation:kinescope-on .4s ease;-webkit-animation:kinescope-on .4s ease;}.turn-off{animation:kinescope-off .2s ease-out;-webkit-animation:kinescope-off .2s ease-out;}\
 @keyframes kinescope-on {from {transform: scale(1, 0);} to {transform: scale(1, 1);}}@-webkit-keyframes kinescope-on {from {-webkit-transform: scale(.5, 0);} to {-webkit-transform: scale(1, 1);}}@keyframes kinescope-off {from {transform: scale(1, 2);} to {transform: scale(1, 1);}}@-webkit-keyframes kinescope-on {from {-webkit-transform: scale(1, 2);} to {-webkit-transform: scale(1, 1);}}\
 @keyframes pview{from {scale(0,0);opacity:0;}25%{transform:scale(.3,.3);opacity:.1;}50%{transform:scale(.9,.9);opacity:.3;}75%{transform:scale(1.02,1.02);opacity:.7;}100%{transform:scale(1,1);opacity:1;}}\
@@ -3264,12 +3255,12 @@ var MagicStyle = '.hidout,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google
 .dpop,#wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}.artwork{background:url(/src/svg/1505/ma-artwork.svg)no-repeat scroll center center / 100% auto;}.movie{background:url(/src/svg/1505/cm-movie.svg)no-repeat scroll center center / 100% auto;}\
 .yuki_clickable,.txt-btn,.wmark-button,.button,.el-li,.icon{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}\
 .replylinks,.button{line-height:2em;font-size:75%;clear:both;}#post-count,.txt-btn{color:#999;}.mapped,.mapped:hover{cursor:default;color:#666!important;}.hidup{top:-9999px!important;}\
-.userdelete:after,.stored:not(.stub):after,.reply.new:not(.stub):after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.cm-button{text-decoration:none;}.s-sect{text-align:left;padding-left:2em;color:#777;}\
+.userdelete:after,.stored:not(.stub):after,.new .reply:not(.stub):after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.cm-button{text-decoration:none;}.s-sect{text-align:left;padding-left:2em;color:#777;}\
 #yuki-captcha,#yuki-pass{width:295px;}#yuki-captcha-image{vertical-align:middle;margin:2px;}#yuki-dropBox{width:7em;height:18em;border:3px dashed rgba(99,99,99,.3);padding:2px;}\
 #convert-strike,.doubledash,.global #yuki-close-form,.dropdown-menu,.magic-picture.gallery-qview + img.thumb{visibility:hidden;}.sagearrow{background:url(/src/svg/1409/Sage.svg)no-repeat center bottom;position:relative;right:24px;top:6px;}.paperclip{background:url(/src/png/1411/attachpopup.png)no-repeat center;}\
 #yuki-errorMsg{text-align:center;color:#FFF;background-color:#E04000;}.wmark-button{color:#fefefe;text-shadow:0 1px 0 rgba(0,0,0,.4);}a:hover > .wmark-button{color:inherit;}.spoiler > .wmark-button{vertical-align:inherit;color:inherit;text-shadow:none;}\
 .rating_SFW{background:green;}.rating_R15{background:yellow;}.rating_R18{background:orange;}.rating_R18G{background:red;}.line-sect,.yukiFile,.cpop,.mpanel-btn{display:inline-block;}#warning-massage{color:#ff3428;}\
-.yukiFile,.yukiFileSets{font-size:66%;}.yukiFile{text-align:center;width:210px;background-color:#fefefe;-webkit-border-radius:5px;margin:5px;padding:2px;}.reply.new{background-color:rgba(212,115,94,.1);}\
+.yukiFile,.yukiFileSets{font-size:66%;}.yukiFile{text-align:center;width:210px;background-color:#fefefe;-webkit-border-radius:5px;margin:5px;padding:2px;}.new .reply{background-color:rgba(212,115,94,.1);}\
 #yuki-files-placeholder > *{vertical-align:top;}.yukiFile img{max-width:150px;margin:5px 0;}.yukiFile span{max-width:200px;word-wrap:break-word;}\
 #yuki-replyForm{text-align:left;padding:4px 8px;}.selected:before{content:"✓ ";color:green;}.reply-button,.cpop{margin-left:.4em;}#oembedapi + .checkarea,#set-show-spoilers + .checkarea{font-size:20px!important;}\
 #yuki-dropBox tr,.magic-picture.onpost-qview{display:block;}.droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em;}.yukiFile > .magic-audio{width:210px;height:210px;}.yukiFile > .magic-info{width:200px;}\
