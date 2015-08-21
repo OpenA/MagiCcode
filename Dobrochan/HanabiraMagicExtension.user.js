@@ -294,8 +294,10 @@ function MagicExtension() {
 		Chanabira = new CharmingHanabira(), mEl = new MagicElements(), Nagato = new Yuki();
 	
 	/***--[ Utilites ]--***/
-	Array.prototype.isThere = matchIndex
-	String.prototype.isThere = matchIndex
+	Array.prototype.isThere = matchIndex;
+	String.prototype.isThere = matchIndex;
+	Array.prototype.last = getLast;
+	HTMLCollection.prototype.last = getLast;
 	String.prototype.allReplace = function(obj, r) {
 		var retStr = this;
 		for (var x in obj) {
@@ -320,6 +322,9 @@ function MagicExtension() {
 			}
 		}
 		return hash;
+	}
+	function getLast() {
+		return this[this.length - 1]
 	}
 	function matchIndex(str) {
 		return this.indexOf(str) >= 0;
@@ -576,7 +581,7 @@ function MagicExtension() {
 	
 	/*** Magic Thread Listener ***/
 	function MagicThreadListener(Thread) {
-		var MListen = this, CiD, Inner, thread_updating, play_notify,
+		var MListen = this, CiD, Posts, thread_updating, play_notify,
 			Timer = { id: 0, offset: 0, ql: UpdateInterval(0) },
 			Count = { dif: 0, new: 0, del: 0, mod: 0 },
 			WarningMsg = _z.setup('strong', {'id': 'warning-massage', 'class': 'blink'}, null),
@@ -602,8 +607,8 @@ function MagicExtension() {
 				}
 			}
 		if (Thread) {
-			CiD = _cid(Thread.id)
-			Inner = collectPNodes(Thread)
+			CiD = _cid(Thread.id);
+			Posts = Thread.getElementsByClassName('post');
 			this.updateThread = updateThread; this.updateTimer = updateTimer; this.expandThread = expandThread; this.truncatThread = truncatThread;
 			function el$(child) { return MListen['NewPostLoader'].querySelector(child) }
 			this['NewPostLoader'] = _z.setup('span', {'id': 'new-post-loader', 'html': '<div class="stat-line"><a id="load-new">'+ MLLC.loadnew[lng] +
@@ -612,7 +617,7 @@ function MagicExtension() {
 					'</label><ul class="dropdown line-sect"><li class="dropdown-toggle"><label id="timer-update-sets" class="dropdown-label el-li t-sec">'+
 					(MLLC.dsl[Timer.ql.value] || checkHTime(Timer.ql.value))[lng] +'</label><ul class="dropdown-menu"><li class="dropdown-item el-li" id="quet-mode-set">'+
 					MLLC.dsl['quet'][lng] +'</li><li class="dropdown-item el-li" id="autotimer-set">'+ MLLC.dsl['autotimer'][lng] +'</li><li class="dropdown-item el-li" id="manual-int-set">'+
-					MLLC.dsl['manual'][lng] +':\n<input id="int-val" max="180" min="15" type="number"></li></ul></li></ul>'
+					MLLC.dsl['manual'][lng] +':\n<input id="int-val" class="dropdown-input" max="180" min="15" type="number"></li></ul></li></ul>'
 				}, {'click': function(e) {
 					var val, txt;
 					switch (e.target.id) {
@@ -648,21 +653,13 @@ function MagicExtension() {
 					}
 				}
 			});
-			this['PostsCount'] = _z.setup('label', {'id': 'post-count', 'class': 'etch-text f-left', 'text': Inner.posts.length + LC.omit[lng]}, null);
+			this['PostsCount'] = _z.setup('label', {'id': 'post-count', 'class': 'etch-text f-left', 'text': Posts.length + LC.omit[lng]}, null);
 			this['AllowedPosts'] = _z.setup('label', {'id': 'allowed-posts', 'class': 'etch-text', 'html': '<span class="rl-inf">\n&nbsp;|&nbsp;'+ LC.allw[lng] +':&nbsp;\n</span>'}, null);
 			this['setInterval'] = _z.setup(el$('#int-val'), {'value': Timer.ql.int}, null);
 		} else {
 			return {
 				getPost: getHanabiraPost,
 				getFile: getHanabiraFile
-			}
-		}
-		function collectPNodes(thr) {
-			return {
-				posts: thr.getElementsByClassName('post'),
-				last: function() {
-					var last = thr.lastElementChild;
-					return last.nodeName === 'FORM' ? last.previousElementSibling : last }
 			}
 		}
 		function UpdateInterval(offset) {
@@ -684,7 +681,7 @@ function MagicExtension() {
 			return ['every '+ x +' '+ LC.tm[v][0] +'.', 'каждые '+ x +' '+ LC.tm[v][1] +'.'];
 		}
 		function updateCount(jPC) {
-			var i = (jPC + Count.mod) - Inner.posts.length - Count.dif,
+			var i = (jPC + Count.mod) - Posts.length - Count.dif,
 				n = i > 0 ? i : 0, d = i < 0 ? i : 0;
 				Count.dif += i; Count.new += n; Count.del += d;
 		}
@@ -700,7 +697,7 @@ function MagicExtension() {
 									updateCount(json.result.posts_count)
 									var postStat = '( '+ (Count.new > 0 ? '+'+ Count.new + LC.newp[lng] : '') +
 										' • '+ (Count.del < 0 ? Count.del + LC.delp[lng] : '') +' • '+ (Count.mod > 0 ? Count.mod + LC.pmod[lng] : '') +')';
-									MListen['PostsCount'].textContent = Inner.posts.length + LC.omit[lng] + postStat;
+									MListen['PostsCount'].textContent = Posts.length + LC.omit[lng] + postStat;
 								}
 							});
 						updateTimer();
@@ -739,7 +736,7 @@ function MagicExtension() {
 				return;
 			thread_updating = true;
 			statusButton(UpdBtn, 0)
-			getDataResponse('/api/thread/'+ HM.URL.board +'/'+ CiD +'/new.json?new_format&message_html&last_post='+ _cid(Inner.last().id),
+			getDataResponse('/api/thread/'+ HM.URL.board +'/'+ CiD +'/new.json?new_format&message_html&last_post='+ _cid(Posts.last().id),
 			function(status, sText, json, xhr) {
 				var i, temp, el, pCount, len, error;
 				if (status !== 200 || json.error) {
@@ -769,7 +766,7 @@ function MagicExtension() {
 						Timer.offset += e;
 				}
 				if (rexk && !error) {
-					if (Inner.posts.length != pCount + Count.mod) {
+					if (Posts.length != pCount + Count.mod) {
 						updateCount(pCount)
 						return getHanabiraFullThread(UpdBtn);
 					}
@@ -777,7 +774,7 @@ function MagicExtension() {
 				}
 				if (e && !error) {
 					MListen['PostsCount'].textContent = pCount + LC.omit[lng] + (Count.mod > 0 ? ' ( +'+ Count.mod + LC.pmod[lng] +' )' : '');
-					genReplyMap(Inner.posts);
+					genReplyMap(Posts);
 				}
 				statusButton(UpdBtn, 1)
 				thread_updating = false;
@@ -787,23 +784,23 @@ function MagicExtension() {
 			getDataResponse('/api/thread/'+ HM.URL.board +'/'+ CiD +'/all.json?new_format&message_html',
 			function(status, sText, json, xhr) {
 				var jsonPosts = json.result.posts, pCount = json.result.posts_count;
-				function pnid(n) { return !Inner.posts[n] ? 99999999 : _cid(Inner.posts[n].id) }
+				function pnid(n) { return !Posts[n] ? 99999999 : _cid(Posts[n].id) }
 				function jpid(n) { return !jsonPosts[n] ? 99999999 : jsonPosts[n].display_id }
-				if (jsonPosts.length == Inner.posts.length) {
+				if (jsonPosts.length == Posts.length) {
 					Count.dif = Count.del = 0;
-					Count.mod = Inner.posts.length - pCount;
+					Count.mod = Posts.length - pCount;
 				} else {
-					for (var i = 0, derefl, temp; i < (Inner.posts.length + Count.new); i++) {
+					for (var i = 0, derefl, temp; i < (Posts.length + Count.new); i++) {
 						if (pnid(i) < jpid(i)) {
-							_z.setup(Inner.posts[i], {'class': "deleted"}, null)
+							_z.setup(Posts[i], {'class': "deleted"}, null)
 							.querySelector('.doubledash').setAttribute('style', 'display:inline-block;');
 						}
 						if (pnid(i) > jpid(i)) {
 							var derefl, temp = getHanabiraPost(jsonPosts[i], [json.result.archived, json.result.autosage]);
-							if (!Inner.posts[i])
+							if (!Posts[i])
 								Thread.appendChild(temp[0]);
 							else
-								_z.before(Inner.posts[i], temp[0]);
+								_z.before(Posts[i], temp[0]);
 							if (ExpandMap) {
 								ExpandMap.push(temp[0]);
 								HM.LoadedPosts[HM.URL.board +'-'+ jpid(i)] = temp[0];
@@ -817,15 +814,15 @@ function MagicExtension() {
 							}
 						}
 						if (pnid(i) < jpid(i)) {
-							_z.setup(Inner.posts[i], {'class': "deleted"}, null)
+							_z.setup(Posts[i], {'class': "deleted"}, null)
 							.querySelector('.doubledash').setAttribute('style', 'display:inline-block;');
 						}
 					}
 					Tinycon.setBubble(unread_count);
-					genReplyMap(Inner.posts);
+					genReplyMap(Posts);
 					Count = { dif: 0, new: 0, del: 0, mod: 0 }
-					if (pCount !== Inner.posts.length && jsonPosts.length === Inner.posts.length) {
-						Count.mod = Inner.posts.length - pCount;
+					if (pCount !== Posts.length && jsonPosts.length === Posts.length) {
+						Count.mod = Posts.length - pCount;
 					}
 				}
 				statusButton(UpdBtn, 1)
@@ -2213,7 +2210,7 @@ function MagicExtension() {
 		}
 		function yukiAddFile(e) { // FileList object
 			var data = (e.dataTransfer || e.target), files = data.files,
-				dataURL = data.getData(data.effectAllowed === 'copyLink' ? 'Text' : 'URL');
+				dataURL = data.getData ? data.getData(data.effectAllowed === 'copyLink' ? 'Text' : 'URL') : null;
 			if (checkfilesLimit())
 				return;
 			if (files.length === 0 && dataURL) {
@@ -3173,8 +3170,8 @@ function MagicExtension() {
 		'keypress': keyMarks,
 		'mouseup': function(e) {
 			HM.DragableObj = null;
-			if (!e.target.classList.contains('dropdown-label'))
-				_z.each('.dropdown-toggle.active', function(dt_a){dt_a.classList.remove('active')});
+			if (!e.target.classList.contains('dropdown-label') && !e.target.classList.contains('dropdown-input'))
+				_z.each('.dropdown-toggle.active', function(dt_a){ dt_a.classList.remove('active')} );
 		},
 		'dblclick': function(e) {
 			if (!['TEXTAREA', 'INPUT'].isThere(e.target.tagName))
