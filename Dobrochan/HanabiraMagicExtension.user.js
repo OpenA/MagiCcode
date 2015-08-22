@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.4.9
+// @version 		1.5.0-beta
 // @grant   		none
 // ==/UserScript==
 
@@ -792,8 +792,9 @@ function MagicExtension() {
 				} else {
 					for (var i = 0, derefl, temp; i < (Posts.length + Count.new); i++) {
 						if (pnid(i) < jpid(i)) {
-							_z.setup(Posts[i], {'class': "deleted"}, null)
+							_z.setup(Posts[i], {'class': "deleted"})
 							.querySelector('.doubledash').setAttribute('style', 'display:inline-block;');
+							HM.PostConstructor[pnid(i)].delete_input.remove();
 						}
 						if (pnid(i) > jpid(i)) {
 							var derefl, temp = getHanabiraPost(jsonPosts[i], [json.result.archived, json.result.autosage]);
@@ -814,8 +815,9 @@ function MagicExtension() {
 							}
 						}
 						if (pnid(i) < jpid(i)) {
-							_z.setup(Posts[i], {'class': "deleted"}, null)
+							_z.setup(Posts[i], {'class': "deleted"})
 							.querySelector('.doubledash').setAttribute('style', 'display:inline-block;');
+							HM.PostConstructor[pnid(i)].delete_input.remove();
 						}
 					}
 					Tinycon.setBubble(unread_count);
@@ -840,24 +842,23 @@ function MagicExtension() {
 				len = files.length,
 				op = postJson.op,
 				wrap = _z.setup((op ? 'div' : 'table'), {'id': 'post_'+ postId, 'class': (op ? 'oppost' : 'replypost new') +' post'}, {'click': PDownListener}),
-				delicon = '<span class="delete icon"><input type="checkbox" id="delbox_r{post_id}" class="delete_checkbox" onclick="this.parentNode.classList.toggle(\'checked\')" value="'+ 
-					postJson.thread_id +'" name="r{post_id}"><img src="/images/blank.png" title="'+ MLLC.mrk_to_del[lng] +'" alt="✕"></span>\n',
-				html = (op ? '' : '<tbody><tr><td class="doubledash">&gt;&gt;</td><td id="replyr{post_id}" class="reply">') +
-					'<a name="ir{post_id}"></a><label>'+ 
-						(op ? '<a class="hide icon" onclick="hide_thread(event, \'r{board}\',r{post_id});" href="/api/thread/r{board}/r{post_id}/hide.redir"><img src="/images/blank.png" title="'+ LC.hide[lng] +'" alt="﹅"></a>\n'+
-							delicon + '<a class="unsigned icon" onclick="sign_thread(event, \'r{board}\',r{post_id});"><img src="/images/blank.png" title="'+ LC.subscrb[lng] +'" alt="✩"></a>\n' : delicon) +
-						(board === 'mad' ? '<span class="iphash">'+
+				html = (op ? '' : '<tbody><tr><td class="doubledash">&gt;&gt;</td><td id="replyr{post_id}" class="reply">') + '<a name="ir{post_id}"></a><label>'+
+						'<ul class="dropdown line-sect"><li class="dropdown-toggle"><label class="postermenu dropdown-label el-li">V</label><ul class="dropdown-menu"><li class="edit-post dropdown-item el-li">Редактировать</li><li class="hide-post dropdown-item el-li">Скрыть</li><li class="delete-post dropdown-item el-li">Удалить<span class="chek-to-del dropdown-input line-sect"></span></li></ul></li></ul>\n'+
+						(op ? '<a class="unsigned icon" onclick="sign_thread(event, \'r{board}\',r{post_id});"><img src="/images/blank.png" title="'+
+						LC.subscrb[lng] +'" alt="✩"></a>\n' : '') + (board === 'mad' ? '<span class="iphash">'+
 							'<span class="ipmark" style="background:rgba(0,0,0,.5)">&nbsp;</span><span class="ipmark" style="background:rgba(255,255,255,.5)">&nbsp;</span>'+
 							'<span class="ipmark" style="background:rgba(25,25,25,.6)">&nbsp;</span><span class="ipmark" style="background:rgba(99,99,99,.6)">&nbsp;</span>'+
 							'<span class="ipmark" style="background:rgba(175,175,175,.6)">&nbsp;</span></span>\n<img class="geoicon" src="/src/png/1408/polandball_kawaii_16.png" alt="(^ ^)" title="Polandball (^ ^)">\n' : '') +
-				'<span class="replytitle">'+ postJson.subject +'</span>\n<span class="postername">'+ getDefaultName(postJson.name) +'</span>\n'+ (op && margArr[0] ? '<img src="/images/archive.gif" alt="В архиве" title="В архиве">\n' :
-				'') + (op && margArr[1] ? '<img src="/images/autosage.gif" alt="Бамп-лимит" title="Бамп-лимит">\n' : '') +'<span class="posterdate">'+ getDateTime(postJson.date) +
-				'</span>\n</label><span class="reflink"><a onclick="Highlight(0, r{post_id})" href="/r{board}/res/r{thread_id}.xhtml#ir{post_id}">No.r{post_id}</a></span>\n<span class="cpanel"><a title="'+
+				'<span class="replytitle">'+ postJson.subject +'</span>\n<span class="postername">'+ getDefaultName(postJson.name) +'</span>\n'+
+				(op && margArr[0] ? '<img src="/images/archive.gif" alt="В архиве" title="В архиве">\n' : '') +
+				(op && margArr[1] ? '<img src="/images/autosage.gif" alt="Бамп-лимит" title="Бамп-лимит">\n' : '') + getDateTime(postJson.date) +
+				'\n</label><span class="reflink"><a onclick="Highlight(0, r{post_id})" href="/r{board}/res/r{thread_id}.xhtml#ir{post_id}">No.r{post_id}</a></span>\n<span class="cpanel"><a title="'+
 				 LC.repl[lng] +'" id="r{board}-r{thread_id}-r{post_id}" class="reply-button line-sect txt-btn"></a></span><br>';
 			for (var i = 0; i < len; i++) {
 				html += getHanabiraFile(files[i], postJson.post_id, board, threadId, postId, (len === 1));
 			}
-			wrap.insertAdjacentHTML('afterbegin', html.allReplace({'r{board}': board, 'r{thread_id}': threadId, 'r{post_id}': postId}) + 
+			mEl['DeleteOverlay'].appendChild( _z.setup('input', {'id': 'delbox_'+ postId, 'class': 'delete_checkbox', 'type': 'checkbox', 'value': postJson.thread_id, 'name': postId}));
+			wrap.insertAdjacentHTML('afterbegin', html.allReplace({'r{board}': board, 'r{thread_id}': threadId, 'r{post_id}': postId}) +
 				(len > 1 ? '<br style="clear:both;">' : '') +'<div class="postbody">'+ postJson.message_html +'</div><div class="abbrev"></div>' + (op ? '' : '</td></tr></tbody>'));
 			if (!mapArr) {
 				unread_count++;
@@ -922,6 +923,7 @@ function MagicExtension() {
 					var Type = type, Embed = '/utils/'+ type +'/'+ fid +'/'+ pid,
 						hash = encodeURI(HM.URL.host +'/'+ src).hashCode();
 						cmClass = 'class="cm-button"';
+						ieClass = 'mview '
 					switch (type) {
 						case 'text': Type = 'docs';
 							meta = lines + LC.line[lng] + (lines === 1 ? LC.few['ru'][lng] : lines < 5 ? LC.few['u-d'][lng] : LC.few['en'][lng] );
@@ -938,15 +940,15 @@ function MagicExtension() {
 							metatype = fmd["File Type"] == 'WEBM' ? 'WebM' : fmd["File Type"];
 							meta = fmd["Image Size"] +' @ '+ fmd["Duration"];
 							break;
-						default: cmClass = '';
+						default: cmClass = ieClass = '';
 					}
 					if (cmClass)
 						HM.LinksMap[hash] = {Embed: Embed, Type: Type}
 				}
-				frontend = '<a href="/'+ src +'" '+ cmClass +' target="_blank"><img class="'+ ieClass +'thumb" '+ thumbW +' '+ thumbH +' src="/'+ thumb +'" '+ action +' alt="'+ (R ? rating : filename) +'"></a>'
+				frontend = '<a href="/'+ src +'" '+ cmClass +'><img class="'+ ieClass +'thumb" '+ thumbW +' '+ thumbH +' src="/'+ thumb +'" '+ action +' alt="'+ (R ? rating : filename) +'"></a>'
 			}
 			var filebtns = (type != 'music' && !R && ONE ? LC.clck_img_to[lng] + (type == 'video' ? LC.pvid[lng] : isImage ? LC.expd[lng] : LC.vitf[lng]) : '') +'<br>'+ (R ? LC.cens[lng] : '') +'</div>',
-				fileinfo = '<div class="fileinfo'+ (!ONE ? ' limited' : '') +'">'+ LC.file[lng] +': <a href="/'+ src +'" target="_blank" title="'+ filename +'">'+ name +'</a><br><em'+
+				fileinfo = '<div class="fileinfo'+ (!ONE ? ' limited' : '') +'">'+ LC.file[lng] +': <a class="download-link" download="'+ filename +'" href="/'+ src +'" title="'+ filename +'">'+ name +'</a><br><em'+
 					(type == 'music' ? ' class="magic-info"' : '') +'>'+ metatype +', '+ size + (!meta ? '' : ', '+ meta) +'</em>',
 				filediv = '<div id="file_'+ pId +'_'+ fid +'" class="file">';
 			return (ONE ? fileinfo + filebtns + filediv : filediv + fileinfo + filebtns) + frontend +'\n</div>';
@@ -1390,7 +1392,7 @@ function MagicExtension() {
 				cont = last;
 				_hide(mEl['ContentMarker']);
 			}
-			mEl['ContentWindow'].classList.remove('hidup');
+			_show(mEl['ContentWindow']);
 		} else {
 			if (th.Embed === 'Pbin') {
 				if (!Megia[hash])
@@ -2298,17 +2300,23 @@ function MagicExtension() {
 					if (this.status === 304) {
 						console.warn('304 ' + this.statusText);
 					} else {
+						var del_checks = document.querySelectorAll('.delete_checkbox:checked'),
+							target_post = document.getElementById('post_'+ formData[0].name);
 						if (this.responseURL === action) {
 							var rText = this.responseText,
-								msg = (/<center><h2>(.+)<\/h2><\/center>/).exec(rText);
-							form.appendChild(_z.setup(WarningMsg, {'text': msg[1], 'style': 'float:right;'}, null));
-							_z.each(document.querySelectorAll('.delete_checkbox:checked'), function(chkbx){ chkbx.checked = false})
+								msg = (/<center><h2>(.+)<\/h2><\/center>/).exec(rText),
+								warn = _z.setup(WarningMsg, {'text': msg[1], 'style': 'float:right;'});
+							if (e.explicitOriginalTarget.tagName === 'INPUT') {
+								form.appendChild(warn);
+							} else {
+								_z.after((target_post || document.getElementById('ref-b-'+ formData[0].name)).querySelector('.cpanel'), warn);
+							}
+							_z.each(del_checks, function(chkbx){ chkbx.checked = false });
 						} else {
-							var chek = document.querySelectorAll('.delete_checkbox:checked');
-							if (chek.length === 1) {
-								_z.setup(document.getElementById('post_'+ chek[0].name), {'class': "deleted"}, null)
-								.querySelector('.doubledash').setAttribute('style', 'display:inline-block;');
-								chek[0].remove()
+							if (del_checks.length === 1) {
+								var target_delete = _z.setup(target_post, {'class': 'deleted'});
+								_z.setup(target_delete.querySelector('.doubledash'), {'style': 'display:inline-block;'});
+								del_checks[0].remove()
 							} else if (locationThread) {
 								setTimeout(function() {
 									HM.ThreadListener[HM.URL.thread].updateThread(false, true);
@@ -2655,22 +2663,23 @@ function MagicExtension() {
 			'<menuitem icon="/src/png/1407/derpibooru_icon.png" label="Derpibooru Reverse Search" onclick="$(\'#rs-url\').val($(this).parent().parent().attr(\'src\')).parent().submit()"></menuitem></menu>'}, null)
 		this['ReverseSearch'] = _z.setup('form', {'method': "post", 'action': "https://derpibooru.org/search/reverse", 'target': "_blank", 'enctype': "multipart/form-data",
 			'hidden': true, 'html': '<input id="rs-url" name="url" type="text" value=""><input id="fuzziness" name="fuzziness" type="text" value="0.25">'}, null);
-		this['ContentWindow'] = _z.setup('div', {'class': 'content-window hidup', 'html': '<div id="shadow-box"></div><label id="close-content-window"></label>'}, {
+		this['ContentWindow'] = _z.setup('div', {'class': 'content-window hidout', 'html': '<div id="shadow-box"></div><label id="close-content-window"></label>'}, {
 				'click': function(e) {
 					switch (e.target.id) {
-						case 'shadow-box': MEt['ContentWindow'].classList.add('hidup');
+						case 'shadow-box': _hide(MEt['ContentWindow']);
 							_show(MEt['ContentMarker'])
 							break;
-						case 'close-content-window': MEt['ContentWindow'].classList.add('hidup');
+						case 'close-content-window': _hide(MEt['ContentWindow']);
 							e.target.nextElementSibling.remove();
 							HM.VActive = [];
 							break;
 					}
 				}
 			});
+		this['DeleteOverlay'] = _z.setup('div', {'id': 'delete-overlay'});
 		this['ContentMarker'] = _z.setup('label', {'id': 'show-content-window', 'class': 'hidout'}, {
 				'click': function(e) {
-					MEt['ContentWindow'].classList.remove('hidup');
+					_show(MEt['ContentWindow']);
 					_hide(this)
 				}
 			});
@@ -2788,7 +2797,7 @@ function MagicExtension() {
 								_z.prepend(HM.VActive[0], _z.setup(cont, {'class': 'video-container', 'id': 'video_'+cont.id.split('_')[1]}, null));
 								_z.setup(Megia['video']['Frame'], {'class': '', 'width': getVSize()[0], 'height': getVSize()[1]}, null);
 								_hide(mEl['ContentMarker']);
-								mEl['ContentWindow'].classList.add('hidup');
+								_hide(mEl['ContentWindow']);
 							}
 					}
 					_z.localS.set('EmbedIn', val)
@@ -3021,11 +3030,10 @@ function MagicExtension() {
 								date.remove();
 							}
 							if (dico) {
-								var chx = dico.firstElementChild, img = dico.lastElementChild,
-									nico = _z.setup('span', {'class': 'delete icon'})
-								_z.append(nico, [chx, img])
-								_z.replace(dico, nico)
-								chx.checked = false;
+								var pMenu = _z.setup('ul', {'class': 'dropdown line-sect', 'html': '<li class="dropdown-toggle"><label class="postermenu dropdown-label el-li">V</label><ul class="dropdown-menu"><li class="edit-post dropdown-item el-li">Редактировать</li><li class="hide-post dropdown-item el-li">Скрыть</li><li class="delete-post dropdown-item el-li">Удалить<span class="chek-to-del dropdown-input line-sect"></span></li></ul></li>'});
+								HM.PostConstructor[url.pid].delete_input = _z.setup(dico.firstElementChild, {'checked': false});
+								mEl['DeleteOverlay'].appendChild(HM.PostConstructor[url.pid].delete_input)
+								_z.replace(dico, pMenu)
 							}
 							if (reply_) {
 								var targ = _z.setup('span', {'class': 'reply-button line-sect txt-btn', 'title': LC.repl[lng]});
@@ -3060,7 +3068,7 @@ function MagicExtension() {
 							});
 						}
 						_z.each(Elems.images, createImgContext);
-						_z.setup(delForm, {}, {'submit': Nagato.submitForm});
+						_z.setup(delForm, {}, {'submit': Nagato.submitForm}).appendChild(mEl['DeleteOverlay']);
 						_z.append(document.body, [
 							mEl['ContentWindow'], mEl['ContentMarker'],
 							mEl['ReverseSearch'], mEl['ImageMenu'],
@@ -3081,6 +3089,11 @@ function MagicExtension() {
 			case 'cm-button': loadMediaContainer(e); break;
 			case 'postermenu': e.target.parentNode.classList.toggle('active'); break;
 			case 'delete-post': delPost(); break;
+			case 'chek-to-del':
+				e.target.classList.toggle('selected');
+				e.target.parentNode.parentNode.previousElementSibling.classList.toggle('red-light');
+				HM.PostConstructor[Id].delete_input.checked = e.target.classList.contains('selected');
+				break;
 			case 'mview':
 				loadMediaContainer({target:e.target.parentNode});
 				_z.fall(e);
@@ -3247,7 +3260,7 @@ var mesAnimations = '.new .reply,#yuki-replyForm.reply{animation:pview .3s ease-
 @keyframes pview{from {scale(0,0);opacity:0;}25%{transform:scale(.3,.3);opacity:.1;}50%{transform:scale(.9,.9);opacity:.3;}75%{transform:scale(1.02,1.02);opacity:.7;}100%{transform:scale(1,1);opacity:1;}}\
 @-webkit-keyframes pview{0%{-webkit-transform:scale(0,0);opacity:0;}25%{-webkit-transform:scale(.3,.3);opacity:.1;}50%{-webkit-transform:scale(.9,.9);opacity:.3;}75%{-webkit-transform:scale(1.02,1.02);opacity:.7;}100%{-webkit-transform:scale(1,1);opacity:1;}}';
 
-var MagicStyle = '.hidout,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google,#postform_placeholder,.reply #yuki-newThread-create,.edit #yuki-newThread-create,.submit-button.process input,.pleer-container + br,.artwork select,.magic-info + br,.autohidden,.autohidden + .dummy-line,.text-original, .reply-link[hidden] + .rl-inf, .submit-button span,form.edit ~ *:not(.abbrev){display:none!important;}\
+var MagicStyle = '.hidout,.hide.icon,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google,#postform_placeholder,.reply #yuki-newThread-create,.edit #yuki-newThread-create,.submit-button.process input,.pleer-container + br,.artwork select,.magic-info + br,.autohidden,.autohidden + .dummy-line,.text-original, .reply-link[hidden] + .rl-inf, .magic-picture.onpost-qview + img.thumb,.submit-button span,form.edit ~ *:not(.abbrev),#delete-overlay,.popup .chek-to-del{display:none!important;}\
 .unexpanded,.rated{max-width:200px!important;max-height:200px!important;}.expanded{width:100%;height:auto;}.hideinfo{margin:5px;}.sp-r.rate{color:darkred;}#yuki-dropBox tr,.f-sect,.hideinfo{text-align:center!important;}\
 .dpop,#wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}.artwork{background:url(/src/svg/1505/ma-artwork.svg)no-repeat scroll center center / 100% auto;}.movie{background:url(/src/svg/1505/cm-movie.svg)no-repeat scroll center center / 100% auto;}\
 .yuki_clickable,.txt-btn,.wmark-button,.button,.el-li,.icon{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}\
@@ -3259,10 +3272,10 @@ var MagicStyle = '.hidout,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google
 .rating_SFW{background:green;}.rating_R15{background:yellow;}.rating_R18{background:orange;}.rating_R18G{background:red;}.line-sect,.yukiFile,.cpop,.mpanel-btn{display:inline-block;}#warning-massage{color:#ff3428;}\
 .yukiFile,.yukiFileSets{font-size:66%;}.yukiFile{text-align:center;width:210px;background-color:#fefefe;-webkit-border-radius:5px;margin:5px;padding:2px;}.new .reply{background-color:rgba(212,115,94,.1);}\
 #yuki-files-placeholder > *{vertical-align:top;}.yukiFile img{max-width:150px;margin:5px 0;}.yukiFile span{max-width:200px;word-wrap:break-word;}\
-#yuki-replyForm{text-align:left;padding:4px 8px;}.selected:before{content:"✓ ";color:green;}.reply-button,.cpop{margin-left:.4em;}#oembedapi + .checkarea,#set-show-spoilers + .checkarea{font-size:20px!important;}\
+#yuki-replyForm{text-align:left;padding:4px 8px;}.selected:before{content:"✓ ";color:green;}.chek-to-del.selected:before{margin:5px;position:relative;bottom:2px;}.reply-button,.cpop{margin-left:.4em;}#oembedapi + .checkarea,#set-show-spoilers + .checkarea{font-size:20px!important;}\
 #yuki-dropBox tr,.magic-picture.onpost-qview{display:block;}.droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em;}.yukiFile > .magic-audio{width:210px;height:210px;}.yukiFile > .magic-info{width:200px;}\
 .cpop.ty{background-image:url(/src/svg/1411/closepopup.svg);}.cpop.all{background-image:url(/src/svg/1411/closeallpopups.svg);}.dpop{float:right;background-image:url(/src/svg/1505/cmove.svg);cursor:move;}.sagearrow{cursor:default;}\
-.cpop{width:14px;height:14px;}.dpop,.sagearrow,.paperclip,.view-eye{width:20px;height:20px;}.reply-button{width:23px;height:14px;background:url(/src/svg/1505/reply-arrow.svg)no-repeat center center;}\
+.cpop{width:14px;height:14px;}.dpop,.sagearrow,.paperclip,.view-eye,.chek-to-del{width:20px;height:20px;}.reply-button{width:23px;height:14px;background:url(/src/svg/1505/reply-arrow.svg)no-repeat center center;}\
 #magic-buttons-panel,#magic-panel{position:fixed;z-index:99;}#magic-buttons-panel{right:1em;bottom:1em;}.mpanel-btn{padding:0 9px;width:28px;height:28px;opacity:.2;filter:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'grayscale\'><feColorMatrix type=\'matrix\' values=\'.3 .3 .3 0 0 .3 .3 .3 0 0 .3 .3 .3 0 0 0 0 0 1 0\'/></filter></svg>#grayscale");-webkit-filter:grayscale(100%);}\
 .ta-inact::-moz-selection{background:rgba(99,99,99,.3);}.ta-inact::selection{background:rgba(99,99,99,.3);}#int-upd{bottom:2px;position:relative;}#allowed-posts a{text-decoration:none;text-shadow:none;font-weight:normal;font-size:14px;}\
 .mpanel-btn:hover,.mpanel-btn.active{opacity:1;filter:none;-webkit-filter:grayscale(0%);}#magic-panel tr{height:3em;}#vsize-textbox{color:#bbb;font-family:Trebuchet;}\
@@ -3275,14 +3288,14 @@ var MagicStyle = '.hidout,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google
 .magic-picture.gallery-qview{box-shadow:5px 5px 10px rgba(0,0,0,.4);}.content-frame{top:10%;left:12%;right:18%;bottom:20%;z-index:3000;}#shadow-box{position:absolute;background-color:rgba(33,33,33,.8);z-index:2999;}\
 .docs-container > iframe,.content-frame.docs > iframe,.full-size,#shadow-box,.content-window,.preview_img{width:100%;height:100%;}.content-frame.img{background-color:transparent;}\
 #close-content-window,#show-content-window{transition:.5s ease;opacity:.6;width:31px;height:31px;background-image:url(/src/svg/1505/close-circle.svg);cursor:pointer;position:absolute;top:20px;right:20px;z-index:3000;}\
-.docs-container,.content-frame.docs,.docs-container > iframe,.message code pre{padding:6px 8px;overflow:auto;resize:both;background-color:#fefefe;}.message code{background-color:#fefefe;border-radius:3px;border:1px #CCC dashed;padding:0 3px;}.content-frame.pdf{top:1%;left:17%;right:20%;bottom:1%;}\
+.docs-container,.content-frame.docs,.docs-container > iframe,.message code pre{padding:6px 8px;overflow:auto;resize:both;background-color:#fefefe;}.message code{background-color:#fefefe;border-radius:3px;padding:0 3px;}code,.chek-to-del{border:1px #CCC dashed;}.chek-to-del{float:right;cursor:default;}.content-frame.pdf{top:1%;left:17%;right:20%;bottom:1%;}\
 #show-content-window{right:52%;position:fixed;background-image:url(/src/svg/1505/show-circle.svg);border-radius:100%;}#close-content-window:hover,#show-content-window:hover{opacity:1;}\
 #ma-play{background:url(/src/svg/1505/ma-play.svg)no-repeat scroll center;}#ma-pause{background:url(/src/svg/1505/ma-pause.svg)no-repeat scroll center;}.magic-audio{width:200px;height:200px;}input:focus,select:focus,textarea:focus,button:focus{outline:none;}\
 .ma-controls,.ma-controls a{display:block;width:50px;height:50px;}.ma-controls{position:relative;top:37%;left:37%;border:2px solid #ddd;border-radius:100%;background-color:#333;opacity:.8;}\
 .font-s{font-size:12px;}.keywords-input{width:300px;height:55px;resize:none;}.o-sect{padding:0 1em;}.cyan-light{color:rgba(90,152,155,.8);}\
 #hide-set{background:url(/src/svg/1505/hide-menu-btn.svg)no-repeat scroll center;}#general-set{background:url(/src/png/1409/list4.png)no-repeat scroll center center / 80%;}.dummy-line{position:absolute;text-align:center;width:100%;}\
-.dropdown,.dropdown-menu{padding-left:0;list-style:outside none none;}.active > .dropdown-label,.active > .dropdown-menu{visibility:visible;background-clip:padding-box;background-color:#fefefe;}.active > .dropdown-label{border-radius:4px 4px 0 0;}.dropdown-label{padding:4px 8px;border-radius:2px;font-variant:small-caps;font-size:14px;}.dropdown-menu{color:#777;position:absolute;min-width:150px;font-size:14px;line-height:1.8;}\
-.dropdown-item{padding:0 10px;}.dropdown-item:hover{background-color:rgba(0,0,0,.1);}.dropdown-menu{border-radius:0 0 4px 4px;}.dropdown-label:before{content:"⟨ ";}.dropdown-label:after{content:" ⟩";}#int-val{width:50px;margin:0 4px;}\
+.dropdown,.dropdown-menu{padding-left:0;list-style:outside none none;}.active > .dropdown-label,.active > .dropdown-menu{visibility:visible;background-clip:padding-box;background-color:#fefefe;}.active > .dropdown-label{border-radius:4px 4px 0 0;}.dropdown-label{padding:4px;font-variant:small-caps;font-size:14px;}.dropdown-menu{color:#777;position:absolute;min-width:150px;font-size:14px;line-height:1.8;}\
+.dropdown-item{padding:0 10px;}.dropdown-item:hover{background-color:rgba(0,0,0,.1);}.dropdown-menu{border-radius:0 0 4px 4px;}#timer-update-sets:before{content:"⟨ ";}#timer-update-sets:after{content:" ⟩";}#int-val{width:50px;margin:0 4px;}.red-light{color:red;text-shadow:0 0 4px red;}\
 .blink{-webkit-animation-name:blinker;-webkit-animation-duration:1s;-webkit-animation-timing-function:linear;-webkit-animation-iteration-count:infinite;animation-name:blinker;animation-duration:1s;animation-timing-function:linear;animation-iteration-count:infinite;}\
 .oppost.highlighted,.highlighted .reply{border-style:dashed!important;border-width:2px!important;border-color:#F50!important;}.postcontent,.rl-inf,.f-left{float:left;}br + .postbody{clear:both;}.sinf{color:#666;font-size:.8em;}.magic-picture:before{content:" "}.celrly:not([hidden]) + .celrly:before, .celrly + * + .celrly:before{content:",   ";color:#666!important;cursor:default;}.celrly:not([hidden]) ~ .rl-inf{display:inline!important;}\
 .view-eye{background:url(/src/png/1506/p-stub-hide.png)no-repeat scroll center;}.i-block{display:inline-block;}\
