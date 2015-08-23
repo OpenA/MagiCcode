@@ -3193,7 +3193,7 @@ function MagicExtension() {
 					mEl['ContextMenu'].classList.add('active');
 					mEl['ContextMenu'].style['left'] = (e.pageX + 5) +'px';
 					mEl['ContextMenu'].style['top'] = (e.pageY + 5) +'px';
-					mEl['ContextMenu'].style['z-index'] = HM.zIndex;
+					mEl['ContextMenu'].style['z-index'] = HM.zIndex + 1;
 					_z.fall(e);
 			}
 		},
