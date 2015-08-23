@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.5.0-beta
+// @version 		1.5.1-beta
 // @grant   		none
 // ==/UserScript==
 
@@ -913,7 +913,7 @@ function MagicExtension() {
 						ieClass = 'spr-image expanded rated ';
 						thumbH = thumbW = '';
 					} else {
-						action = 'contextmenu="image-context" oncontextmenu="$(\'#image-context\').attr({src:this.parentNode.href, edit:\''+ edit +'\'})"';
+						action = 'contextmenu="image-context" edit-tool="'+ edit +'"';
 						if (type === 'vector')
 							ieClass = 'spr-image unexpanded ';
 						else
@@ -1705,7 +1705,7 @@ function MagicExtension() {
 					fileCont.querySelector('.ma-button');
 					break;
 				case 'img': fileCont.innerHTML = '<div class="fileinfo limited"><em>'+ HM.LinksMap[hash]['Title'] +
-					'</em></div>\n<img class="spr-image thumb unexpanded" contextmenu="image-context" oncontextmenu="$(\'#image-context\').attr({src:this.src, edit:\'\'})" src="'+ 
+					'</em></div>\n<img class="spr-image thumb unexpanded" contextmenu="image-context" src="'+ 
 					fileSrc +'"style="border:medium none;cursor:pointer;" alt="'+ fileName +'">';
 					fileCont.querySelector('.spr-image').addEventListener('click', MagicSpoirate, false);
 					break;
@@ -1713,15 +1713,15 @@ function MagicExtension() {
 		return fileCont;
 	}
 	function createImgContext(img) {
-		var fid, edit;
+		var fid, events = null, params = {'contextmenu': 'image-context'};
 		if (img.parentNode.href.fext() == 'svg') {
-			_z.setup(img, {'class': 'spr-image thumb unexpanded'}, {'click': MagicSpoirate});
-			edit = ''
+			params['class'] = 'spr-image thumb unexpanded';
+			events = {'click': MagicSpoirate};
 		} else {
-			fid = img.parentNode.parentNode.id.split('_'),
-			edit = '/utils/image/edit/'+fid[2]+'/'+fid[1];
+			fid = img.parentNode.parentNode.id.split('_');
+			params['edit-tool'] = '/utils/image/edit/'+fid[2]+'/'+fid[1];
 		}
-		_z.setup(img, {'contextmenu': 'image-context', 'oncontextmenu': '$(\'#image-context\').attr({src:this.parentNode.href, edit:\''+edit+'\'})'}, null);
+		_z.setup(img, params, events);
 	}
 	
 	/*** Base64Binary ***/
@@ -2650,19 +2650,25 @@ function MagicExtension() {
 	
 	/************************************************************************/
 	function MagicElements(h) {
-		var MEt = this,
-			tLC = {
-				m_macro: ['Make Image Macro', 'Создать макро'],
-				fnd_src_wth: ["Find Source with", "Найти оригинал в"]
+		var MEt = this, tLC = {
+			m_macro: ['Make Image Macro', 'Создать макро'],
+			fnd_src_wth: ["find source with", "искать оригинал в"]
+		}
+		this['ContextMenu'] = _z.setup('div', {'class': 'dropdown-toggle', 'style': 'position:absolute;', 'html': '<ul class="dropdown-menu"><li class="dropdown-item el-li" id="icm-create-macro">'+ tLC.m_macro[lng] +'</li><div class="dropdown-br cyan-light">'+ tLC.fnd_src_wth[lng] +'</div><li id="icm-fsw-google" class="dropdown-item i-fav el-li">Google</li><li class="dropdown-item i-fav el-li" id="icm-fsw-iqdb">Iqdb</li><li class="dropdown-item i-fav el-li" id="icm-fsw-saucenao">SauceNAO</li><li class="dropdown-item i-fav el-li" id="icm-fsw-derpibooru">Derpibooru</li></ul><form enctype="multipart/form-data" target="_blank" action="https://derpibooru.org/search/reverse" method="post" hidden><input id="rs-url" name="url" value="" type="text"><input id="fuzziness" name="fuzziness" value="0.25" type="text"></form>'}, {
+			'click': function(e) {
+				switch (e.target.id) {
+					case 'icm-create-macro': window.open(this.editTool, '_blank'); break;
+					case 'icm-fsw-google': window.open('//www.google.com/searchbyimage?image_url='+ this.contentSource, '_blank'); break;
+					case 'icm-fsw-saucenao': window.open('//saucenao.com/search.php?url='+ this.contentSource, '_blank'); break;
+					case 'icm-fsw-iqdb': window.open('//iqdb.org/?url='+ this.contentSource, '_blank'); break;
+					case 'icm-fsw-derpibooru':
+						var input = document.getElementById('rs-url');
+						input.value = this.contentSource;
+						input.parentNode.submit();
+						break;
+				}
 			}
-		this['ImageMenu'] = _z.setup('menu', {'type': 'context', 'id': 'image-context', 'src': '', 'edit': '', 'html': 
-			'<menuitem icon="/images/edit.gif" label="'+ tLC.m_macro[lng] +'" onclick="window.open($(this).parent().attr(\'edit\'), \'_blank\')"></menuitem><menu label="'+ tLC.fnd_src_wth[lng] +'" icon="">'+
-			'<menuitem icon="/src/png/1407/google_14_icon.png" label="Google" onclick="window.open(\'//www.google.com/searchbyimage?image_url=\'+ $(this).parent().parent().attr(\'src\'), \'_blank\')"></menuitem>'+
-			'<menuitem icon="/images/booru.png" label="Iqdb" onclick="window.open(\'//iqdb.org/?url=\'+ $(this).parent().parent().attr(\'src\'), \'_blank\')"></menuitem>'+
-			'<menuitem icon="/src/png/1502/saucenao_favicon1.png" label="SauceNAO" onclick="window.open(\'//saucenao.com/search.php?url=\'+ $(this).parent().parent().attr(\'src\'), \'_blank\')"></menuitem>'+
-			'<menuitem icon="/src/png/1407/derpibooru_icon.png" label="Derpibooru Reverse Search" onclick="$(\'#rs-url\').val($(this).parent().parent().attr(\'src\')).parent().submit()"></menuitem></menu>'}, null)
-		this['ReverseSearch'] = _z.setup('form', {'method': "post", 'action': "https://derpibooru.org/search/reverse", 'target': "_blank", 'enctype': "multipart/form-data",
-			'hidden': true, 'html': '<input id="rs-url" name="url" type="text" value=""><input id="fuzziness" name="fuzziness" type="text" value="0.25">'}, null);
+		});
 		this['ContentWindow'] = _z.setup('div', {'class': 'content-window hidout', 'html': '<div id="shadow-box"></div><label id="close-content-window"></label>'}, {
 				'click': function(e) {
 					switch (e.target.id) {
@@ -3070,8 +3076,7 @@ function MagicExtension() {
 						_z.each(Elems.images, createImgContext);
 						_z.setup(delForm, {}, {'submit': Nagato.submitForm}).appendChild(mEl['DeleteOverlay']);
 						_z.append(document.body, [
-							mEl['ContentWindow'], mEl['ContentMarker'],
-							mEl['ReverseSearch'], mEl['ImageMenu'],
+							mEl['ContentWindow'], mEl['ContentMarker'], mEl['ContextMenu'],
 							new MagicSettings()['ButtonsPanel']
 						]);
 				}
@@ -3178,12 +3183,23 @@ function MagicExtension() {
 				break;
 		}
 	}
-	
 	_z.setup(window, {}, {
 		'keypress': keyMarks,
+		'contextmenu': function(e) {
+			switch (e.target.getAttribute('contextmenu')) {
+				case 'image-context':
+					mEl['ContextMenu'].contentSource = e.target.parentNode.href;
+					mEl['ContextMenu'].editTool = e.target.getAttribute('edit-tool');
+					mEl['ContextMenu'].classList.add('active');
+					mEl['ContextMenu'].style['left'] = (e.pageX + 5) +'px';
+					mEl['ContextMenu'].style['top'] = (e.pageY + 5) +'px';
+					mEl['ContextMenu'].style['z-index'] = HM.zIndex;
+					_z.fall(e);
+			}
+		},
 		'mouseup': function(e) {
 			HM.DragableObj = null;
-			if (!e.target.classList.contains('dropdown-label') && !e.target.classList.contains('dropdown-input'))
+			if (!e.target.classList.contains('dropdown-label') && !e.target.classList.contains('dropdown-input') && !e.target.getAttribute('contextmenu'))
 				_z.each('.dropdown-toggle.active', function(dt_a){ dt_a.classList.remove('active')} );
 		},
 		'dblclick': function(e) {
@@ -3255,8 +3271,12 @@ var mesShadows = /* hr shadow */ 'hr{border-style:none none solid!important;bord
 /* video-container shadows */ '.video-container,.content-frame{box-shadow:0 0 2px rgba(0,0,0,.2),0 0 4px rgba(0,0,0,.4),0 9px 9px -8px rgba(0,0,0,.8);}'+
 /* yuki-form previews shadows */ '.yukiFile img{box-shadow:0 4px 8px 0 rgba(0,0,0,.2);}';
 var mesAnimations = '.new .reply,#yuki-replyForm.reply{animation:pview .3s ease-out;-webkit-animation:pview .3s ease-out;}.popup{animation:pview .2s linear;-webkit-animation:pview .2s linear;}\
-.turn-on{animation:kinescope-on .4s ease;-webkit-animation:kinescope-on .4s ease;}.turn-off{animation:kinescope-off .2s ease-out;-webkit-animation:kinescope-off .2s ease-out;}\
+.content-frame{animation:slide .2s linear;-webkit-animation:slide .2s linear;}#shadow-box{animation:thaw 1s ease;-webkit-animation:thaw 1s ease;}\
+.magic-picture{animation:imageQView .3s ease-out;-webkit-animation:imageQView .3s ease-out;}.turn-on{animation:kinescope-on .4s ease;-webkit-animation:kinescope-on .4s ease;}.turn-off{animation:kinescope-off .2s ease-out;-webkit-animation:kinescope-off .2s ease-out;}\
 @keyframes kinescope-on {from {transform: scale(1, 0);} to {transform: scale(1, 1);}}@-webkit-keyframes kinescope-on {from {-webkit-transform: scale(.5, 0);} to {-webkit-transform: scale(1, 1);}}@keyframes kinescope-off {from {transform: scale(1, 2);} to {transform: scale(1, 1);}}@-webkit-keyframes kinescope-on {from {-webkit-transform: scale(1, 2);} to {-webkit-transform: scale(1, 1);}}\
+@keyframes imageQView {from {transform: scale(0.7, 0.7);} to {transform: scale(1, 1);}} @-webkit-keyframes imageQView {from {-webkit-transform: scale(0.7, 0.7);} to {-webkit-transform: scale(1, 1);}}\
+@keyframes slide{from{top:-90%;bottom:90%;}to{top:10%;bottom:20%;}}@-webkit-keyframes slide{from{top:-90%;bottom:90%;}to{top:10%;bottom:20%;}}\
+@keyframes thaw{from{opacity:0;}to{opacity:1;}}@-webkit-keyframes thaw{from{opacity:0;}to{opacity:1;}}\
 @keyframes pview{from {scale(0,0);opacity:0;}25%{transform:scale(.3,.3);opacity:.1;}50%{transform:scale(.9,.9);opacity:.3;}75%{transform:scale(1.02,1.02);opacity:.7;}100%{transform:scale(1,1);opacity:1;}}\
 @-webkit-keyframes pview{0%{-webkit-transform:scale(0,0);opacity:0;}25%{-webkit-transform:scale(.3,.3);opacity:.1;}50%{-webkit-transform:scale(.9,.9);opacity:.3;}75%{-webkit-transform:scale(1.02,1.02);opacity:.7;}100%{-webkit-transform:scale(1,1);opacity:1;}}';
 
@@ -3283,7 +3303,7 @@ var MagicStyle = '.hidout,.hide.icon,.add_,.play_,.view_,.edit_,.search_iqdb,.se
 .deleted,.t-sec{opacity:.6;}.inactive{opacity:.4;}img[src="#transparent"]{opacity:0;}.wmark-button,.reply-button{vertical-align:middle;}.content-window{position:fixed;left:0;top:0;z-index:2999}\
 .submit-button.process{font-size:13px;font-style:italic;color:#777;}@keyframes process{0%{width:0;}100%{width:1em;}}@-webkit-keyframes process{0%{width:0;}100%{width:1em;}}\
 .submit-button.process span{display:inline!important;}.process:after{content:"....";display:inline-block;overflow:hidden;animation:process 3s linear .1s infinite;-webkit-animation:process 3s linear .1s infinite;}\
-.magic-info,.sp-r{width:190px;background-color:rgba(255,255,255,.8);padding:5px;opacity:.6}.magic-info:hover,.sp-r:hover,.dropdown-menu,.popup{z-index:1;opacity:1;}.magic-info,.magic-info + br,.sp-r,.content-frame{position:absolute;}\
+.magic-info,.sp-r{width:190px;background-color:rgba(255,255,255,.8);padding:5px;opacity:.6}.magic-info:hover,.sp-r:hover,.popup{z-index:1;opacity:1;}.magic-info,.magic-info + br,.sp-r,.content-frame{position:absolute;}\
 .content-frame,.scbc-container,.mhs-title{background-color:#fefefe;}.video-container,.content-frame.video{background-color:#000;}.video-container,.scbc-container{margin:0 9px;display:inline-block!important;}\
 .magic-picture.gallery-qview{box-shadow:5px 5px 10px rgba(0,0,0,.4);}.content-frame{top:10%;left:12%;right:18%;bottom:20%;z-index:3000;}#shadow-box{position:absolute;background-color:rgba(33,33,33,.8);z-index:2999;}\
 .docs-container > iframe,.content-frame.docs > iframe,.full-size,#shadow-box,.content-window,.preview_img{width:100%;height:100%;}.content-frame.img{background-color:transparent;}\
@@ -3294,12 +3314,12 @@ var MagicStyle = '.hidout,.hide.icon,.add_,.play_,.view_,.edit_,.search_iqdb,.se
 .ma-controls,.ma-controls a{display:block;width:50px;height:50px;}.ma-controls{position:relative;top:37%;left:37%;border:2px solid #ddd;border-radius:100%;background-color:#333;opacity:.8;}\
 .font-s{font-size:12px;}.keywords-input{width:300px;height:55px;resize:none;}.o-sect{padding:0 1em;}.cyan-light{color:rgba(90,152,155,.8);}\
 #hide-set{background:url(/src/svg/1505/hide-menu-btn.svg)no-repeat scroll center;}#general-set{background:url(/src/png/1409/list4.png)no-repeat scroll center center / 80%;}.dummy-line{position:absolute;text-align:center;width:100%;}\
-.dropdown,.dropdown-menu{padding-left:0;list-style:outside none none;}.active > .dropdown-label,.active > .dropdown-menu{visibility:visible;background-clip:padding-box;background-color:#fefefe;}.active > .dropdown-label{border-radius:4px 4px 0 0;}.dropdown-label{padding:4px;font-variant:small-caps;font-size:14px;}.dropdown-menu{color:#777;position:absolute;min-width:150px;font-size:14px;line-height:1.8;}\
-.dropdown-item{padding:0 10px;}.dropdown-item:hover{background-color:rgba(0,0,0,.1);}.dropdown-menu{border-radius:0 0 4px 4px;}#timer-update-sets:before{content:"⟨ ";}#timer-update-sets:after{content:" ⟩";}#int-val{width:50px;margin:0 4px;}.red-light{color:red;text-shadow:0 0 4px red;}\
+.dropdown,.dropdown-menu{padding-left:0;list-style:outside none none;}.active > .dropdown-label,.active > .dropdown-menu{visibility:visible;background-clip:padding-box;background-color:#fefefe;}.active > .dropdown-label{border-radius:4px 4px 0 0;}.dropdown-label{padding:4px;font-variant:small-caps;font-size:14px;}.dropdown-label + .dropdown-menu{position:absolute;border-top-left-radius:0;border-top-right-radius:0;}.dropdown-menu{color:#777;min-width:150px;font-size:14px;line-height:1.8;}\
+.dropdown-item,.dropdown-br{padding:0 10px;}.dropdown-item:hover{background-color:rgba(0,0,0,.1);}.dropdown-br{font-size:12px;line-height:16px;border:1px solid #e1e1e1;}.dropdown-menu{border-radius:4px;}#timer-update-sets:before{content:"⟨ ";}#timer-update-sets:after{content:" ⟩";}#int-val{width:50px;margin:0 4px;}.red-light{color:red;text-shadow:0 0 4px red;}\
 .blink{-webkit-animation-name:blinker;-webkit-animation-duration:1s;-webkit-animation-timing-function:linear;-webkit-animation-iteration-count:infinite;animation-name:blinker;animation-duration:1s;animation-timing-function:linear;animation-iteration-count:infinite;}\
 .oppost.highlighted,.highlighted .reply{border-style:dashed!important;border-width:2px!important;border-color:#F50!important;}.postcontent,.rl-inf,.f-left{float:left;}br + .postbody{clear:both;}.sinf{color:#666;font-size:.8em;}.magic-picture:before{content:" "}.celrly:not([hidden]) + .celrly:before, .celrly + * + .celrly:before{content:",   ";color:#666!important;cursor:default;}.celrly:not([hidden]) ~ .rl-inf{display:inline!important;}\
 .view-eye{background:url(/src/png/1506/p-stub-hide.png)no-repeat scroll center;}.i-block{display:inline-block;}\
-.turn-on{position:absolute;bottom:50px;}\
+.turn-on{position:absolute;bottom:50px;}.i-fav:before{content:"";margin-right:5px;padding:7px;background:transparent no-repeat scroll center center / 16px;}#icm-fsw-google:before{content:"";background-image:url(/src/png/1407/google_14_icon.png);}#icm-fsw-iqdb:before{content:"";background-image:url(/images/booru.png);}#icm-fsw-saucenao:before{content:"";background-image:url(//lh5.googleusercontent.com/PwUKd2IMqOi0BQkhZlf9IgCWg7Ziqb2qanUF1pJRsxYElA3MUZF4v69lOAh4kyV_EPSNLxq7XQ=s26-h26-e365);}#icm-fsw-derpibooru:before{content:"";background-image:url(/src/png/1407/derpibooru_icon.png)}\
 @-webkit-keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}@keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}\
 @keyframes onReady{50% {opacity:0;}} @-webkit-keyframes onReady{50% {opacity:0;}}'+ mesShadows + mesAnimations;
 	
