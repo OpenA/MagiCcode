@@ -691,7 +691,7 @@ function MagicExtension() {
 					}
 				for (i = posts.length - 1; posts[i]; i--) {
 					if (Math.round(new Date(posts[i].querySelector('.posterdate').id).getTime() / 1000) > last_date){
-						total_posts_board = last_id - _cid(posts[i].id);
+						total_posts_board += last_id - _cid(posts[i].id);
 						total_posts++;
 					}
 				}
