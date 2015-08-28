@@ -687,11 +687,11 @@ function MagicExtension() {
 					last_date = Math.round(new Date(posts.last().querySelector('.posterdate').id).getTime() / 1000) - (60 * 60),
 					last_id = _cid(posts.last().id),
 					nstr = function(num) {
-						return num +' '+ LC.hidden[2][lng] + (num === 0 || num > 5 ? LC.few['u-b'][lng] : num === 1 ? '' : LC.few['u-a'][lng]) +'/'+ LC.tm['h'][lng];
+						return num +' '+ LC.hidden[2][lng] + (num === 0 || num >= 5 ? LC.few['u-b'][lng] : num === 1 ? '' : LC.few['u-a'][lng]) +'/'+ LC.tm['h'][lng];
 					}
 				for (i = posts.length - 1; posts[i]; i--) {
 					if (Math.round(new Date(posts[i].querySelector('.posterdate').id).getTime() / 1000) > last_date){
-						total_posts_board += last_id - _cid(posts[i].id);
+						total_posts_board = last_id - _cid(posts[i].id) + 1;
 						total_posts++;
 					}
 				}
