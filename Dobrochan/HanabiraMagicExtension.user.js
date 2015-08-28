@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.5.2
+// @version 		1.5.3
 // @grant   		none
 // ==/UserScript==
 
@@ -252,7 +252,7 @@ function MagicExtension() {
 		tm: {
 			's': ['sec', 'cек'],
 			'm': ['min', 'мин'],
-			'h': ['h', 'ч']
+			'h': ['hour', 'час']
 		},
 		few: {
 			'u-a': ["\'s", "а"],
@@ -295,6 +295,7 @@ function MagicExtension() {
 	Array.prototype.isThere = matchIndex;
 	String.prototype.isThere = matchIndex;
 	Array.prototype.last = getLast;
+	NodeList.prototype.last = getLast;
 	HTMLCollection.prototype.last = getLast;
 	String.prototype.allReplace = function(obj, r) {
 		var retStr = this;
@@ -369,7 +370,6 @@ function MagicExtension() {
 		var node = el || document;
 		return {
 			images: node.querySelectorAll('.file > a > img.thumb[onclick^="expand_image"], .file > a[href$=".svg"] > img'),
-			hoos: node.querySelectorAll('.reply-link, .spr-image, .sp-r'),
 			links: node.querySelectorAll('.message a:not(#cm-link):not(.reply-link)'),
 			elements: node.querySelectorAll('.delete.icon, .fileinfo, .postername:not(.t-sec), .postertrip:not(.t-sec), .reply_, .file > a[href$=".swf"] > img, img[alt^="r-1"]:not(.spr-image), img[alt="unrated"]:not(.spr-image), img[alt="illegal"]:not(.spr-image), .file > a > img[src="/thumb/generic/sound.png"], .file > a[href$=".webm"] > img, .file > a[href$=".pdf"] > img, .file > a > img[onclick^="open_url"]')
 		}
@@ -524,15 +524,26 @@ function MagicExtension() {
 	}
 	
 	function getDateTime(jsonDT) {
-		var date = new RegExp(/(?:(\d*)\-(\d*)\-(\d*)|(\d*)\s(\w*)\s(\d*)\s\(\w*\))\s(\d*\:\d*)(\:\d*)?/gm).exec(jsonDT),
-			year = (date[1] || date[6]), month = (date[2] || date[5]), day = (date[3] || date[4]), hmin = date[7], sec = (date[8] || ''),
-			uDate = new Date(month +" "+ day +", "+ year +" "+ hmin + " GMT+0300"),
-			Time = uDate.toLocaleTimeString(),
-			Month = LC.Month[uDate.getMonth()][lng],
-			Weekday = LC.Weekday[uDate.getDay()][lng],
-			Day = uDate.getDate(), Year = uDate.getFullYear();
-		return '\n<span class="posterdate">'+ (Day < 10 ? "0" : '') + Day +" "+ Month +" "+ Year +" "+ Weekday +" "+
-			(Time.length === 7 ? "0" + Time.slice(0, 4) : Time.slice(0, 5)) +'<span class="t-sec">'+ sec +'</span></span>';
+		try {
+			var date  = new RegExp(/(?:(\d*)\-(\d*)\-(\d*)|(\d*)\s(\w*)\s(\d*)\s\(\w*\))\s(\d*\:\d*)(\:\d*)?/gm).exec(jsonDT),
+				year  = (date[1] || date[6]),
+				month = (date[2] || date[5]),
+				day   = (date[3] || date[4]),
+				hmin  =  date[7],
+				sec   = (date[8] || ''),
+				uDate = new Date(month +" "+ day +", "+ year +" "+ hmin + " GMT+0300"),
+				Year  = uDate.getFullYear(),
+				Month = uDate.getMonth(),
+				Weday = uDate.getDay(),
+				Day   = uDate.getDate(),
+				Time  = uDate.toTimeString().split(' ')[0],
+				Outer = '\n<span id="'+ uDate.toJSON() +'" class="posterdate">'+ (Day < 10 ? "0" : '') + Day +" "+ LC.Month[Month][lng] +" "+
+					Year +" "+ LC.Weekday[Weday][lng] +" "+(Time.length === 7 ? "0" + Time.slice(0, 4) : Time.slice(0, 5)) +'<span class="t-sec">'+ sec +'</span></span>';
+		} catch(e) {
+			_z.dbg(e);
+		} finally {
+			return Outer;
+		}
 	}
 	
 	function getDefaultName(name) {
@@ -569,10 +580,11 @@ function MagicExtension() {
 	
 	/*** Magic Thread Listener ***/
 	function MagicThreadListener(Thread) {
-		var MListen = this, CiD = HM.URL.thread, Posts, thread_updating, play_notify,
+		var MListen = this, CiD = HM.URL.thread, Posts, thread_updating, play_notify, Autosage,
 			Timer = { id: 0, offset: 0, ql: UpdateInterval(0) },
 			Count = { dif: 0, new: 0, del: 0, mod: 0 },
 			WarningMsg = _z.setup('strong', {'id': 'warning-massage', 'class': 'blink'}, null),
+			SageIcon = '<span class="sagearrow line-sect" style="right:6px;"></span>',
 			ExpCache = new Array(0),
 			Notif = _z.setup(new Audio('/src/mp3/1406/musbox.mp3'), {}, {
 				'play': function(e) { play_notify = true },
@@ -596,6 +608,7 @@ function MagicExtension() {
 			}
 		if (Thread) {
 			CiD = _cid(Thread.id);
+			Autosage = Thread.querySelector('img[src="/images/autosage.gif"]');
 			Posts = Thread.getElementsByClassName('post');
 			this.updateThread = updateThread; this.updateTimer = updateTimer; this.expandThread = expandThread; this.truncatThread = truncatThread; this.getThread = getHanabiraFullThread;
 			function el$(child) { return MListen['NewPostLoader'].querySelector(child) }
@@ -641,11 +654,13 @@ function MagicExtension() {
 					}
 				}
 			});
-			this['PostsCount'] = _z.setup('label', {'id': 'post-count', 'class': 'etch-text f-left', 'text': Posts.length + LC.omit[lng]}, null);
-			this['AllowedPosts'] = _z.setup('label', {'id': 'allowed-posts', 'class': 'etch-text', 'html': '<span class="rl-inf">\n&nbsp;|&nbsp;'+ LC.allw[lng] +':&nbsp;\n</span>'}, null);
+			this['PostsCount'] = _z.setup('label', {'id': 'post-count', 'class': 'etch-text break-lines', 'html': (Autosage ? SageIcon : '') + Posts.length + LC.omit[lng]});
+			this['SpeedCount'] = _z.setup('label', {'id': 'speed-count', 'class': 'etch-text', 'html': speedMether(Posts)[0]});
+			this['AllowedPosts'] = _z.setup('label', {'id': 'allowed-posts', 'class': 'etch-text', 'html': '<span class="rl-inf">'+ LC.allw[lng] +':&nbsp;\n</span>'});
 			this['setInterval'] = _z.setup(el$('#int-val'), {'value': Timer.ql.int}, null);
 		} else {
 			return {
+				getSpeedCount: speedMether,
 				getThread: function(ts) {
 					getDataResponse('/api/thread/'+ HM.URL.board +'/'+ HM.URL.thread +'/all.json?new_format&message_html',
 					function(status, sText, json, xhr) {
@@ -664,6 +679,26 @@ function MagicExtension() {
 				},
 				getPost: getHanabiraPost,
 				getFile: getHanabiraFile
+			}
+		}
+		function speedMether(posts) {
+			try {
+				var i = total_posts_board = total_posts = 0, tp_s, tp_bs,
+					last_date = Math.round(new Date(posts.last().querySelector('.posterdate').id).getTime() / 1000) - (60 * 60),
+					last_id = _cid(posts.last().id),
+					nstr = function(num) {
+						return num +' '+ LC.hidden[2][lng] + (num === 0 || num > 5 ? LC.few['u-b'][lng] : num === 1 ? '' : LC.few['u-a'][lng]) +'/'+ LC.tm['h'][lng];
+					}
+				for (i = posts.length - 1; posts[i]; i--) {
+					if (Math.round(new Date(posts[i].querySelector('.posterdate').id).getTime() / 1000) > last_date){
+						total_posts_board = last_id - _cid(posts[i].id);
+						total_posts++;
+					}
+				}
+				tp_s = ('<span class="break-lines">\n&nbsp;'+ nstr(total_posts) +'\n('+ Math.round(100*total_posts/total_posts_board) +'%)\n&nbsp;</span>').replace('(Infinity%)', '∞');
+				tp_bs = '<span class="break-lines">\n&nbsp;'+['On board: ', 'доска: '][lng] + nstr(total_posts_board) +'\n&nbsp;</span>';
+			} catch(e) { _z.dbg(e) } finally {
+				return [tp_s + tp_bs, tp_s, tp_bs]
 			}
 		}
 		function UpdateInterval(offset) {
@@ -698,10 +733,11 @@ function MagicExtension() {
 						getDataResponse('/api/thread/'+ HM.URL.board +'/'+ CiD +'.json?new_format',
 							function(status, sText, json, xhr) {
 								if (json.result) {
+									Autosage = json.result.autosage;
 									updateCount(json.result.posts_count)
-									var postStat = '( '+ (Count.new > 0 ? '+'+ Count.new + LC.newp[lng] : '') +
-										' • '+ (Count.del < 0 ? Count.del + LC.delp[lng] : '') +' • '+ (Count.mod > 0 ? Count.mod + LC.pmod[lng] : '') +')';
-									MListen['PostsCount'].textContent = Posts.length + LC.omit[lng] + postStat;
+									var postStat = (Count.new > 0 ? '<span class="break-midot">\n+'+ Count.new + LC.newp[lng] +'</span>' : '') + (Count.del < 0 ? '<span class="break-midot">\n'+
+										Count.del + LC.delp[lng] +'</span>' : '') + (Count.mod > 0 ? '<span class="break-midot">\n'+ Count.mod + LC.pmod[lng] +'</span>' : '');
+									MListen['PostsCount'].innerHTML = (Autosage ? SageIcon : '') + Posts.length + LC.omit[lng] + (postStat ? '<span class="parensis">'+ postStat +'</span>' : '');
 								}
 							});
 						updateTimer();
@@ -755,6 +791,7 @@ function MagicExtension() {
 					}
 					_z.replace(UpdBtn, error);
 				} else {
+					Autosage = json.result.autosage;
 					pCount = json.result.posts_count;
 					el = json.result.posts;
 					len = el ? el.length : 0;
@@ -764,10 +801,12 @@ function MagicExtension() {
 						for (i = 0; i < len; i++) {
 							try {
 								temp_post = getHanabiraPost(el[i]);
-							} catch(e) { console.error(e) }
-							Thread.appendChild(temp_post);
+							} catch(e) { _z.dbg(e) } finally {
+								Thread.appendChild(temp_post);
+							}
 						}
 						Tinycon.setBubble(unread_count);
+						MListen['SpeedCount'].innerHTML = speedMether(Posts)[0];
 					} else if (typeof e === 'number')
 						Timer.offset += e;
 				}
@@ -779,7 +818,7 @@ function MagicExtension() {
 					updateTimer();
 				}
 				if (e && !error) {
-					MListen['PostsCount'].textContent = pCount + LC.omit[lng] + (Count.mod > 0 ? ' ( +'+ Count.mod + LC.pmod[lng] +' )' : '');
+					MListen['PostsCount'].innerHTML = (Autosage ? SageIcon : '') + pCount + LC.omit[lng] + (Count.mod > 0 ? '<span class="parensis">\n+'+ Count.mod + LC.pmod[lng] +'\n</span>' : '');
 					genReplyMap(Posts);
 				}
 				statusButton(UpdBtn, 1)
@@ -819,7 +858,7 @@ function MagicExtension() {
 											'href': '/'+ HM.URL.board +'/res/'+ CiD +'.xhtml#i'+ jpid(i), 'text': '>>'+ jpid(i)}, {
 											'click': Chanabira.MagicHighlight, 'mouseover': Chanabira.MagicPostView
 										});
-										_z.after(MListen['PostsCount'], MListen['AllowedPosts'])
+										_z.after(Thread, MListen['AllowedPosts'])
 										_z.before(MListen['AllowedPosts'].lastElementChild, derefl);
 									}
 								}
@@ -837,7 +876,7 @@ function MagicExtension() {
 				thread_updating = false;
 				if (!ExpandMap)
 					updateTimer();
-				MListen['PostsCount'].textContent = pCount + LC.omit[lng] + (Count.mod > 0 ? ' ( +'+ Count.mod + LC.pmod[lng] +' )' : '');
+				MListen['PostsCount'].innerHTML = (Autosage ? SageIcon : '') + pCount + LC.omit[lng] + (Count.mod > 0 ? '<span class="parensis">\n+'+ Count.mod + LC.pmod[lng] +'\n</span>' : '');
 			});
 		}
 		function getHanabiraPost(postJson, threadStat, mapArr) {
@@ -1012,7 +1051,9 @@ function MagicExtension() {
 					reftab = document.getElementById('ref-'+ id), binded = function (el) {
 						var load = (el.querySelector('.reply:not(.autohidden)') || el).cloneNode(true)
 						_z.remove(load.querySelectorAll('form.edit'))
-						attachEvents(load);
+						_z.each(load.querySelectorAll('.reply-link'), function(a) {
+							a.addEventListener('mouseover', Chana.MagicPostView, false);
+						});
 						if (attach && load.classList[1] !== 'stub') {
 							BindCloseRef(reftab);
 						} else {
@@ -1070,8 +1111,10 @@ function MagicExtension() {
 				Timrs.clear('PopupOpen');
 			}
 			function add_mapping(mapp) {
-				if (mapp)
-					_z.setup(mapp, {'class': mapp.className +' mapped locked'});
+				if (mapp) {
+					mapp.classList.add('mapped');
+					mapp.classList.add('locked');
+				}
 			}
 			function set_style(r) {
 				var w = window.innerWidth, mw,
@@ -1680,25 +1723,6 @@ function MagicExtension() {
 			}
 		});
 	}
-	function attachEvents(node) {
-		_z.each(GetElements(node).hoos,
-		function(a) {
-			switch (a.classList[0]) {
-				case 'reply-link':
-					if (a.classList[2] !== 'locked')
-						a.addEventListener('mouseover', Chanabira.MagicPostView, false);
-					break;
-				case 'sp-r':
-					a.addEventListener('click', function(e) {
-						hRate(this, this.parentNode.parentNode.querySelector('img.spr-image'))
-					}, false)
-					break;
-				case 'spr-image':
-					a.addEventListener('click', MagicSpoirate, false)
-			}
-		});
-	}
-	
 	function hRate(el, img) {
 		if (el.classList[2]) {
 			el.classList.remove('rate')
@@ -1708,25 +1732,22 @@ function MagicExtension() {
 			img.src = '/images/'+ img.alt +'.png'
 		}
 	}
-	function MagicSpoirate(e) {
-		if (this.classList[2] === 'rated') {
-			var finf = _z.route(this, '.fileinfo > a + br'), iMg = this,
-				href = this.parentNode.href,
-				fid = this.parentNode.parentNode.id.split('_'),
-				btnRate = _z.setup('a', {'class': 'sp-r txt-btn', 'text': this.alt}, {
-					'click': function(e) { hRate(this, iMg) }
-				});
-			createImgContext(this);
+	function MagicSpoirate(el) {
+		if (el.classList[2] === 'rated') {
+			var finf = _z.route(el, '.fileinfo > a + br'),
+				href = el.parentNode.href,
+				fid = el.parentNode.parentNode.id.split('_'),
+				btnRate = _z.setup('a', {'class': 'sp-r txt-btn', 'text': el.alt});
+			createImgContext(el);
 			_z.after(finf, btnRate);
-			this.classList.remove('rated');
-			this.src = href;
-		} else if (this.alt.fext() == 'svg') {
-			this.alt = this.src;
-			this.src = this.parentNode.href;
+			el.classList.remove('rated');
+			el.src = href;
+		} else if (el.alt.fext() == 'svg') {
+			el.alt = el.src;
+			el.src = el.parentNode.href;
 		}
-		this.classList.toggle('unexpanded')
-		this.classList.toggle('expanded')
-		return _z.fall(e);
+		el.classList.toggle('unexpanded')
+		el.classList.toggle('expanded')
 	}
 	function createFileContent(fileSrc, hash, Id, type) {
 		var fileName = getPageName(fileSrc),
@@ -1919,7 +1940,7 @@ function MagicExtension() {
 			'<div id="yuki-errorMsg"></div>'+
 			'<table><tbody id="yuki-dropBox" class="line-sect"><tr class="etch-text"></tr><tr class="droparrow inactive"></tr></tbody><tbody class="line-sect">'+
 			'<tr id="trname"><td><input placeholder="'+ getDefaultName() +'" name="name" size="30" value="" type="text">'+
-				'<label class="sagearrow line-sect txt-btn inactive"><input id="yuki-sage" name="sage" type="checkbox" hidden></label>'+
+				'<label class="sagearrow line-sect txt-btn inactive" style="right:24px;"><input id="yuki-sage" name="sage" type="checkbox" hidden></label>'+
 				'<label id="yuki-newThread-create" class="yuki_clickable inactive">'+ LCY.newt[lng] +'<span class="t-sec">\n/'+ Yum.brd +
 				'/</span></label><span class="txt-btn yuki_clickable" id="yuki-close-form" title="'+ LC.remv[lng] +'">✕</span></td></tr>'+
 			'<tr id="trsubject"><td><input placeholder="'+ LCY.subj[lng] +'" name="subject" size="30" maxlength="64" value="" type="text">'+
@@ -2690,7 +2711,6 @@ function MagicExtension() {
 						var input = document.getElementById('rs-url');
 						input.value = this.contentSource;
 						input.parentNode.submit();
-						break;
 				}
 			}
 		});
@@ -2708,6 +2728,7 @@ function MagicExtension() {
 				}
 			});
 		this['DeleteOverlay'] = _z.setup('div', {'id': 'delete-overlay'});
+		this['StatusPanel'] = _z.setup('div', {'id': 'status-panel'});
 		this['ContentMarker'] = _z.setup('label', {'id': 'show-content-window', 'class': 'hidout'}, {
 				'click': function(e) {
 					_show(MEt['ContentWindow']);
@@ -2749,8 +2770,8 @@ function MagicExtension() {
 			(HM.MC == 0 ? 'checked ' : '') +'id="media-placement" value="0" name="cont_p" type="radio">\n'+ SLC.mcw[lng] +'\n<input '+
 			(HM.MC == 1 ? 'checked ' : '') +'id="media-placement" value="1" name="cont_p" type="radio">\n'+ SLC.mcp[lng] +'\n</label></td><td class="s-sect">'+
 			SLC.cframe[lng] +'</td></tr><tr id="vs-set" class="'+ (HM.MC == 0 ? 'hidout' : '') +'"><td class="f-sect"><input id="video-frame-size" min="1" value="'+
-			getVSize('value') +'" step="1" max="4" type="range" name="v_size"></td><td class="s-sect">'+ SLC.vsyz[lng] +'\n<span id="vsize-textbox">('+
-			getVSize('text') +')</span></td></tr><tr><td class="f-sect"><select id="max-allowed-rating" class="rating_'+ HM.maXrating.replace('-', '') +'"><option class="rating_SFW">SFW</option>'+
+			getVSize('value') +'" step="1" max="4" type="range" name="v_size"></td><td class="s-sect">'+ SLC.vsyz[lng] +'\n<span id="vsize-textbox" class="parensis">'+
+			getVSize('text') +'</span></td></tr><tr><td class="f-sect"><select id="max-allowed-rating" class="rating_'+ HM.maXrating.replace('-', '') +'"><option class="rating_SFW">SFW</option>'+
 			'<option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select></td>'+
 			'<td class="s-sect">'+ SLC.maxr[lng] +'</td></tr><tr><td class="f-sect"><label><input id="oembedapi" type="checkbox" hidden'+
 			(HM.oEmbedAPI ? ' checked' : '') +'><span class="checkarea"></span></label></td><td class="s-sect"><a id="exemple-link" title="'+
@@ -2801,7 +2822,7 @@ function MagicExtension() {
 					var p = $Item.value;
 						_z.localS.set('VideoSize', p);
 					function size(w, h) {
-						document.getElementById('vsize-textbox').textContent = '('+w+'×'+h+')';
+						document.getElementById('vsize-textbox').textContent = w+'×'+h;
 						Megia['video']['Frame'].width = w;
 						Megia['video']['Frame'].height = h;
 						Megia['scbc']['Frame'].width = h;
@@ -3026,7 +3047,7 @@ function MagicExtension() {
 								wer(HM.Keywords[Types[n]].keys, Types[n], event.target)
 						}
 						break;
-					case 'footer':
+					case 'footer': try {
 						_z.append(document.head, [
 							_z.setup("script", {"src": "/src/js/1501/alac_0.1.0.js"}, null),
 							_z.setup("script", {"src": "/src/js/1501/flac_0.2.1.js"}, null)
@@ -3059,7 +3080,7 @@ function MagicExtension() {
 						if (locationThread) {
 							HM.ThreadListener[HM.URL.thread] = new MagicThreadListener(locationThread);
 							_z.append(delForm, [Nagato['OpenBottomForm'], HM.ThreadListener[HM.URL.thread]['NewPostLoader']]);
-							_z.after(locationThread, HM.ThreadListener[HM.URL.thread]['PostsCount']);
+							_z.append(mEl['StatusPanel'], [HM.ThreadListener[HM.URL.thread]['PostsCount'], HM.ThreadListener[HM.URL.thread]['SpeedCount']])
 							HM.ThreadListener[HM.URL.thread].updateTimer();
 						} else if (!locationThread && HM.URL.thread) {
 							var TS = _z.setup('div', {'id': 'thread_'+ HM.URL.thread, 'class': 'thread'})
@@ -3081,9 +3102,10 @@ function MagicExtension() {
 							_z.setup(delForm, {}, {'submit': Nagato.submitForm}).appendChild(mEl['DeleteOverlay']);
 						}
 						_z.append(document.body, [
-							mEl['ContentWindow'], mEl['ContentMarker'], mEl['ContextMenu'],
+							mEl['ContentWindow'], mEl['ContentMarker'], mEl['ContextMenu'], mEl['StatusPanel'],
 							new MagicSettings()['ButtonsPanel']
 						]);
+					} catch(e) { _z.dbg(e) }
 				}
 		}
 	}
@@ -3154,6 +3176,12 @@ function MagicExtension() {
 				var eXcaT = e.target.id.split('-')[1]
 				HM.ThreadListener[Map[1]][eXcaT +'Thread'](e);
 				e.target.id = 'thread-'+ (eXcaT === 'expand' ? 'truncat' : 'expand');
+				_z.fall(e);
+			case 'sp-r':
+				hRate(e.target, e.target.parentNode.parentNode.querySelector('img.spr-image'))
+				break;
+			case 'spr-image':
+				MagicSpoirate(e.target);
 				_z.fall(e);
 		}
 		function textSource(mNode) {
@@ -3267,7 +3295,7 @@ var mesShadows = /* hr shadow */ 'hr{border-style:none none solid!important;bord
 /* popup/error posts, settings panel sadows & dropdown menu */ '.reply,.popup{border:0 none transparent!important;}.active > .dropdown-label,.dropdown-menu,.popup,#magic-panel{box-shadow:5px 5px 10px rgba(0,0,0,.4),inset 0 0 30px rgba(0,0,0,.1);}'+
 /* reply post sadows */ '.oppost.highlighted,.reply,.highlight{padding:2px 1em 2px 2px!important;box-shadow:inset 0 1px 30px -9px #fff,0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);}.line-sect.reply{padding:2px 4px!important;}'+
 /* new reply post sadows */ '.new .reply{box-shadow:inset 0 1px 30px -9px rgba(255, 85, 0, 0.8),0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);}'+
-/* post images/files & audio players shadows */ '.thumb,.magic-picture.onpost-qview,.yukiFile,.scbc-container,.prosto-pleer,.audio-container video{box-shadow:1px 2px 2px -1px rgba(0,0,0,.4),-1px 0 4px -1px rgba(0,0,0,.2),inset 0 0 30px rgba(0,0,0,.1)!important;}'+
+/* post images/files & audio players shadows */ '.thumb,.magic-picture.onpost-qview,.yukiFile,.scbc-container,.prosto-pleer,.audio-container video,#status-panel{box-shadow:1px 2px 2px -1px rgba(0,0,0,.4),-1px 0 4px -1px rgba(0,0,0,.2),inset 0 0 30px rgba(0,0,0,.1)!important;}'+
 /* error massage, theader & text input shadows */ '#yuki-errorMsg,.theader,.passvalid,input[type="text"],input[type="password"],input[type="number"],textarea,.docs-container,.message code pre{box-shadow:inset 0 1px 2px rgba(0,0,0,.3)!important;-webkit-border-radius:5px;border-style:none!important;}input[type="text"],input[type="number"],input[type="password"],textarea{-webkit-border-radius:3px!important;padding:4px!important;}'+
 /* input buttons style */ 'input[type="button"],input[type="submit"],.button{transition:all .3s ease;box-shadow:0 1px 3px -1px rgba(0,0,0,.5),0 0 2px rgba(0,0,0,.2) inset;padding:3px 6px;color:#999;border:0 none;background-color:#fff;}input[type="button"]:hover,input[type="submit"]:hover,.button:hover{background-color:rgba(255,255,255,.5);}input[type="button"]:active,input[type="submit"]:active,.button:active{box-shadow:0 0 2px rgba(255,255,255,.3),0 0 2px rgba(0,0,0,.2) inset;background-color:rgba(255,255,255,.2);}'+
 /* input checkbox style */ '.checkarea{box-shadow:inset 1px 1px 2px rgba(0,0,0,.3),0 0 2px #fff;border-radius:3px;padding:0 4px;background-color:#fff;font-size:14px;}.checkarea:before{content:"✗";color:transparent;}input[type="checkbox"]:checked + .checkarea:before{color:grey;}'+
@@ -3287,12 +3315,12 @@ var mesAnimations = '.new .reply,#yuki-replyForm.reply{animation:pview .3s ease-
 var MagicStyle = '.hidout,.hide.icon,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google,#postform_placeholder,.reply #yuki-newThread-create,.edit #yuki-newThread-create,.submit-button.process input,.pleer-container + br,.artwork select,.magic-info + br,.autohidden,.autohidden + .dummy-line,.text-original, .reply-link[hidden] + .rl-inf, .magic-picture.onpost-qview + img.thumb,.submit-button span,form.edit ~ *:not(.abbrev),#delete-overlay,.popup .chek-to-del{display:none!important;}\
 .unexpanded,.rated{max-width:200px!important;max-height:200px!important;}.expanded{width:100%;height:auto;}.hideinfo{margin:5px;}.sp-r.rate{color:darkred;}#yuki-dropBox tr,.f-sect,.hideinfo{text-align:center!important;}\
 .dpop,#wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}.artwork{background:url(/src/svg/1505/ma-artwork.svg)no-repeat scroll center center / 100% auto;}.movie{background:url(/src/svg/1505/cm-movie.svg)no-repeat scroll center center / 100% auto;}\
-.content-frame,.scbc-container,.mhs-title,#magic-panel,.active > #timer-update-sets,.yukiFile,.dropdown-menu,.message code{background-color:#fefefe;}\
+.content-frame,.scbc-container,.mhs-title,#magic-panel,.active > #timer-update-sets,.yukiFile,.dropdown-menu,.message code,#status-panel{background-color:#fefefe;}\
 .yuki_clickable,.txt-btn,.wmark-button,.button,.el-li,.icon{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}\
 .replylinks,.button{line-height:2em;font-size:75%;clear:both;}#post-count,.txt-btn{color:#999;}.mapped,.mapped:hover{cursor:default;color:#666!important;}.hidup{top:-9999px!important;}\
 .footer:after,.stored:not(.stub):after,.new .reply:not(.stub):after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.cm-button{text-decoration:none;}.s-sect{text-align:left;padding-left:2em;color:#777;}\
 #yuki-captcha,#yuki-pass{width:295px;}#yuki-captcha-image{vertical-align:middle;margin:2px;}#yuki-dropBox{width:7em;height:18em;border:3px dashed rgba(99,99,99,.3);padding:2px;}\
-#convert-strike,.doubledash,.global #yuki-close-form,.dropdown-menu,.magic-picture.gallery-qview + img.thumb{visibility:hidden;}.sagearrow{background:url(/src/svg/1409/Sage.svg)no-repeat center bottom;position:relative;right:24px;top:6px;}.paperclip{background:url(/src/png/1411/attachpopup.png)no-repeat center;}\
+#convert-strike,.doubledash,.global #yuki-close-form,.dropdown-menu,.magic-picture.gallery-qview + img.thumb{visibility:hidden;}.sagearrow{background:url(/src/svg/1409/Sage.svg)no-repeat center bottom;position:relative;}.paperclip{background:url(/src/png/1411/attachpopup.png)no-repeat center;}\
 #yuki-errorMsg{text-align:center;color:#FFF;background-color:#E04000;}.wmark-button{color:#fefefe;text-shadow:0 1px 0 rgba(0,0,0,.4);}a:hover > .wmark-button{color:inherit;}.spoiler > .wmark-button{vertical-align:inherit;color:inherit;text-shadow:none;}\
 .rating_SFW{background:green;}.rating_R15{background:yellow;}.rating_R18{background:orange;}.rating_R18G{background:red;}.line-sect,.yukiFile,.cpop,.mpanel-btn,.postdeleted .doubledash{display:inline-block;}#warning-massage{color:#ff3428;}\
 .yukiFile,.yukiFileSets{font-size:66%;}.yukiFile{text-align:center;width:210px;-webkit-border-radius:5px;margin:5px;padding:2px;}.new .reply{background-color:rgba(212,115,94,.1);}\
@@ -3301,11 +3329,11 @@ var MagicStyle = '.hidout,.hide.icon,.add_,.play_,.view_,.edit_,.search_iqdb,.se
 #yuki-dropBox tr,.magic-picture.onpost-qview{display:block;}.droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em;}.yukiFile > .magic-audio{width:210px;height:210px;}.yukiFile > .magic-info{width:200px;}\
 #rf-cb-ty{background-image:url(/src/svg/1411/closepopup.svg);}#rf-cb-all{background-image:url(/src/svg/1411/closeallpopups.svg);}.dpop{float:right;background-image:url(/src/svg/1505/cmove.svg);cursor:move;}.sagearrow{cursor:default;}\
 .cpop{width:14px;height:14px;}.dpop,.sagearrow,.paperclip,.view-eye,.chek-to-del{width:20px;height:20px;}.reply-button{margin-left:3px;width:23px;height:14px;background:url(/src/svg/1505/reply-arrow.svg)no-repeat center top;}\
-#magic-buttons-panel,#magic-panel{position:fixed;z-index:99;}#magic-buttons-panel{right:1em;bottom:1em;}.mpanel-btn{padding:0 9px;width:28px;height:28px;opacity:.2;filter:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'grayscale\'><feColorMatrix type=\'matrix\' values=\'.3 .3 .3 0 0 .3 .3 .3 0 0 .3 .3 .3 0 0 0 0 0 1 0\'/></filter></svg>#grayscale");-webkit-filter:grayscale(100%);}\
+#magic-buttons-panel,#magic-panel,#status-panel{position:fixed;z-index:99;}#magic-buttons-panel{right:1em;bottom:1em;}.mpanel-btn{padding:0 9px;width:28px;height:28px;opacity:.2;filter:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'grayscale\'><feColorMatrix type=\'matrix\' values=\'.3 .3 .3 0 0 .3 .3 .3 0 0 .3 .3 .3 0 0 0 0 0 1 0\'/></filter></svg>#grayscale");-webkit-filter:grayscale(100%);}\
 .ta-inact::-moz-selection{background:rgba(99,99,99,.3);}.ta-inact::selection{background:rgba(99,99,99,.3);}#int-upd{bottom:2px;position:relative;}#allowed-posts a{text-decoration:none;text-shadow:none;font-weight:normal;font-size:14px;}\
 .mpanel-btn:hover,.mpanel-btn.active{opacity:1;filter:none;-webkit-filter:grayscale(0%);}#magic-panel tr{height:3em;}#vsize-textbox{color:#bbb;font-family:Trebuchet;}\
 #magic-panel{right:5px;bottom:5px;max-width:450px;height:300px;border-radius:8px;padding:9px;padding-bottom:3em;}.sp-r{text-align:right;font-size:18px;}\
-.postdeleted,.t-sec{opacity:.6;}.inactive{opacity:.4;}img[src="#transparent"]{opacity:0;}.wmark-button,.reply-button{vertical-align:middle;}.content-window{position:fixed;left:0;top:0;z-index:2999}\
+.postdeleted,.t-sec{opacity:.6;}.inactive{opacity:.4;}img[src="#transparent"]{opacity:0;}.wmark-button,.reply-button,.sagearrow{vertical-align:middle;}.content-window{position:fixed;left:0;top:0;z-index:2999}\
 .submit-button.process{font-size:13px;font-style:italic;color:#777;}@keyframes process{0%{width:0;}100%{width:1em;}}@-webkit-keyframes process{0%{width:0;}100%{width:1em;}}\
 .submit-button.process span{display:inline!important;}.process:after{content:"....";display:inline-block;overflow:hidden;animation:process 3s linear .1s infinite;-webkit-animation:process 3s linear .1s infinite;}\
 .magic-info,.sp-r{width:190px;background-color:rgba(255,255,255,.8);padding:5px;opacity:.6}.magic-info:hover,.sp-r:hover,.popup{z-index:1;opacity:1;}.magic-info,.magic-info + br,.sp-r,.content-frame{position:absolute;}\
@@ -3325,10 +3353,11 @@ var MagicStyle = '.hidout,.hide.icon,.add_,.play_,.view_,.edit_,.search_iqdb,.se
 .oppost.highlighted,.highlighted .reply{border-style:dashed!important;border-width:2px!important;border-color:#F50!important;}.postcontent,.rl-inf,.f-left{float:left;}br + .postbody{clear:both;}.sinf{color:#666;font-size:.8em;}.magic-picture:before{content:" "}.celrly:not([hidden]) + .celrly:before, .celrly + * + .celrly:before{content:",   ";color:#666!important;cursor:default;}.celrly:not([hidden]) ~ .rl-inf{display:inline!important;}\
 .view-eye{background:url(/src/png/1506/p-stub-hide.png)no-repeat scroll center;}.i-block{display:inline-block;}.postermenu{display:block;background:url(/src/svg/1508/new-dropdown-arrow.svg)no-repeat scroll bottom center / 18px;padding:9px;}.active > .postermenu{transform:rotate(180deg);-webkit-transform:rotate(180deg);box-shadow:none!important;background-position:top center;}\
 .turn-on{position:absolute;bottom:50px;}.i-fav:before{content:"";margin-right:5px;padding:8px;background:transparent no-repeat scroll center center / 16px;}#icm-fsw-google:before{background-image:url(/src/svg/1508/google_ico_monochrome.svg);}#icm-create-macro:before{background-image:url(/src/svg/1508/macroeditor_ico_monochrome.svg);}#icm-fsw-iqdb:before{background-image:url(/src/svg/1508/new-cube-icon-monochrome.svg);}#icm-fsw-saucenao:before{background-image:url(/src/svg/1508/soucenao_ico_monochrome.svg);}#icm-fsw-derpibooru:before{background-image:url(/src/svg/1508/trixie_cutie_mark_by_rildraw-d3khewr.svg);}\
+#status-panel{bottom:0;border-radius:0 5px;padding:3px 6px;}.break-lines + *:before{content:"||";font-size:12px;padding:0 2px;}.parensis:before{content:"("}.parensis:after{content:")"}.break-midot + *:before{content:"・";}\
 @-webkit-keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}@keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}\
 @keyframes onReady{50% {opacity:0;}} @-webkit-keyframes onReady{50% {opacity:0;}}'+ mesShadows + mesAnimations;
 	
-	try{ MagicExtension() }catch(e){console.error(e)}
+	try{ MagicExtension() }catch(e){ _z.dbg(e) }
 	
 	_z.append(document.head, [
 		_z.setup("script", {"src": "/src/js/1501/aurora_0.4.4.js"}, null),
