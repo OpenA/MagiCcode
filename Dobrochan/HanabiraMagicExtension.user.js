@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.5.3
+// @version 		1.5.4
 // @grant   		none
 // ==/UserScript==
 
@@ -371,7 +371,7 @@ function MagicExtension() {
 		return {
 			images: node.querySelectorAll('.file > a > img.thumb[onclick^="expand_image"], .file > a[href$=".svg"] > img'),
 			links: node.querySelectorAll('.message a:not(#cm-link):not(.reply-link)'),
-			elements: node.querySelectorAll('.delete.icon, .fileinfo, .postername:not(.t-sec), .postertrip:not(.t-sec), .reply_, .file > a[href$=".swf"] > img, img[alt^="r-1"]:not(.spr-image), img[alt="unrated"]:not(.spr-image), img[alt="illegal"]:not(.spr-image), .file > a > img[src="/thumb/generic/sound.png"], .file > a[href$=".webm"] > img, .file > a[href$=".pdf"] > img, .file > a > img[onclick^="open_url"]')
+			elements: node.querySelectorAll('.fileinfo, .postername:not(.t-sec), .postertrip:not(.t-sec), .reply_, .file > a[href$=".swf"] > img, img[alt^="r-1"]:not(.spr-image), img[alt="unrated"]:not(.spr-image), img[alt="illegal"]:not(.spr-image), .file > a > img[src="/thumb/generic/sound.png"], .file > a[href$=".webm"] > img, .file > a[href$=".pdf"] > img, .file > a > img[onclick^="open_url"]')
 		}
 	}
 
@@ -1628,11 +1628,6 @@ function MagicExtension() {
 	function hooElements(elems) {
 		_z.each(elems, function(el) {
 			switch (el.classList[0]) {
-				case 'delete':
-					var pMenu = _z.setup('ul', {'class': 'dropdown line-sect', 'html': '<li class="dropdown-toggle"><label class="postermenu dropdown-label el-li"></label><ul class="dropdown-menu"><li class="edit-post dropdown-item el-li">Редактировать</li><li class="hide-post dropdown-item el-li">Скрыть</li><li class="delete-post dropdown-item el-li">Удалить<span class="chek-to-del dropdown-input line-sect"></span></li></ul></li>'});
-					mEl['DeleteOverlay'].appendChild(el.firstElementChild);
-					_z.replace(el, pMenu)
-					break;
 				case 'fileinfo':
 					var a = el.firstElementChild, name = getPageName(a.href);
 					_z.setup(a, {'class': 'download-link', 'download': name, 'title': name});
@@ -2048,7 +2043,7 @@ function MagicExtension() {
 				var key = e.charCode;
 				if (key > 38 && !e.ctrlKey) {
 					var keychar = SwapL(String.fromCharCode(key), LC.lng[lng]);
-					wmarkText(this, keychar, '++')
+					wmarkText(this, keychar, '\r')
 					_z.fall(e);
 				}
 			}
@@ -2352,17 +2347,15 @@ function MagicExtension() {
 					if (this.status === 304) {
 						console.warn('304 ' + this.statusText);
 					} else {
-						var del_checks = document.querySelectorAll('.delete_checkbox:checked'),
-							target_post = document.getElementById('post_'+ formData[0].name);
+						var del_checks = document.querySelectorAll('.delete_checkbox:checked');
 						if (this.responseURL === action) {
 							var rText = this.responseText,
 								msg = (/<center><h2>(.+)<\/h2><\/center>/).exec(rText),
 								warn = _z.setup(WarningMsg, {'text': msg[1], 'style': 'width:100%;padding:5px;top:0;display:block;text-align:center;background-color:#fefefe;position:fixed;'});
-							document.body.appendChild(warn);
-							_z.each(del_checks, function(chkbx){ chkbx.checked = false });
+								document.body.appendChild(warn);
 						} else {
 							if (del_checks.length === 1) {
-								target_post.className = 'postdeleted';
+								document.getElementById('post_'+ del_checks[0].name).className = 'postdeleted';
 								del_checks[0].remove();
 							} else if (locationThread) {
 								setTimeout(function() {
@@ -2370,6 +2363,8 @@ function MagicExtension() {
 								}, 2000)
 							}
 						}
+						_z.each(del_checks, function(chkbx){ chkbx.checked = false });
+						_z.each('.chek-to-del.selected', function(ctd_sel){ ctd_sel.classList.remove('selected') });
 					}
 				}
 			}
@@ -3065,11 +3060,16 @@ function MagicExtension() {
 						
 						_z.each(posts, function(post) {
 							var url = ParseUrl(post.querySelector('.reflink > a').href),
-								patchId = url.board +'_'+ url.thread +'_'+ url.pid;
+								patchId = url.board +'_'+ url.thread +'_'+ url.pid,
+								delbox = post.getElementsByClassName('delete_checkbox')[0],
+								delico = delbox.parentNode,
+								pMenu = _z.setup('ul', {'class': 'dropdown line-sect', 'html': '<li class="dropdown-toggle"><label class="postermenu dropdown-label el-li"></label><ul class="dropdown-menu"><li class="edit-post dropdown-item el-li">Редактировать</li><li class="hide-post dropdown-item el-li">Скрыть</li><li class="delete-post dropdown-item el-li">Удалить<span class="chek-to-del dropdown-input line-sect"></span></li></ul></li>'});
 								HM.PostConstructor[patchId] = {
 									el: post,
-									delete_input: _z.setup(document.getElementById('delbox_'+ url.pid), {'checked': false})
+									delete_input: _z.setup(delbox, {'checked': false})
 								}
+							mEl['DeleteOverlay'].appendChild(delbox);
+							_z.replace(delico, pMenu)
 							_z.setup(post, {'patch-id': patchId}, {'click': PDownListener});
 							_z.setup(post.querySelector('.abbrev a[onclick^="GetFullText"]'), {'class': 'Get-Full-Text', 'onclick': undefined});
 						})
@@ -3122,7 +3122,6 @@ function MagicExtension() {
 			case 'delete-post': delPost(this); break;
 			case 'chek-to-del':
 				e.target.classList.toggle('selected');
-				e.target.parentNode.parentNode.previousElementSibling.classList.toggle('red-light');
 				HM.PostConstructor[patchId].delete_input.checked = e.target.classList.contains('selected');
 				break;
 			case 'mview':
