@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.5.4
+// @version 		1.5.5
 // @grant   		none
 // ==/UserScript==
 
@@ -336,6 +336,13 @@ function MagicExtension() {
 		HM[option] = val;
 		_z[stor +'S'].set(option, val);
 	}
+	function getCoords(elem) {
+		var box = elem.getBoundingClientRect();
+		return {
+			top: box.top + pageYOffset,
+			left: box.left + pageXOffset
+		}
+	}
 	function getVSize(arg) {
 		var out, n = _z.localS.get('VideoSize', 2),
 			w = (n == 4 ? 854 : n == 3 ? 720 : n == 2 ? 480 : 360),
@@ -586,8 +593,8 @@ function MagicExtension() {
 			WarningMsg = _z.setup('strong', {'id': 'warning-massage', 'class': 'blink'}, null),
 			SageIcon = '<span class="sagearrow line-sect" style="right:6px;"></span>',
 			ExpCache = new Array(0),
-			Notif = _z.setup(new Audio('/src/mp3/1406/musbox.mp3'), {}, {
-				'play': function(e) { play_notify = true },
+			Notif = _z.setup('audio', {'html': '<source src="/src/mp3/1406/musbox.mp3" type="audio/mpeg"><source src="/src/ogg/1404/musbox.ogg" type="audio/ogg">'}, {
+				'play' : function(e) { play_notify = true },
 				'ended': function(e) { play_notify = false }
 			}),
 			MLLC = {
@@ -613,8 +620,8 @@ function MagicExtension() {
 			this.updateThread = updateThread; this.updateTimer = updateTimer; this.expandThread = expandThread; this.truncatThread = truncatThread; this.getThread = getHanabiraFullThread;
 			function el$(child) { return MListen['NewPostLoader'].querySelector(child) }
 			this['NewPostLoader'] = _z.setup('span', {'id': 'new-post-loader', 'html': '<div class="stat-line"><a id="load-new">'+ MLLC.loadnew[lng] +
-					'</a></div><label><input id="notif-chbx" type="checkbox" hidden'+ (HM.SoundNotify ? ' checked' : '') +'><span class="checkarea"></span>\n'+ MLLC.snd_notify[lng] +
-					'</label><br><label><input id="upd-chbx" type="checkbox" hidden'+ (HM.AutoUpdate ? ' checked' : '') +'><span class="checkarea"></span>\n'+ MLLC.updauto[lng] +
+					'</a></div><label><input id="SoundNotify-chbx" type="checkbox" hidden'+ (HM.SoundNotify ? ' checked' : '') +'><span class="checkarea"></span>\n'+ MLLC.snd_notify[lng] +
+					'</label><br><label><input id="AutoUpdate-chbx" type="checkbox" hidden'+ (HM.AutoUpdate ? ' checked' : '') +'><span class="checkarea"></span>\n'+ MLLC.updauto[lng] +
 					'</label><ul class="dropdown line-sect"><li class="dropdown-toggle"><label id="timer-update-sets" class="dropdown-label el-li t-sec">'+
 					(MLLC.dsl[Timer.ql.value] || checkHTime(Timer.ql.value))[lng] +'</label><ul class="dropdown-menu"><li class="dropdown-item el-li" id="quet-mode-set">'+
 					MLLC.dsl['quet'][lng] +'</li><li class="dropdown-item el-li" id="autotimer-set">'+ MLLC.dsl['autotimer'][lng] +'</li><li class="dropdown-item el-li" id="manual-int-set">'+
@@ -635,14 +642,13 @@ function MagicExtension() {
 						case 'autotimer-set':
 							_z.sessionS.set('UpdateMode', (val || e.target.id.split('-')[0]));
 							el$('.dropdown-label').textContent = (txt || e.target.textContent);
+							updateTimer();
 					}
 				}, 'change': function(e) {
 					switch (e.target.id) {
-						case 'notif-chbx':
-							setupOptions(e.target, 'SoundNotify', 'session');
-							break;
-						case 'upd-chbx':
-							setupOptions(e.target, 'AutoUpdate', 'session');
+						case 'SoundNotify-chbx':
+						case 'AutoUpdate-chbx':
+							setupOptions(e.target, e.target.id.split('-')[0], 'session');
 							updateTimer();
 					}
 				}
@@ -662,10 +668,9 @@ function MagicExtension() {
 			return {
 				getSpeedCount: speedMether,
 				getThread: function(ts) {
-					getDataResponse('/api/thread/'+ HM.URL.board +'/'+ HM.URL.thread +'/all.json?new_format&message_html',
-					function(status, sText, json, xhr) {
+					getDataResponse('/api/thread/'+ HM.URL.board +'/'+ HM.URL.thread +'/all.json?new_format&message_html', function(status, sText, json, xhr) {
 						if (status !== 200 || json.error) {
-							return _z.setup(WarningMsg, {'class': undefined, 'text': (json.error || status +' '+ sText)});
+							return _z.setup(WarningMsg, {'class': undefined, 'text': (json.error ? json.error.message +' '+ json.error.code : status +' '+ sText)});
 						} else {
 							for (var i = 0, temp_post, jTS = json.result, jsonPosts = jTS.posts; jsonPosts[i]; i++) {
 								temp_post = getHanabiraPost(jsonPosts[i], [jTS.archived, jTS.autosage], [HM.URL.board, jTS.display_id]);
@@ -683,20 +688,21 @@ function MagicExtension() {
 		}
 		function speedMether(posts) {
 			try {
-				var i = total_posts_board = total_posts = 0, tp_s, tp_bs,
+				var i = total_posts_board = total_posts = 0, tp_s, tp_bs, I,
 					last_date = Math.round(new Date(posts.last().querySelector('.posterdate').id).getTime() / 1000) - (60 * 60),
 					last_id = _cid(posts.last().id),
 					nstr = function(num) {
 						return num +' '+ LC.hidden[2][lng] + (num === 0 || num >= 5 ? LC.few['u-b'][lng] : num === 1 ? '' : LC.few['u-a'][lng]) +'/'+ LC.tm['h'][lng];
 					}
 				for (i = posts.length - 1; posts[i]; i--) {
-					if (Math.round(new Date(posts[i].querySelector('.posterdate').id).getTime() / 1000) > last_date){
+					if (Math.round(new Date(posts[i].querySelector('.posterdate').id).getTime() / 1000) > last_date) {
 						total_posts_board = last_id - _cid(posts[i].id) + 1;
 						total_posts++;
 					}
 				}
-				tp_s = ('<span class="break-lines">\n&nbsp;'+ nstr(total_posts) +'\n('+ Math.round(100*total_posts/total_posts_board) +'%)\n&nbsp;</span>').replace('(Infinity%)', '∞');
-				tp_bs = '<span class="break-lines">\n&nbsp;'+['On board: ', 'доска: '][lng] + nstr(total_posts_board) +'\n&nbsp;</span>';
+				I = Math.round(100*total_posts/total_posts_board);
+				tp_s = '<span class="break-lines">\n&nbsp;'+ nstr(total_posts) + (I === Infinity ? '∞' : '\n('+ I +'%)') +'&nbsp;\n</span>';
+				tp_bs = '<span class="break-lines">\n&nbsp;'+['On board: ', 'доска: '][lng] + nstr(total_posts_board) +'&nbsp;\n</span>';
 			} catch(e) { _z.dbg(e) } finally {
 				return [tp_s + tp_bs, tp_s, tp_bs]
 			}
@@ -706,7 +712,7 @@ function MagicExtension() {
 			if (isNaN(val))
 				t = 45 + (offset > 135 ? 135 : offset);
 			else
-				t = val < 15 ? 45 : val;
+				t = !val || val < 15 ? 45 : val;
 			return { value: val, int: t }
 		}
 		function checkHTime(x) {
@@ -726,25 +732,26 @@ function MagicExtension() {
 		}
 		function updateTimer() {
 			clearTimeout(Timer.id);
-			Timer.ql = UpdateInterval(Timer.offset);
-			Timer.id = setTimeout(function() {
-				if (HM.AutoUpdate) {
-					if (Timer.ql.value === 'quet') {
-						getDataResponse('/api/thread/'+ HM.URL.board +'/'+ CiD +'.json?new_format',
-							function(status, sText, json, xhr) {
-								if (json.result) {
-									Autosage = json.result.autosage;
-									updateCount(json.result.posts_count)
-									var postStat = (Count.new > 0 ? '<span class="break-midot">\n+'+ Count.new + LC.newp[lng] +'</span>' : '') + (Count.del < 0 ? '<span class="break-midot">\n'+
-										Count.del + LC.delp[lng] +'</span>' : '') + (Count.mod > 0 ? '<span class="break-midot">\n'+ Count.mod + LC.pmod[lng] +'</span>' : '');
-									MListen['PostsCount'].innerHTML = (Autosage ? SageIcon : '') + Posts.length + LC.omit[lng] + (postStat ? '<span class="parensis">'+ postStat +'</span>' : '');
-								}
-							});
-						updateTimer();
-					} else
-						updateThread(15, true);
-				}
-			}, Timer.ql.int * 1000);
+			if (HM.AutoUpdate) {
+				Timer.ql = UpdateInterval(Timer.offset);
+				Timer.id = setTimeout(function() {
+						if (Timer.ql.value === 'quet') {
+							getDataResponse('/api/thread/'+ HM.URL.board +'/'+ CiD +'.json?new_format',
+								function(status, sText, json, xhr) {
+									if (json.result) {
+										Autosage = json.result.autosage;
+										updateCount(json.result.posts_count);
+										Timer.offset += Count.new > 0 ? 0 : 15;
+										var postStat = (Count.new > 0 ? '<span class="break-midot">\n+'+ Count.new + LC.newp[lng] +'</span>' : '') + (Count.del < 0 ? '<span class="break-midot">\n'+
+											Count.del + LC.delp[lng] +'</span>' : '') + (Count.mod > 0 ? '<span class="break-midot">\n'+ Count.mod + LC.pmod[lng] +'</span>' : '');
+										MListen['PostsCount'].innerHTML = (Autosage ? SageIcon : '') + Posts.length + LC.omit[lng] + (postStat ? '<span class="parensis">'+ postStat +'</span>' : '');
+									}
+								});
+							updateTimer();
+						} else
+							updateThread(15, true);
+				}, Timer.ql.int * 1000);
+			}
 		}
 		function expandThread(e) {
 			if (ExpCache.length === 0) {
@@ -891,7 +898,7 @@ function MagicExtension() {
 				patchId = board +'_'+ threadId +'_'+ postId,
 				wrap = _z.setup((op ? 'div' : 'table'), {'id': 'post_'+ postId, 'class': (op ? 'oppost' : 'replypost' + (archive ? '' : ' new')) +' post', 'patch-id': patchId}, {'click': PDownListener}),
 				html = (op ? '' : '<tbody><tr><td class="doubledash">&gt;&gt;</td><td id="replyr{post_id}" class="reply">') + '<a name="ir{post_id}"></a><label>'+
-						(archive ? '&nbsp;\n' : '<ul class="dropdown line-sect"><li class="dropdown-toggle"><label class="postermenu dropdown-label el-li"></label><ul class="dropdown-menu"><li class="edit-post dropdown-item el-li">Редактировать</li><li class="hide-post dropdown-item el-li">Скрыть</li><li class="delete-post dropdown-item el-li">Удалить<span class="chek-to-del dropdown-input line-sect"></span></li></ul></li></ul>\n') +
+						(archive ? '&nbsp;\n' : '<ul class="dropdown line-sect"><li class="dropdown-toggle"><label class="postermenu dropdown-label el-li"></label><ul class="dropdown-menu"><li class="edit-post dropdown-item el-li">Редактировать</li><li class="mod-report dropdown-item el-li">Пожаловаться</li><li class="hide-post dropdown-item el-li">Скрыть</li><li class="delete-post dropdown-item el-li">Удалить<span class="chek-to-del dropdown-input line-sect"></span></li></ul></li></ul>\n') +
 						(op ? '<a class="unsigned icon" onclick="sign_thread(event, \'r{board}\',r{post_id});"><img src="/images/blank.png" title="'+
 						LC.subscrb[lng] +'" alt="✩"></a>\n' : '') + (board === 'mad' ? '<span class="iphash">'+
 							'<span class="ipmark" style="background:rgba(0,0,0,.5)">&nbsp;</span><span class="ipmark" style="background:rgba(255,255,255,.5)">&nbsp;</span>'+
@@ -1137,8 +1144,9 @@ function MagicExtension() {
 			var rtb = _z.setup('tbody', {'html': '<tr><td>'}),
 				drag = _z.setup('span', {'class': 'dpop txt-btn'}, {
 					'mousedown': function(e) {
+						var coords = getCoords(reftab);
 						reftab.style['z-index'] = HM.zIndex + 1;
-						HM.DragableObj = { el: reftab, offsetY: 9, offsetX: 9 }
+						HM.DragableObj = { el: reftab, shiftY: e.pageY - coords.top, shiftX: e.pageX - coords.left }
 					}}),
 				close = _z.setup('span', {
 					'id': 'rf-cb-ty',
@@ -1636,9 +1644,11 @@ function MagicExtension() {
 					if (lng < 1)
 						el.textContent = getDefaultName(el.textContent);
 				case 'postertrip':
-					var date = el.parentNode.lastChild
-						date.previousElementSibling.insertAdjacentHTML('afterend', getDateTime(date.textContent))
+					var date = el.parentNode.lastChild;
+					if (date.className !== 'posterdate') {
+						date.previousElementSibling.insertAdjacentHTML('afterend', getDateTime(date.textContent));
 						date.remove();
+					}
 					break;
 				case 'reply_':
 					_z.replace(el, _z.setup('span', {'class': 'reply-button line-sect txt-btn', 'title': LC.repl[lng]}))
@@ -1899,7 +1909,7 @@ function MagicExtension() {
 	//* @ copyright 		2013+, You
 	function Yuki(stored) {
 		var Yu = this, fileList = [], 
-		Yum = { brd: HM.URL.board, tid: (HM.URL.thread || 0), funct: function(){}},
+		Yum = {brd: HM.URL.board, tid: (HM.URL.thread || 0), funct: function(){}},
 		LCY = {
 			acap: ["Attach Captcha Image", 'Прикрепить капчу'],
 			subj: ["Subject", "Тема"],
@@ -1931,7 +1941,7 @@ function MagicExtension() {
 		ratingselect_tamplate = '<select name="file_1_rating" class="rating_SFW" id="file_rating_sel"><option class="rating_SFW">SFW</option><option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select>',
 		filepreview_tamplate = '[\n<a class="yuki_clickable">убрать</a>\n]<br><img class="preview_img" src="r{img}"><br><span class="file_name">r{fname}</span><br>'+
 			'<span class="file_name">r{size}&nbsp;</span>'+ ratingselect_tamplate,
-		replyform_tamplate = '<input id="yuki-targetThread" name="thread_id" value="'+ Yum.tid +'" type="hidden"><input name="task" value="post" type="hidden"><input name="goto" value="thread" type="hidden">'+
+		replyform_tamplate = '<input id="yuki-targetThread" name="thread_id" value="" type="hidden"><input name="task" value="post" type="hidden"><input name="goto" value="thread" type="hidden">'+
 			'<div id="yuki-errorMsg"></div>'+
 			'<table><tbody id="yuki-dropBox" class="line-sect"><tr class="etch-text"></tr><tr class="droparrow inactive"></tr></tbody><tbody class="line-sect">'+
 			'<tr id="trname"><td><input placeholder="'+ getDefaultName() +'" name="name" size="30" value="" type="text">'+
@@ -1979,14 +1989,6 @@ function MagicExtension() {
 		}, {'submit': yukiPleasePost,
 			'click': function(e) {
 				switch (e.target.id) {
-					case 'yuki-newThread-create':
-						var sel = e.target.classList[1] === 'selected';
-						if (HM.URL.thread) {
-							Yu['TargetThread'].value = sel ? HM.URL.thread : 0;
-							e.target.classList.toggle('selected')
-							e.target.classList.toggle('inactive')
-						}
-						break;
 					case 'yuki-replyText':
 						e.target.classList.remove('ta-inact');
 						break;
@@ -2002,6 +2004,12 @@ function MagicExtension() {
 					case 'yuki-attach-captcha-button':
 						yukiAttachCapcha(e);
 						break;
+					case 'yuki-newThread-create':
+						if (HM.URL.thread) {
+							Yu['TargetThread'].value = e.target.classList.contains('selected') ? HM.URL.thread : 0;
+							e.target.classList.toggle('selected')
+							e.target.classList.toggle('inactive')
+						}
 				}
 		}, 'change': function(e) {
 			switch (e.target.id) {
@@ -2374,15 +2382,16 @@ function MagicExtension() {
 			return _z.fall(e);
 		}
 		function makeReplyForm(map, params) {
-			Yu['TargetThread'].value = Yum.tid = map[1]; Yum.brd = map[0]; Yum.pid = map[2];
+			Yu['TargetThread'].value = Yum.tid = map[1]; Yum.brd = map[0];
 			Yu['CaptchaImage'].src = '/captcha/'+ Yum.brd +'/'+ _t() +'.png';
 			switch (params.type) {
 				case 'reply':
-					if (Yum.pid && !Yu['ReplyText'].value.isThere('>>'+ Yum.pid)) {
-						wmarkText(Yu['ReplyText'], '>>'+ Yum.pid, '\r\n')
-					}
 					_z.each([Yu['OpenTopForm'], Yu['OpenBottomForm']], _show);
 					_hide(Yu['HideGlobalForm']);
+				case 'report':
+					if (map[2] && !Yu['ReplyText'].value.isThere('>>'+ map[2])) {
+						wmarkText(Yu['ReplyText'], '>>'+ map[2], '\r\n')
+					}
 					break;
 				case 'edit':
 					Yu['ReplyText'].value = params.text;
@@ -2413,12 +2422,12 @@ function MagicExtension() {
 					break;
 			}
 			function _DWG(node, A, B) {
-				var RPForm = makeReplyForm([HM.URL.board, (HM.URL.thread && Yu['TargetThread'].value > 0 ? HM.URL.thread : 0)], {type: 'global'});
+				var RPForm = makeReplyForm([HM.URL.board, (HM.URL.thread && Yu['TargetThread'].value !== '0' ? HM.URL.thread : 0)], {type: 'global'});
 				_z.each([Yu['HideGlobalForm'], Yu[B], Yu['GlobalFormArea']], _show);
 				_z.after(node, Yu['GlobalFormArea'])
 				_hide(Yu[A]);
 				Yu['GlobalFormSect'].appendChild(RPForm);
-				Yu['NewThreadCreate'].className = (HM.URL.thread ? 'yuki_clickable ' : '') + (Yu['TargetThread'].value > 0 ? 'inactive' : 'selected');
+				Yu['NewThreadCreate'].className = (HM.URL.thread ? 'yuki_clickable ' : '') + (Yu['TargetThread'].value !== '0' ? 'inactive' : 'selected');
 			}
 		}
 		function makeRandId(size) {
@@ -2758,8 +2767,8 @@ function MagicExtension() {
 				true: function(style) { document.body.appendChild(StyleSet[style]) },
 				false: function(style) { StyleSet[style].remove() }
 			}
-			StyleSet[HM.DiscloseTextSpoilers]('spoiler');
-			StyleSet[HM.Keywords.conceal]('hinfostub');
+			StyleSet[HM.DiscloseTextSpoilers ? true : false]('spoiler');
+			StyleSet[HM.Keywords.conceal ? true : false]('hinfostub');
 		function el$(child) { return MSs['GeneralSets'].querySelector(child) }
 		this['GeneralSets'] = _z.setup('table', {'html': '<tbody><tr><td class="f-sect"><label><input '+
 			(HM.MC == 0 ? 'checked ' : '') +'id="media-placement" value="0" name="cont_p" type="radio">\n'+ SLC.mcw[lng] +'\n<input '+
@@ -3063,7 +3072,7 @@ function MagicExtension() {
 								patchId = url.board +'_'+ url.thread +'_'+ url.pid,
 								delbox = post.getElementsByClassName('delete_checkbox')[0],
 								delico = delbox.parentNode,
-								pMenu = _z.setup('ul', {'class': 'dropdown line-sect', 'html': '<li class="dropdown-toggle"><label class="postermenu dropdown-label el-li"></label><ul class="dropdown-menu"><li class="edit-post dropdown-item el-li">Редактировать</li><li class="hide-post dropdown-item el-li">Скрыть</li><li class="delete-post dropdown-item el-li">Удалить<span class="chek-to-del dropdown-input line-sect"></span></li></ul></li>'});
+								pMenu = _z.setup('ul', {'class': 'dropdown line-sect', 'html': '<li class="dropdown-toggle"><label class="postermenu dropdown-label el-li"></label><ul class="dropdown-menu"><li class="edit-post dropdown-item el-li">Редактировать</li><li class="mod-report dropdown-item el-li">Пожаловаться</li><li class="hide-post dropdown-item el-li">Скрыть</li><li class="delete-post dropdown-item el-li">Удалить<span class="chek-to-del dropdown-input line-sect"></span></li></ul></li>'});
 								HM.PostConstructor[patchId] = {
 									el: post,
 									delete_input: _z.setup(delbox, {'checked': false})
@@ -3138,6 +3147,27 @@ function MagicExtension() {
 				if (e.layerY > window.innerHeight || e.layerY < 1)
 					this.scrollIntoView();
 				break;
+			case 'mod-report':
+				if (!HM.ReportForm) {
+					HM.ReportForm = new Yuki(false);
+					_z.setup(HM.ReportForm['ReplyForm'], {'style': 'position:fixed;left:35%;top:35%;z-index:'+HM.zIndex}, {'mousedown': function(e){
+						if (!['INPUT', 'TEXTAREA'].isThere(e.target.tagName)) {
+							var coords = getCoords(this);
+							HM.zIndex++;
+							HM.DragableObj = {
+								el: this,
+								shiftX: e.pageX - coords.left,
+								shiftY: e.pageY - coords.top
+							}
+							this.style['z-index'] = HM.zIndex;
+							_z.fall(e);
+						}
+					}})
+					findModThread(0)
+				}
+				RPForm = HM.ReportForm.getForm(['d', HM.ReportForm['TargetThread'].value, (Map[0] === 'd' ? '' : Map[0] +'/') + Map[2]], {type: 'report'})
+				document.body.appendChild(RPForm)
+				break;
 			case 'edit-post':
 				var name = (this.querySelector('.postertrip:not(.t-sec)')
 						|| this.querySelector('.postername:not(.t-sec)')),
@@ -3193,6 +3223,21 @@ function MagicExtension() {
 				}
 				soucText = _z.setup('div', {'html': patcHTML}).textContent
 			return soucText.replace(/^[\n]+/, '');
+		}
+		function findModThread(n) {
+			getDataResponse('/d/'+n+'.json', function(status, sText, json, xhr) {
+				if (status === 200) {
+					var threads = json.boards.d.threads;
+					for (var i = 0; i < threads.length; i++) {
+						if (threads[i].title.isThere('Модераторам тред')) {
+							HM.ReportForm['TargetThread'].value = threads[i].display_id;
+							return;
+						}
+					}
+					n++;
+					findModThread(n);
+				}
+			});
 		}
 		function delPost(current) {
 			var delbox = HM.PostConstructor[patchId].delete_input;
@@ -3264,8 +3309,9 @@ function MagicExtension() {
 				} else {
 					scr = { Y: e.pageY, X: e.pageX }
 				}
-				HM.DragableObj.el.style.top  = HM.DragableObj.offsetY + scr.Y - HM.DragableObj.el.offsetHeight +'px';
-				HM.DragableObj.el.style.left = HM.DragableObj.offsetX + scr.X - HM.DragableObj.el.offsetWidth +'px';
+				HM.DragableObj.el.style.top  = scr.Y - HM.DragableObj.shiftY + 'px';
+				HM.DragableObj.el.style.left = scr.X - HM.DragableObj.shiftX + 'px';
+				_z.fall(e);
 			}
 		}
 	});
@@ -3291,7 +3337,7 @@ function MagicExtension() {
 function initScripts() {
 var mesShadows = /* hr shadow */ 'hr{border-style:none none solid!important;border-color:rgba(0,0,0,.3)!important;box-shadow:0 1px 0 #fff!important;}'+
 /* text spoiler, banner image & captcha image sadows */ '#yuki-captcha-image,.banner,.spoiler,.spoiler a,.message code{transition:all .1s ease;box-shadow:0 1px 2px -1px rgba(0,0,0,.7)!important;}.spoiler a:hover,.spoiler:hover,.transparent{box-shadow:none!important;}'+
-/* popup/error posts, settings panel sadows & dropdown menu */ '.reply,.popup{border:0 none transparent!important;}.active > .dropdown-label,.dropdown-menu,.popup,#magic-panel{box-shadow:5px 5px 10px rgba(0,0,0,.4),inset 0 0 30px rgba(0,0,0,.1);}'+
+/* popup/error posts, settings panel sadows & dropdown menu */ '.reply,.popup{border:0 none transparent!important;}.active > .dropdown-label,.dropdown-menu,.popup,#magic-panel,.report{box-shadow:5px 5px 10px rgba(0,0,0,.4),inset 0 0 30px rgba(0,0,0,.1);}'+
 /* reply post sadows */ '.oppost.highlighted,.reply,.highlight{padding:2px 1em 2px 2px!important;box-shadow:inset 0 1px 30px -9px #fff,0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);}.line-sect.reply{padding:2px 4px!important;}'+
 /* new reply post sadows */ '.new .reply{box-shadow:inset 0 1px 30px -9px rgba(255, 85, 0, 0.8),0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);}'+
 /* post images/files & audio players shadows */ '.thumb,.magic-picture.onpost-qview,.yukiFile,.scbc-container,.prosto-pleer,.audio-container video,#status-panel{box-shadow:1px 2px 2px -1px rgba(0,0,0,.4),-1px 0 4px -1px rgba(0,0,0,.2),inset 0 0 30px rgba(0,0,0,.1)!important;}'+
@@ -3311,7 +3357,7 @@ var mesAnimations = '.new .reply,#yuki-replyForm.reply{animation:pview .3s ease-
 @keyframes pview{from {scale(0,0);opacity:0;}25%{transform:scale(.3,.3);opacity:.1;}50%{transform:scale(.9,.9);opacity:.3;}75%{transform:scale(1.02,1.02);opacity:.7;}100%{transform:scale(1,1);opacity:1;}}\
 @-webkit-keyframes pview{0%{-webkit-transform:scale(0,0);opacity:0;}25%{-webkit-transform:scale(.3,.3);opacity:.1;}50%{-webkit-transform:scale(.9,.9);opacity:.3;}75%{-webkit-transform:scale(1.02,1.02);opacity:.7;}100%{-webkit-transform:scale(1,1);opacity:1;}}';
 
-var MagicStyle = '.hidout,.hide.icon,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google,#postform_placeholder,.reply #yuki-newThread-create,.edit #yuki-newThread-create,.submit-button.process input,.pleer-container + br,.artwork select,.magic-info + br,.autohidden,.autohidden + .dummy-line,.text-original, .reply-link[hidden] + .rl-inf, .magic-picture.onpost-qview + img.thumb,.submit-button span,form.edit ~ *:not(.abbrev),#delete-overlay,.popup .chek-to-del{display:none!important;}\
+var MagicStyle = '.hidout,.hide.icon,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google,#postform_placeholder,.report #yuki-newThread-create,.reply #yuki-newThread-create,.edit #yuki-newThread-create,.submit-button.process input,.pleer-container + br,.artwork select,.magic-info + br,.autohidden,.autohidden + .dummy-line,.text-original, .reply-link[hidden] + .rl-inf, .magic-picture.onpost-qview + img.thumb,.submit-button span,form.edit ~ *:not(.abbrev),#delete-overlay,.popup .chek-to-del{display:none!important;}\
 .unexpanded,.rated{max-width:200px!important;max-height:200px!important;}.expanded{width:100%;height:auto;}.hideinfo{margin:5px;}.sp-r.rate{color:darkred;}#yuki-dropBox tr,.f-sect,.hideinfo{text-align:center!important;}\
 .dpop,#wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}.artwork{background:url(/src/svg/1505/ma-artwork.svg)no-repeat scroll center center / 100% auto;}.movie{background:url(/src/svg/1505/cm-movie.svg)no-repeat scroll center center / 100% auto;}\
 .content-frame,.scbc-container,.mhs-title,#magic-panel,.active > #timer-update-sets,.yukiFile,.dropdown-menu,.message code,#status-panel{background-color:#fefefe;}\
@@ -3335,7 +3381,7 @@ var MagicStyle = '.hidout,.hide.icon,.add_,.play_,.view_,.edit_,.search_iqdb,.se
 .postdeleted,.t-sec{opacity:.6;}.inactive{opacity:.4;}img[src="#transparent"]{opacity:0;}.wmark-button,.reply-button,.sagearrow{vertical-align:middle;}.content-window{position:fixed;left:0;top:0;z-index:2999}\
 .submit-button.process{font-size:13px;font-style:italic;color:#777;}@keyframes process{0%{width:0;}100%{width:1em;}}@-webkit-keyframes process{0%{width:0;}100%{width:1em;}}\
 .submit-button.process span{display:inline!important;}.process:after{content:"....";display:inline-block;overflow:hidden;animation:process 3s linear .1s infinite;-webkit-animation:process 3s linear .1s infinite;}\
-.magic-info,.sp-r{width:190px;background-color:rgba(255,255,255,.8);padding:5px;opacity:.6}.magic-info:hover,.sp-r:hover,.popup{z-index:1;opacity:1;}.magic-info,.magic-info + br,.sp-r,.content-frame{position:absolute;}\
+.magic-info,.sp-r{width:190px;background-color:rgba(255,255,255,.8);padding:5px;opacity:.6}.magic-info:hover,.sp-r:hover,.popup,.dropdown-menu{z-index:1;opacity:1;}.magic-info,.magic-info + br,.sp-r,.content-frame{position:absolute;}\
 .video-container,.content-frame.video{background-color:#000;}.video-container,.scbc-container{margin:0 9px;display:inline-block!important;}\
 .magic-picture.gallery-qview{box-shadow:5px 5px 10px rgba(0,0,0,.4);}.content-frame{top:10%;left:12%;right:18%;bottom:20%;z-index:3000;}#shadow-box{position:absolute;background-color:rgba(33,33,33,.8);z-index:2999;}\
 .docs-container > iframe,.content-frame.docs > iframe,.full-size,#shadow-box,.content-window,.preview_img{width:100%;height:100%;}.content-frame.img{background-color:transparent;}\
@@ -3349,7 +3395,7 @@ var MagicStyle = '.hidout,.hide.icon,.add_,.play_,.view_,.edit_,.search_iqdb,.se
 .dropdown,.dropdown-menu{padding-left:0;list-style:outside none none;}.active > * {visibility:visible;}.active > .dropdown-label{border-radius:4px 4px 0 0;}.dropdown-label{padding:2px 4px;font-variant:small-caps;font-size:14px;}.dropdown-label + .dropdown-menu{border-top-left-radius:0;border-top-right-radius:0;}.dropdown-menu{border-radius:4px;position:absolute;color:#777;min-width:150px;font-size:14px;line-height:1.8;}\
 .dropdown-item,.dropdown-br{padding:0 10px;}.dropdown-item:hover{background-color:rgba(0,0,0,.1);}.dropdown-br{font-size:12px;line-height:16px;border:1px solid #e1e1e1;}#timer-update-sets:before{content:"⟨ ";}#timer-update-sets:after{content:" ⟩";}#int-val{width:50px;margin:0 4px;}.red-light{color:red;text-shadow:0 0 4px red;}.cpanel > .reply-button{top:-1px;position:relative;}\
 .blink{-webkit-animation-name:blinker;-webkit-animation-duration:1s;-webkit-animation-timing-function:linear;-webkit-animation-iteration-count:infinite;animation-name:blinker;animation-duration:1s;animation-timing-function:linear;animation-iteration-count:infinite;}\
-.oppost.highlighted,.highlighted .reply{border-style:dashed!important;border-width:2px!important;border-color:#F50!important;}.postcontent,.rl-inf,.f-left{float:left;}br + .postbody{clear:both;}.sinf{color:#666;font-size:.8em;}.magic-picture:before{content:" "}.celrly:not([hidden]) + .celrly:before, .celrly + * + .celrly:before{content:",   ";color:#666!important;cursor:default;}.celrly:not([hidden]) ~ .rl-inf{display:inline!important;}\
+.oppost.highlighted,.highlighted .reply{border-style:dashed!important;border-width:2px!important;border-color:#F50!important;}.postcontent,.rl-inf,.f-left{float:left;}br + .postbody{clear:both;}.sinf{color:#666;font-size:.8em;}.magic-picture:before{content:" "}.celrly:not([hidden]) + .celrly:before, .celrly + * + .celrly:before{content:",   ";color:#666!important;cursor:default;}.celrly:not([hidden]) ~ .rl-inf{display:inline!important;}.report{background-color:#FFE2D4;}\
 .view-eye{background:url(/src/png/1506/p-stub-hide.png)no-repeat scroll center;}.i-block{display:inline-block;}.postermenu{display:block;background:url(/src/svg/1508/new-dropdown-arrow.svg)no-repeat scroll bottom center / 18px;padding:9px;}.active > .postermenu{transform:rotate(180deg);-webkit-transform:rotate(180deg);box-shadow:none!important;background-position:top center;}\
 .turn-on{position:absolute;bottom:50px;}.i-fav:before{content:"";margin-right:5px;padding:8px;background:transparent no-repeat scroll center center / 16px;}#icm-fsw-google:before{background-image:url(/src/svg/1508/google_ico_monochrome.svg);}#icm-create-macro:before{background-image:url(/src/svg/1508/macroeditor_ico_monochrome.svg);}#icm-fsw-iqdb:before{background-image:url(/src/svg/1508/new-cube-icon-monochrome.svg);}#icm-fsw-saucenao:before{background-image:url(/src/svg/1508/soucenao_ico_monochrome.svg);}#icm-fsw-derpibooru:before{background-image:url(/src/svg/1508/trixie_cutie_mark_by_rildraw-d3khewr.svg);}\
 #status-panel{bottom:0;border-radius:0 5px;padding:3px 6px;}.break-lines + *:before{content:"||";font-size:12px;padding:0 2px;}.parensis:before{content:"("}.parensis:after{content:")"}.break-midot + *:before{content:"・";}\
