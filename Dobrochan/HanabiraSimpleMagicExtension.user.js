@@ -7,64 +7,78 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraSimpleMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.2.2
+// @version 		1.3.0
 // @grant   		none
 // ==/UserScript==
 
 /* Tinycon - A small library for manipulating the Favicon Tom Moor, http://tommoor.com */
-(function(){var Tinycon={};var currentFavicon=null;var originalFavicon=null;var faviconImage=null;var canvas=null;var options={};var r=window.devicePixelRatio||1;var size=16*r;var defaults={width:7,height:9,font:10*r+'px arial',colour:'#fff',background:'#F03D25',fallback:true,crossOrigin:true,abbreviate:true};var ua=(function(){var agent=navigator.userAgent.toLowerCase();return function(browser){return agent.indexOf(browser)!==-1}}());var browser={ie:ua('msie'),chrome:ua('chrome'),webkit:ua('chrome')||ua('safari'),safari:ua('safari')&&!ua('chrome'),mozilla:ua('mozilla')&&!ua('chrome')&&!ua('safari')};var getFaviconTag=function(){var links=document.getElementsByTagName('link');for(var i=0,len=links.length;i<len;i++){if((links[i].getAttribute('rel')||'').match(/\bicon\b/)){return links[i]}}return false};var removeFaviconTag=function(){var links=document.getElementsByTagName('link');var head=document.getElementsByTagName('head')[0];for(var i=0,len=links.length;i<len;i++){var exists=(typeof(links[i])!=='undefined');if(exists&&(links[i].getAttribute('rel')||'').match(/\bicon\b/)){head.removeChild(links[i])}}};var getCurrentFavicon=function(){if(!originalFavicon||!currentFavicon){var tag=getFaviconTag();originalFavicon=currentFavicon=tag?tag.getAttribute('href'):'/favicon.ico'}return currentFavicon};var getCanvas=function(){if(!canvas){canvas=document.createElement("canvas");canvas.width=size;canvas.height=size}return canvas};var setFaviconTag=function(url){removeFaviconTag();var link=document.createElement('link');link.type='image/x-icon';link.rel='icon';link.href=url;document.getElementsByTagName('head')[0].appendChild(link)};var log=function(message){if(window.console)window.console.log(message)};var drawFavicon=function(label,colour){if(!getCanvas().getContext||browser.ie||browser.safari||options.fallback==='force'){return updateTitle(label)}var context=getCanvas().getContext("2d");var colour=colour||'#000';var src=getCurrentFavicon();faviconImage=document.createElement('img');faviconImage.onload=function(){context.clearRect(0,0,size,size);context.drawImage(faviconImage,0,0,faviconImage.width,faviconImage.height,0,0,size,size);if((label+'').length>0)drawBubble(context,label,colour);refreshFavicon()};if(!src.match(/^data/)&&options.crossOrigin){faviconImage.crossOrigin='anonymous'}faviconImage.src=src};var updateTitle=function(label){if(options.fallback){var originalTitle=document.title;if(originalTitle[0]==='('){originalTitle=originalTitle.slice(originalTitle.indexOf(' '))}if((label+'').length>0){document.title='('+label+') '+originalTitle}else{document.title=originalTitle}}};var drawBubble=function(context,label,colour){if(typeof label=='number'&&label>99&&options.abbreviate){label=abbreviateNumber(label)}var len=(label+'').length-1;var width=options.width*r+(6*r*len),height=options.height*r;var top=size-height,left=size-width-r,bottom=16*r,right=16*r,radius=2*r;context.font=(browser.webkit?'bold ':'')+options.font;context.fillStyle=options.background;context.strokeStyle=options.background;context.lineWidth=r;context.beginPath();context.moveTo(left+radius,top);context.quadraticCurveTo(left,top,left,top+radius);context.lineTo(left,bottom-radius);context.quadraticCurveTo(left,bottom,left+radius,bottom);context.lineTo(right-radius,bottom);context.quadraticCurveTo(right,bottom,right,bottom-radius);context.lineTo(right,top+radius);context.quadraticCurveTo(right,top,right-radius,top);context.closePath();context.fill();context.beginPath();context.strokeStyle="rgba(0,0,0,.3)";context.moveTo(left+radius/2.0,bottom);context.lineTo(right-radius/2.0,bottom);context.stroke();context.fillStyle=options.colour;context.textAlign="right";context.textBaseline="top";context.fillText(label,r===2?29:15,browser.mozilla?7*r:6*r)};var refreshFavicon=function(){if(!getCanvas().getContext)return;setFaviconTag(getCanvas().toDataURL())};var abbreviateNumber=function(label){var metricPrefixes=[['G',1000000000],['M',1000000],['k',1000]];for(var i=0;i<metricPrefixes.length;++i){if(label>=metricPrefixes[i][1]){label=round(label/metricPrefixes[i][1])+metricPrefixes[i][0];break}}return label};var round=function(value,precision){var number=new Number(value);return number.toFixed(precision)};Tinycon.setOptions=function(custom){options={};for(var key in defaults){options[key]=custom.hasOwnProperty(key)?custom[key]:defaults[key]}return this};Tinycon.setImage=function(url){currentFavicon=url;refreshFavicon();return this};Tinycon.setBubble=function(label,colour){label=label||'';drawFavicon(label,colour);return this};Tinycon.reset=function(){setFaviconTag(originalFavicon)};Tinycon.setOptions(defaults);window.Tinycon=Tinycon;if(typeof define==='function'&&define.amd){define(Tinycon)}})();
-//Copyright (c) 2012 Tom Moor @license MIT Licensed @version 0.6.3
+!function(){var a={},b=null,c=null,d=null,e=null,f={},g=window.devicePixelRatio||1,h=16*g,i={width:7,height:9,font:10*g+"px arial",colour:"#fff",background:"#F03D25",fallback:!0,crossOrigin:!0,abbreviate:!0},j=function(){var a=navigator.userAgent.toLowerCase();return function(b){return-1!==a.indexOf(b)}}(),k={ie:j("msie"),chrome:j("chrome"),webkit:j("chrome")||j("safari"),safari:j("safari")&&!j("chrome"),mozilla:j("mozilla")&&!j("chrome")&&!j("safari")},l=function(){for(var a=document.getElementsByTagName("link"),b=0,c=a.length;c>b;b++)if((a[b].getAttribute("rel")||"").match(/\bicon\b/))return a[b];return!1},m=function(){for(var a=document.getElementsByTagName("link"),b=document.getElementsByTagName("head")[0],c=0,d=a.length;d>c;c++){var e="undefined"!=typeof a[c];e&&(a[c].getAttribute("rel")||"").match(/\bicon\b/)&&b.removeChild(a[c])}},n=function(){if(!c||!b){var a=l();c=b=a?a.getAttribute("href"):"/favicon.ico"}return b},o=function(){return e||(e=document.createElement("canvas"),e.width=h,e.height=h),e},p=function(a){if(a){m();var b=document.createElement("link");b.type="image/x-icon",b.rel="icon",b.href=a,document.getElementsByTagName("head")[0].appendChild(b)}},q=function(a,b){if(!o().getContext||k.ie||k.safari||"force"===f.fallback)return r(a);var c=o().getContext("2d"),b=b||"#000",e=n();d=document.createElement("img"),d.onload=function(){c.clearRect(0,0,h,h),c.drawImage(d,0,0,d.width,d.height,0,0,h,h),(a+"").length>0&&s(c,a,b),t()},!e.match(/^data/)&&f.crossOrigin&&(d.crossOrigin="anonymous"),d.src=e},r=function(a){if(f.fallback){var b=document.title;"("===b[0]&&(b=b.slice(b.indexOf(" "))),(a+"").length>0?document.title="("+a+") "+b:document.title=b}},s=function(a,b,c){"number"==typeof b&&b>99&&f.abbreviate&&(b=u(b));var d=(b+"").length-1,e=f.width*g+6*g*d,i=f.height*g,j=h-i,l=h-e-g,m=16*g,n=16*g,o=2*g;a.font=(k.webkit?"bold ":"")+f.font,a.fillStyle=f.background,a.strokeStyle=f.background,a.lineWidth=g,a.beginPath(),a.moveTo(l+o,j),a.quadraticCurveTo(l,j,l,j+o),a.lineTo(l,m-o),a.quadraticCurveTo(l,m,l+o,m),a.lineTo(n-o,m),a.quadraticCurveTo(n,m,n,m-o),a.lineTo(n,j+o),a.quadraticCurveTo(n,j,n-o,j),a.closePath(),a.fill(),a.beginPath(),a.strokeStyle="rgba(0,0,0,.3)",a.moveTo(l+o/2,m),a.lineTo(n-o/2,m),a.stroke(),a.fillStyle=f.colour,a.textAlign="right",a.textBaseline="top",a.fillText(b,2===g?29:15,k.mozilla?7*g:6*g)},t=function(){o().getContext&&p(o().toDataURL())},u=function(a){for(var b=[["G",1e9],["M",1e6],["k",1e3]],c=0;c<b.length;++c)if(a>=b[c][1]){a=v(a/b[c][1])+b[c][0];break}return a},v=function(a,b){var c=new Number(a);return c.toFixed(b)};a.setOptions=function(a){f={};for(var b in i)f[b]=a.hasOwnProperty(b)?a[b]:i[b];return this},a.setImage=function(a){return b=a,t(),this},a.setBubble=function(a,b){return a=a||"",q(a,b),this},a.reset=function(){p(c)},a.setOptions(i),"function"==typeof define&&define.amd?define(a):"undefined"!=typeof module?module.exports=a:window.Tinycon=a}();
+//Copyright (c) 2015 Tom Moor @license MIT Licensed @version 0.6.4
 
-/* SpelzZ - */
+/* SpelzZ - a lightweight Node Work Tool */
 (function(){
 	var _z = {
-		each: $each, setup: $setup, route: $route,
-		getlSVal: getlSValue, setlSVal: setlSValue, fall: fallback,
-		append:  function(el, nodes) { $nodeUtil('append',  el, nodes) },
-		prepend: function(el, nodes) { $nodeUtil('prepend', el, nodes) },
-		after:   function(el, nodes) { $nodeUtil('after',   el, nodes) },
-		before:  function(el, nodes) { $nodeUtil('before',  el, nodes) },
-		replace: function(el, nodes) { $nodeUtil('replace', el, nodes) },
-		remove:  function(el, nodes) { $nodeUtil('remove',  el, nodes) }
+		each: $each, setup: $setup, route: $route, fall: fallback, dbg: $dbg,
+		sessionS: $storeItem('session'), localS: $storeItem('local'),
+		append: function(el, nodes) { try { $nodeUtil('append', el, nodes) } catch(e) { $dbg(e) } },
+		prepend: function(el, nodes) { try { $nodeUtil('prepend', el, nodes) } catch(e) { $dbg(e) } },
+		after: function(el, nodes) { try { $nodeUtil('after', el, nodes) } catch(e) { $dbg(e) } },
+		before: function(el, nodes) { try { $nodeUtil('before', el, nodes) } catch(e) { $dbg(e) } },
+		replace: function(el, nodes) { try { $nodeUtil('replace', el, nodes) } catch(e) { $dbg(e) } },
+		remove: function(el, nodes) { try { $nodeUtil('remove', el, nodes) } catch(e) { $dbg(e) } }
+	}
+	function $dbg(e) {
+		if (e.stack)
+			e.stack = e.stack.replace(new RegExp(e.fileName, 'g'), '');
+		console.error(e)
 	}
 	function $each(obj, Fn) {
 		var el = typeof obj === 'string' ? document.querySelectorAll(obj) : obj;
 		Array.prototype.slice.call(el, 0).forEach(Fn)
 	}
-	function $setup(obj, attr, events) {
-		var el = typeof obj === 'string' ? document.createElement(obj) : obj;
-		if (attr) {
-			for (var key in attr) {
-				attr[key] === undefined ? el.removeAttribute(key) :
-				key === 'html'    ? el.innerHTML   = attr[key] :
-				key === 'text'    ? el.textContent = attr[key] :
-				key === 'value'   ? el.value       = attr[key] :
-				key === 'checked' ? el.checked     = attr[key] :
-				el.setAttribute(key, attr[key]);
+	function $setup(el, attr, events) {
+		if (el) {
+			el = typeof el === 'string' ? document.createElement(el) : el;
+			if (attr) {
+				for (var key in attr) {
+					attr[key] === undefined ? el.removeAttribute(key) :
+					key === 'id'      ? el.id          = attr[key] :
+					key === 'html'    ? el.innerHTML   = attr[key] :
+					key === 'text'    ? el.textContent = attr[key] :
+					key === 'value'   ? el.value       = attr[key] :
+					key === 'hidden'  ? el.hidden      = attr[key] :
+					key === 'checked' ? el.checked     = attr[key] :
+					el.setAttribute(key, attr[key]);
+				}
 			}
-		}
-		if (events) {
-			for (var key in events) {
-				el.addEventListener(key, events[key], false);
+			if (events) {
+				for (var key in events) {
+					if (key === 'remove') {
+						for (var evr in events[key]) {
+							el.removeEventListener(evr, events[key][evr], false);
+						}
+					} else {
+						el.addEventListener(key, events[key], false);
+					}
+				}
 			}
 		}
 		return el;
 	}
 	function $nodeUtil(p, el, nodes) {
-		var i, node, Child, Parent = el.parentNode;
 		if (typeof el === 'string')
 			el = document.querySelector(el);
 		if (nodes && !Array.isArray(nodes))
 			nodes = [nodes];
-		switch (p.toLowerCase()) {
+		var i, node, meth = p.toLowerCase(), Child, Parent = el.parentNode;
+		switch (meth) {
 			case 'append':
-				for (i = 0, len = nodes.length; i < len; i++) {
-					if (nodes[i])
-						el.appendChild(nodes[i]);
+				for (i = 0; node = nodes[i++];) {
+					el.appendChild(node);
 				}
 				break;
 			case 'remove':
-				_z.each(el, function(child) {
+				$each(el, function(child) {
 					child.parentNode.removeChild(child);
 				});
 				break;
@@ -72,7 +86,7 @@
 				Parent.replaceChild(nodes[0], el);
 				break;
 			default:
-				switch (p.toLowerCase()) {
+				switch (meth) {
 					case 'after': Child = el.nextSibling;
 						break;
 					case 'before': Child = el;
@@ -92,34 +106,41 @@
 			el = el.parentNode;
 		}
 	}
-	function probeStore(name, val, sess) {
-		var stor = sess ? sessionStorage : localStorage;
-		try {
-			stor.setItem(name, val);
-		} catch(e) {
-			stor.removeItem(name);
-			stor.setItem(name, val);
-		}
-	}
-	function setlSValue(name, value, sess) {
-		if (typeof name === 'object') {
-			for (var key in name) {
-				probeStore(key, (name[key] === null ? value : name[key]), sess);
+	function $storeItem(locate) {
+		var Store = locate === 'session' ? sessionStorage : localStorage,
+			probeStore = function(name, val) {
+				try {
+					Store.setItem(name, val);
+				} catch(e) {
+					Store.removeItem(name);
+					Store.setItem(name, val);
+				}
 			}
-		} else {
-			probeStore(name, value, sess);
-		}
-	}
-	function getlSValue(name, def, sess) {
-		var stor = sess ? sessionStorage : localStorage;
-		if (name in stor) {
-			var v = stor.getItem(name);
-			v = v == 'false' ? false : 
-				v == 'true' ? true : v;
-			return v;
-		} else {
-			probeStore(name, def, sess);
-			return def;
+		return {
+			rm: function(names) {
+					if (typeof names === 'string')
+						names = [names];
+					for (var name, i = 0; name = names[i++];) {
+						Store.removeItem(name); 
+					}
+				},
+			set: function(name, value) {
+					if (typeof name === 'object') {
+						for (var key in name) {
+							probeStore(key, (name[key] === null ? value : name[key]));
+						}
+					} else {
+						probeStore(name, value);
+					}
+				},
+			get: function(name, def) {
+					if (name in Store) {
+						def = Store.getItem(name);
+					} else {
+						probeStore(name, def);
+					}
+					return (def == 'false' ? false : def == 'true' ? true : def);
+				}
 		}
 	}
 	function fallback(e) {
@@ -131,86 +152,118 @@
 	window._z = _z;
 })();
 
-var GlobalStyle = _z.setup('style', {'text': '.hide,.reply_,#postform,#hideinfodiv hr{display:none!important;position:absolute;left:-9999;}.reply-button,.cpop,.callpop{margin-left:.4em;}\
+var GlobalStyle = _z.setup('style', {'text': '.hidout,.reply #yuki-newThread-create,.edit #yuki-newThread-create,#open-top-form + #postform_placeholder,#open-top-form + * + #postform_placeholder,form.edit ~ *:not(.abbrev){display:none!important;}\
+.cpop,.callpop{margin-left:8px;}.wmark-button,.sagearrow{vertical-align:middle;}.hideinfo{margin:5px;}.ta-inact::-moz-selection{background:rgba(99,99,99,.3);}.ta-inact::selection{background:rgba(99,99,99,.3);}\
 .unexpanded,.rated{max-width:200px!important;max-height:200px!important;}.expanded{width:100%;height:auto;}#hideinfodiv{margin:5px;}.sp-r.rate{color:darkred;}#music_player{right:5px;position:fixed;bottom:5px;}\
 .search_google{background-image:url(/src/png/1407/google_14_icon.png)!important;}.search_derpibooru{background-image:url(/src/png/1407/derpibooru_reverse_search_14_icon.png);}.search_saucenao{background-image:url(/src/png/1502/saucenao_favicon1.png);}\
 .yuki_clickable,.txt-btn,.wmark-button{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}\
-.replylinks{line-height:2em;font-size:75%;clear:both;}.hideinfo{text-align:center!important;}.post-count,.txt-btn{color:#999;}.mapped,.mapped:hover{cursor:default;color:#666!important;}.dpop{cursor:move;}\
-.postername:after, .userdelete:after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.dpop,.sp-r,.wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}.err-msg{color:#ff3428;}.deleted{opacity:.6;}.reply.new{background:#ee9;}\
-.font-s-a{font-size:12px;font-size-adjust:.8;}\
-@keyframes onReady{50% {opacity:0;}} @-webkit-keyframes onReady{50% {opacity:0;}}'}, null);
-document.head.appendChild(GlobalStyle);
+.replylinks{line-height:2em;font-size:75%;clear:both;}.hideinfo{text-align:center!important;}.etch-text,.txt-btn{color:#999;}.mapped,.mapped:hover,.sagearrow{cursor:default;color:#666!important;}.dpop{cursor:move;}\
+.footer:after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.dpop,.sp-r,.wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}.err-msg{color:#ff3428;}.postdeleted,.opaque{opacity:.6;}.new .reply{background:#ee9;}\
+.font-s-a{font-size:12px;font-size-adjust:.8;}.oppost.highlighted,.highlighted .reply{border-style:dashed!important;border-width:2px!important;border-color:#F50!important;}\
+.dummy-line{position:absolute;text-align:center;width:100%;}.stat-line{margin-left:.2em;}\
+#yuki-captcha,#yuki-pass{width:295px;}#yuki-captcha-image,.reply-button{vertical-align:middle;margin:2px;}#yuki-dropBox{width:7em;height:18em;border:3px dashed rgba(99,99,99,.3);padding:2px;}\
+#convert-strike,.global #yuki-close-form{visibility:hidden;}.sagearrow{width:20px;height:20px;background:url(/src/svg/1409/Sage.svg)no-repeat center center;}\
+a:hover > .wmark-button{color:inherit;}.spoiler > .wmark-button{vertical-align:inherit;color:inherit;text-shadow:none;}\
+#yuki-errorMsg{text-align:center;color:#FFF;background-color:#E04000;}.wmark-button{color:#fefefe;text-shadow:0 1px 0 rgba(0,0,0,.4);}.inactive{opacity:.4;}\
+.rating_SFW{background:green;}.rating_R15{background:yellow;}.rating_R18{background:orange;}.rating_R18G{background:red;}.line-sect,.yukiFile,.postdeleted .doubledash{display:inline-block;}\
+.yukiFile,.yukiFileSets{font-size:66%;}.yukiFile{text-align:center;width:210px;background:#fefefe;-webkit-border-radius:5px;margin:5px;padding:2px;}img[src="#transparent"]{width:150px;opacity:0;}\
+#yuki-files-placeholder > *{vertical-align:top;}.yukiFile .yf_preview{max-width:150px;margin:5px 0;}.yf_info{padding:0 2px;word-wrap:break-word;}.yf_preview._text{border:1px inset #aaa;}\
+#yuki-replyForm{text-align:left;padding:4px 8px;}.selected:before{content:"✓ ";color:green;}\
+#yuki-dropBox tr{display:block;text-align:center!important;}.droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em;}\
+@keyframes onReady{50% {opacity:0;}} @-webkit-keyframes onReady{50% {opacity:0;}}'});
 
-(function() {
-	var hideinfo, showinfo, postForm, pfplaceh, topForm, delForm, deli, pass, lng, btn, thread_updating,
-		unread_count = 0, timer_id = 0, updInt = 45,
-	HM = {
-		Sage: false, zIndex: 0, RefTab: null,
-		RepliesMap: {}, LoadedPosts: {}, URL: ParseUrl(),
-		RemoveExif: _z.getlSVal('RemoveExif', true),
-		SoundNotify: _z.getlSVal('SoundNotify', false, true),
-		AttachPopups: _z.getlSVal('AttachPopups', true),
-		RemoveFileName: _z.getlSVal('RemoveFileName', false),
-		DiscloseTextSpoilers: _z.getlSVal('DiscloseTextSpoilers', false),
-		UpdateInterval: function() {
-			var i = updInt > 180 ? 180 :
-					updInt < 45  ? 45  : updInt;
-			return i * 1000;
-		},
-		defaultName: function(name) {
+(function initStore() {
+	try { 
+		var User = JSON.parse(localStorage.getItem('User'));
+		if (!User || !User.tokens[0] || User.modified) {
+			var apiReq = new XMLHttpRequest();
+				apiReq.open('GET', '/api/user.json', true);
+				apiReq.onreadystatechange = function() {
+					if (this.readyState !== 4)
+						return;
+					if (this.status === 200) {
+						localStorage.setItem('User', this.responseText);
+						SimpleMagicExtension();
+					}
+				}
+				apiReq.send(null);
+		} else {
+			SimpleMagicExtension();
+		}
+	} catch(e) {
+		_z.dbg(e);
+	}
+})();
+
+function SimpleMagicExtension() {
+	var HM = {
+		UnreadCount: 0, zIndex: 1, RefTab: null,
+		RepliesMap: {}, LoadedPosts: {}, ThreadListener: {}, 
+		RemoveExif: _z.localS.get('RemoveExif', true),
+		SoundNotify: _z.sessionS.get('SoundNotify', false),
+		AttachPopups: _z.localS.get('AttachPopups', true),
+		RemoveFileName: _z.localS.get('RemoveFileName', false),
+		DiscloseTextSpoilers: _z.localS.get('DiscloseTextSpoilers', false),
+		User: JSON.parse(_z.localS.get('User', '{}')),
+		URL: ParseUrl()},
+	Files = {
+		audio: ["m4a", "m4r", "aac", "opus", "alac", "flac", "ogg", "mp3", "wav"],
+		video: ['ogv', 'ogm', 'm4v', "3gp", 'mp4', 'webm', 'flv', 'swf'],
+		image: ["jpeg", "jpg", "png", "svg", "gif", 'bmp'],
+		arch: ['zip', 'rar', '7z']},
+	Names = {
+		'en': ['Anonymous', 'Developer', 'Lawrense', 'Anonymous Expert', 'Slowpoke', 'Experimenter'],
+		'ru': ['Анонимус', 'Доброкодер', 'Лоуренс', 'Анонимный эксперт', 'Добропок', 'Экспериментатор'],
+		 get: function(brd, name) {
 			var i, l = LC.lng[lng];
 			if (name) {
-				i = LC.names['ru'].indexOf(name)
-				return (i >= 0 ? LC.names[l][i] : name)
-			} else {
-				switch (HM.URL.board) {
-					case 's'   : i = 1; break;
-					case 'sw'  : i = 2; break;
-					case 'wn'  : i = 3; break;
-					case 'slow': i = 4; break;
-					case 'mad' : i = 5; break;
-					default    : i = 0;
-				}
-				return LC.names[l][i]
+				i = this['ru'].indexOf(name);
+				return (i >= 0 ? this[l][i] : name);
 			}
+			switch ((brd || HM.URL.board)) {
+				case 's'   : i = 1; break;
+				case 'sw'  : i = 2; break;
+				case 'wn'  : i = 3; break;
+				case 'slow': i = 4; break;
+				case 'mad' : i = 5; break;
+				default    : i = 0;
+			}
+			return this[l][i];
 		}},
-	Target = {
-		board: HM.URL.board,
-		tid: HM.URL.thread,
-		thread: function(num) {
-			return document.getElementById('thread_'+ (num || Target.tid));
-		},
-		last: function() {
-			var tlel = Target.thread().lastElementChild;
-			return tlel.nodeName === 'FORM' ? tlel.previousElementSibling : tlel;
-		}}, 
-	Files = {
-		audio: ["flac", "alac", "wav", "m4a", "m4r", "aac", "ogg", "mp3", "opus"],
-		video: ['webm', 'ogv', 'ogm', 'mp4', 'm4v', 'flv', "3gp"],
-		image: ["jpeg", "jpg", "png", "svg", "gif"],
-		arch: ['zip', 'rar', '7z']},
+	KeyCodes = {
+		symbs: ['"', '*', '(', '`', '%', '~'],
+		codew: ['{', '[', '(', '\'', '"'],
+		quots: ['^', '>'],
+		balance: function(k) {
+			var O = ['"', '(', '[', '{'],
+				C = ['"', ')', ']', '}'],
+				idx = O.indexOf(k) || C.indexOf(k);
+			return [(O[idx] || k), (C[idx] || k)]
+		}},
+	Btn = {
+		tamplate: '\n<a class="r{Fn} icon" r{Act}><img src="/images/blank.png" title="r{title}" alt="r{alt}"></a>\n',
+		get: function(ein) {
+			var click, title;
+			switch (ein.toLowerCase()) {
+				case 'derpibooru':
+					click = '$(\'#rs-url\').val(\'@img_src\').parent().submit()';
+					title = 'Derpibooru reverse search';
+			}
+			return this['tamplate'].allReplace({'r{Fn}': 'search_'+ ein.toLowerCase(), 'r{Act}': 'onclick="'+ (click || 'window.open(this.href,\'_blank\');return false') +'"', 'r{title}': (title || LC.fnd_src_wth[lng] +' '+ ein), 'r{alt}': ein});
+		}},
 	LC = {
 		lng: ['en', 'ru'],
 		file: ["File", "файл"],
 		repl: ["Reply", "Ответ"],
 		edit: ["Edit", "Изменить"],
 		omit: [" omited ", " ответов "],
-		wsec: ['Wait a Second...', 'Секунду...'],
-		updprog: ["Updating...", "Обновление..."],
-		postdel: ["Post is deleted.", "Пост удалён."],
-		loadnew: ["Load New Posts", "Подгрузить посты"],
-		clipopup: ["Clipping Popup Posts", "Закреплять превью постов"],
-		txtspoils: ["Disclose text spoilers", "Раскрывать текстовые спойлеры"],
-		snd_notify: ["Sound Notifications", "Звуковые уведомления"],
+		edit_post: ['Edit this post', 'Отредактировать'],
 		fnd_src_wth: ["Find source with", "Искать оригинал в"],
-		remv: ["Remove", "Убрать"],
-		clos: ["Close", "Закрыть"],
+		mrk_to_del: ["Mark to delete", "Отметить для удаления"],
+		remv: ["Close", "Убрать"],
+		clos: ["Remove", "Закрыть"],
 		all: [" All", " все"],
 		add: ["Add", "Добавить"],
-		names: {
-			'en': ['Anonymous', 'Developer', 'Lawrense', 'Anonymous Expert', 'Slowpoke', 'Experimenter'],
-			'ru': ['Анонимус', 'Доброкодер', 'Лоуренс', 'Анонимный эксперт', 'Добропок', 'Экспериментатор']
-		},
 		few: {
 			'u-a': ["\'s", "а"],
 			'u-b': ["s", "ов"],
@@ -219,11 +272,20 @@ document.head.appendChild(GlobalStyle);
 			'en': ["s", ""],
 			'ru': ["", "а"]
 		}
-	}
+	},
+	
+	lng = (LC.lng.indexOf(HM.User.language) > -1 ? LC.lng.indexOf(HM.User.language) : 1),
+	Nagato = new Yuki(true),
+	Chanabira = new CharmingHanabira(),
+	SettingsPanel = new SimpleSets();
+	document.head.appendChild(GlobalStyle);
 	
 	/***--[ Utilites ]--***/
-	Array.prototype.isThere = matchIndex
-	String.prototype.isThere = matchIndex
+	Array.prototype.isThere = matchIndex;
+	String.prototype.isThere = matchIndex;
+	Array.prototype.last = getLast;
+	NodeList.prototype.last = getLast;
+	HTMLCollection.prototype.last = getLast;
 	String.prototype.allReplace = function(obj, r) {
 		var retStr = this;
 		for (var x in obj) {
@@ -240,160 +302,366 @@ document.head.appendChild(GlobalStyle);
 	function matchIndex(str) {
 		return this.indexOf(str) >= 0;
 	}
-	function setupOptions(obj, option, sess) {
-		if (obj.type === 'checkbox')
-			val = obj.checked;
-		if (obj.tagName === 'SELECT')
-			val = obj.value;
-		HM[option] = val;
-		_z.setlSVal(option, val, sess);
+	function getLast() {
+		return this[this.length - 1];
 	}
-	
+	function setupOptions(input, option, stor, val) {
+		switch (input.type) {
+			case 'checkbox':
+				val = input.checked;
+				break;
+			case 'select-one':
+			case 'number':
+				val = (input.value || 0);
+		}
+		HM[option] = val;
+		_z[stor +'S'].set(option, val);
+	}
 	function ParseUrl(url) {
 		var m = (url || document.location.href).match(/(?:https?:\/\/([^\/]+))?\/([^\/]+)\/(?:(\d+)|res\/(\d+)|(\w+))(?:\.x?html)?(#i?(\d+))?/);
 		return m ? {host: m[1], board: m[2], page: m[3], thread: m[4], desk: m[5], pointer: m[6], pid: m[7]} : {};
 	}
-	function GetElements(el) { 
-		var node = el || document;
-		return { posts: node.getElementsByClassName('post'), hoos: node.querySelectorAll('.reply-button, .reply-link, .spr-image, .sp-r'),
-			links: node.querySelectorAll('.message a, img.thumb[alt="unrated"], img.thumb[alt^="r-1"], img.thumb[alt="illegal"], .file > a[href$=".svg"] > img, a.search_iqdb.icon, .reflink')
-		}
+	function getPageName(url) {
+		var a = url.split('/'), p = a.pop(), out = !p ? a.pop() : p;
+		return decodeURIComponent(out);
 	}
-	function _show (el) { el.classList.remove('hide') }
-	function _shide(el) { el.classList.toggle('hide') }
-	function _hide (el) { el.classList.add('hide') }
+	function SwapL(str, lang) {
+		if (lang === 'ru') {
+			str = str.replace(/[\-=0-9]/,'').replace(/`/, "ё").replace(/q/i, "й").replace(/w/i, "ц").replace(/e/i, "у").replace(/r/i, "к").replace(/t/i, "е").replace(/y/i, "н").replace(/u/i, "г").replace(/i/i, "ш").replace(/o/i, "щ").replace(/p/i, "з").replace(/\[/, "х").replace(/[\]\\]/, "ъ").replace(/a/i, "ф").replace(/s/i, "ы").replace(/d/i, "в").replace(/f/i, "а").replace(/g/i, "п").replace(/h/i, "р").replace(/j/i, "о").replace(/k/i, "л").replace(/l/i, "д").replace(/;/, "ж").replace(/'/, "э").replace(/z/i, "я").replace(/x/i, "ч").replace(/c/i, "с").replace(/v/i, "м").replace(/b/i, "и").replace(/n/i, "т").replace(/m/i, "ь").replace(/,/, "б").replace(/[\.\/]/, "ю");
+		} else if (lang === 'en') {
+			str = str.replace(/[;\[\]',\.\/`\-=0-9ъЪЭэ]/,'').replace(/[фФ]/, "a").replace(/[иИ]/, "b").replace(/[сС]/, "c").replace(/[вВ]/, "d").replace(/[уУ]/, "e").replace(/[аА]/, "f").replace(/[пП]/, "g").replace(/[рР]/, "h").replace(/[шШ]/, "i").replace(/[оО]/, "j").replace(/[лЛ]/, "k").replace(/[дДжЖ]/, "l").replace(/[ьЬбБ]/, "m").replace(/[тТ]/, "n").replace(/[щЩ]/, "o").replace(/[зЗхХ]/, "p").replace(/[йЙ]/, "q").replace(/[кК]/, "r").replace(/[ыЫ]/, "s").replace(/[еЕ]/, "t").replace(/[гГ]/, "u").replace(/[мМ]/, "v").replace(/[цЦ]/, "w").replace(/[чЧ]/, "x").replace(/[нН]/, "y").replace(/[яЯ]/, "z");
+		}
+		return str;
+	}
+	function _show (el) { el.classList.remove('hidout') }
+	function _shide(el) { el.classList.toggle('hidout') }
+	function _hide (el) { el.classList.add('hidout') }
 	function _cid(pid) {
 		var n = new RegExp(/(\d+)/).exec(pid);
 		return Number((n[1] || 0));
 	}
 	
 	/************************************************************************/
-	function getDataResponse(uri, Fn) {
-		var apiReq = new XMLHttpRequest();
-		apiReq.open('GET', uri, true);
-		apiReq.onreadystatechange = function() {
+	function getDataResponse(URI, Fn) {
+		var xhrReq = new XMLHttpRequest();
+			xhrReq.onreadystatechange = oRsTc;
+			xhrReq.open('GET', URI, true);
+			xhrReq.send(null);
+		function oRsTc() {
 			if (this.readyState !== 4)
 				return;
 			if (this.status === 304) {
-				console.log('304 ' + this.statusText);
+				console.warn('304 '+ this.statusText);
 			} else {
 				try {
 					var json = JSON.parse(this.responseText);
-				} catch(e){
 				} finally {
 					Fn(this.status, this.statusText, (json || this.responseText), this);
 					Fn = null;
 				}
 			}
 		}
-		apiReq.send(null);
 	}
-	function updateThread(e) {
-		if (thread_updating)
-			return;
-		thread_updating = true;
-		HM.Settings['LoadButton'].textContent = LC.updprog[lng];
-		getDataResponse('/api/thread/'+ HM.URL.board +'/'+ Target.tid +'/new.json?new_format&post_html&last_post='+ _cid(Target.last().id),
-			function parseNewPosts(status, sText, json, xhr) {
-				var i, temp, el, pCount, len, errorMsg;
-				if (status !== 200 || json.error) {
-					errorMsg = !json.error ? status +' '+ sText : json.error.message +' '+ json.error.code;
-					HM.Settings['UpdateStatBox'].innerHTML = this['ErrorMsg'].replace('r{Text}', errorMsg);
-					setTimeout(function() {
-						_z.setup(HM.Settings['UpdateStatBox'], {
-							'html': ''
-						}, null).appendChild(HM.Settings['LoadButton'])
-						updateTimer();
-					}, 5000);
-				} else {
-					pCount = json.result.posts_count;
-					el = json.result.posts;
-					len = el ? el.length : 0;
-					if (len > 0) {
-						updInt = 45;
-						unread_count += len;
-						if (window.HTMLAudioElement && HM.SoundNotify)
-							new Audio("/src/mp3/1406/musbox.mp3").play();
-						_z.each(el, function(xhtml) {
-							var temp = _z.setup('div', {'html': xhtml}, null);
-							hooLinksElement(GetElements(temp).links);
-							_z.setup(temp.querySelector('.reply'), {'class': 'reply new'}, {'click': markAsRead });
-							temp.querySelector('.delete_checkbox').addEventListener('click', function(e) {
-								this.parentNode.classList.toggle('checked');
-							}, false);
-							Target.thread().appendChild(temp.firstElementChild);
-						});
-						Tinycon.setBubble(unread_count);
-						HM.Settings['PostCountStat'].textContent = pCount + LC.omit[lng];
-					} else if (e === true)
-						updInt += 15;
+	function getUrlData(TYPE, Source, Fn) {
+		if (typeof GM_xmlhttpRequest !== 'undefined') {
+			new GM_xmlhttpRequest({
+				method: 'GET',
+				responseType: TYPE.toLowerCase(),
+				url: Source,
+				onload: function(gm_xhr) {
+					if (gm_xhr.readyState !== 4)
+						return;
+					if (gm_xhr.status === 200) {
+						Fn(gm_xhr.response, gm_xhr.finalUrl, gm_xhr);
+						Fn = null;
+					}
 				}
-				if (e && !errorMsg)
-					updateTimer();
-				genReplyMap(GetElements().posts);
-				HM.Settings['LoadButton'].textContent = LC.loadnew[lng];
-				thread_updating = false;
+			});
+		} else {
+			var dtReq = new XMLHttpRequest();
+				dtReq.responseType = TYPE.toLowerCase();
+				dtReq.onload = function() {
+					if (this.readyState !== 4)
+						return;
+					if (this.status === 200) {
+						Fn(this.response, this.responseURL, this);
+						Fn = null;
+					}
+				};
+				dtReq.open('GET', Source, true);
+				dtReq.send(null);
+		}
+	}
+	
+	function getFileReaderData(readAs, file, Fn) {
+		var reader = new FileReader();
+			reader.onload = function() {
+				if (this.readyState < 1 || this.error) {
+					console.warn(this.error || 'No data has been loaded yet.');
+					return;
+				} else {
+					Fn(this.result, this);
+					Fn = null;
+				}
 			}
-		);
+		switch (readAs.toLowerCase()) {
+			case 'string': reader.readAsBinaryString(file);
+				break;
+			case 'dataurl': reader.readAsDataURL(file);
+				break;
+			case 'arraybuffer': reader.readAsArrayBuffer(file);
+				break;
+			case 'text':
+				default: reader.readAsText(file, 'UTF-8');
+		}
 	}
-	function markAsRead(e) {
-		unread_count--;
-		this.removeEventListener('click', markAsRead, false);
-		this.classList.remove('new');
-		Tinycon.setBubble(unread_count);
+	
+	/*** Magic Thread Listener ***/
+	function MagicThreadListener(Thread, N) {
+		var MListen = this, CiD = _cid(Thread.id), thread_updating, play_notify,
+			Autosage = Thread.querySelector('img[src="/images/autosage.gif"]'),
+			Posts = Thread.getElementsByClassName('post'), OP = Posts[0],
+			Timer = { id: 0, offset: 0 }, ExpCache = new Array(0),
+			WarningMsg = _z.setup('strong', {'class': 'err-msg'}),
+			SageIcon = '<span class="sagearrow line-sect opaque"></span>',
+			Notif = _z.setup('audio', {'html': '<source src="/src/mp3/1406/musbox.mp3" type="audio/mpeg"><source src="/src/ogg/1404/musbox.ogg" type="audio/ogg">'}, {
+				'play' : function(e) { play_notify = true },
+				'ended': function(e) { play_notify = false }
+			}),
+			MLLC = {
+				loadnew: ["Load New Posts", "Подгрузить посты"],
+				updprog: ["Updating...", "Обновление..."],
+				unexpt: ["Truncate Thread", "Свернуть тред"],
+				expant: ["Expand Thread", "Развернуть тред"],
+				expdin: ["Expanding...", 'Разворачивается...'],
+				unexin: ["Truncating...", 'Сворачивается...']
+			}
+			this.updateThread = updateThread; this.updateTimer = updateTimer; this.expandThread = expandThread; this.truncatThread = truncatThread;
+			this['NewPostLoader'] = _z.setup('div', {'id': 'new-post-loader', 'class': (N ? 'dummy-line' : 'stat-line'), 'html': '<a id="'+ (N ? 'dummy-load' : 'load-new') +'">'+ MLLC.loadnew[lng] +'</a>'}, {
+				'click': function(e) {
+					switch (e.target.id) {
+						case 'dummy-load': updateThread(e, false); break;
+						case 'load-new': updateThread(e, true);
+					}
+				}
+			});
+			this['PostsCount'] = _z.setup('label', {'id': 'post-count', 'class': 'etch-text break-lines', 'html': (Autosage ? SageIcon : '') + Posts.length + LC.omit[lng]});
+		function updateTimer() {
+			var t = 45 + (Timer.offset > 135 ? 135 : Timer.offset);
+			clearTimeout(Timer.id);
+			Timer.id = setTimeout(function() {
+				updateThread(15, true);
+			}, t * 1000);
+		}
+		function expandThread(e) {
+			if (ExpCache.length === 0) {
+				statusButton(e.target, 0)
+				getDataResponse('/api/thread/expand/'+ HM.URL.board +'/'+ CiD, function(status, sText, xhtml, xhr) {
+					Thread.innerHTML = xhtml;
+					for (var i = 0; i < Posts.length; i++) {
+						ExpCache.push(Posts[i]);
+						handlePost(Posts[i]);
+					}
+					_z.setup(Thread.querySelector('.abbrev a[onclick^="Truncate"]'), {'class': 'excat-button', 'id': 'thread-truncat', 'onclick': undefined});
+					genReplyMap(Posts);
+					statusButton(e.target, 1);
+				});
+			} else {
+				_z.remove(Posts);
+				_z.append(Thread, ExpCache);
+			}
+		}
+		function truncatThread(e) {
+			genReplyMap([OP]);
+			for (var i = 10, Nodes = [OP]; i > 0; i--) {
+				Nodes.push(ExpCache[ExpCache.length - i]);
+			}
+			_z.remove(ExpCache);
+			_z.append(Thread, Nodes);
+		}
+		function statusButton(btn, v) {
+			switch (btn.id) {
+				case 'load-new':
+				case 'dummy-load': btn.textContent = [MLLC.updprog[lng], MLLC.loadnew[lng]][v];
+					break;
+				case 'thread-expand': btn.textContent = [MLLC.expdin[lng], MLLC.expant[lng]][v];
+					break;
+				case 'thread-truncat': btn.textContent = [MLLC.unexin[lng], MLLC.unexpt[lng]][v];
+			}
+		}
+		function updateThread(e, rexk) {
+			var UpdBtn = typeof e === 'object' ? e.target : MListen['NewPostLoader'].firstElementChild;
+			if (thread_updating)
+				return;
+			thread_updating = true;
+			statusButton(UpdBtn, 0)
+			getDataResponse('/api/thread/'+ HM.URL.board +'/'+ CiD +'/new.json?new_format&post_html&last_post='+ _cid(Posts.last().id),
+			function(status, sText, json, xhr) {
+				try {
+					var i, temp_post, el, pCount, len, error;
+					if (status !== 200 || json.error) {
+						error = _z.setup(WarningMsg, {'text': (json.error ? json.error.message +' '+ json.error.code : status +' '+ sText)});
+						setTimeout(function() {
+							_z.replace(error, UpdBtn);
+							if (rexk)
+								updateTimer();
+						}, 8000);
+						_z.replace(UpdBtn, error);
+					} else {
+						Autosage = json.result.autosage;
+						pCount = json.result.posts_count;
+						el = json.result.posts;
+						len = el ? el.length : 0;
+						if (len > 0) {
+							Timer.offset = 0;
+							HM.UnreadCount += len;
+							if (rexk && HM.SoundNotify)
+								Notif.play();
+							_z.each(el, function(xhtml) {
+								var temp = _z.setup('div', {'html': xhtml}), post_node = temp.firstElementChild;
+								handlePost(post_node);
+								Thread.appendChild(_z.setup(post_node, {'class': post_node.className +' new'}));
+								if (ExpCache.length > 0 && ExpCache.indexOf(post_node) === -1)
+									ExpCache.push(post_node);
+							});
+							Tinycon.setBubble(HM.UnreadCount);
+							genReplyMap(Posts);
+							MListen['PostsCount'].innerHTML = (Autosage ? SageIcon : '') + pCount + LC.omit[lng];
+						} else if (typeof e === 'number')
+							Timer.offset += e;
+					}
+					if (rexk && !error)
+						updateTimer();
+				} catch(e) {
+					_z.dbg(e);
+				} finally {
+					statusButton(UpdBtn, 1);
+					thread_updating = false;
+				}
+			});
+		}
 	}
-	function updateTimer() {
-		clearTimeout(timer_id);
-		timer_id = setTimeout(function() {
-			updateThread(true)
-		}, HM.UpdateInterval());
+	
+	function markAsRead(new_post) {
+		if (new_post) {
+			HM.UnreadCount--;
+			new_post.classList.remove('new');
+			Tinycon.setBubble(HM.UnreadCount);
+		} else {
+			_z.each('.replypost.new', function(replypost_new) {
+				replypost_new.classList.remove('new');
+			});
+			Tinycon.setBubble(0);
+			HM.UnreadCount = 0;
+		}
 	}
 	
 	/*** Wakabamark Buttons Engine ***/
 	function wmarkText(TextArea, openTag, closeTag) {
-		var val = TextArea.value, ins, ql, sp, c, s, e,
+		var	val = TextArea.value,
 			end = TextArea.selectionEnd,
 			start = TextArea.selectionStart,
 			selected = val.substring(start, end),
 			ws = window.getSelection().toString(),
 			getext = start === end ? ws : selected,
-			cont = (typex()).exec(selected);
-			switch (closeTag.slice(0, 1)) {
-				case '+' : ins = true; break;
-				case '\n': ql  = true; break;
-				case '%' : sp  = true; break;
-				case '`' : c   = true; break;
-				case '~' : s   = true;
-			}
-			function typex(gmi) {
-				return new RegExp('^(\\s*)(.*?)(\\s*)$', (gmi || ''))
-			}
-		if (ins) {
-			return _z.setup(TextArea, {'value': val.substr(0, end) + openTag + val.substr(end)}, null)
-					.setSelectionRange(start + openTag.length, start + openTag.length);
+			typex = function (gmi) {return new RegExp('^(\\s*)(.*?)(\\s*)$', (gmi || ''))},
+			cont = (typex()).exec(selected), offsetS = 0, offsetE, markedText, CASM = closeTag.slice(0, 1);
+		switch (CASM) {
+			case '\x20':
+			case '\r'  :
+				markedText = openTag + (val.substring(start, start -1) !== '\n' ? CASM : closeTag);
+				break;
+			case '\n':
+				if (ws && ws != getext) {
+					start = end = TextArea.value.length;
+					getext = ws;
+					openTag = closeTag;
+				}
+				markedText = openTag + getext.replace(/\n/gm, closeTag);
+				break;
+			case '~' :
+				if (selected.slice(0, 1) === '~' || val.substring(end, end + 1) === '~')
+					closeTag = openTag = openTag.slice(0, 1);
+			default:
+				var c = sp = '';
+				switch (CASM) {
+					case '%' : sp  = '%'; break;
+					case '`' : c   = '`'; break;
+				}
+				markedText = cont === null ? (sp || c ? openTag + c + '\n' + getext + '\n' + c + closeTag :
+					selected.replace(typex('gm'), '$1'+ openTag +'$2'+ closeTag +'$3')) :
+					cont[1] + openTag + cont[2] + closeTag + cont[3];
+				if (cont != null && !cont[2]) {
+					offsetS = openTag.length;
+					offsetE = offsetS + selected.length;
+				}
 		}
-		if (ql) {
-			if (ws && ws != getext){
-				start = end = TextArea.value.length;
-				getext = ws; openTag = closeTag;
-			}
-			markedText = openTag + getext.replace(/\n/gm, closeTag);
+		TextArea.value = val.substring(0, start) + markedText + val.substring(end);
+		if (CASM == '\r' || CASM == '\x20' ) {
+			TextArea.selectionStart = TextArea.selectionEnd = TextArea.value.length;
 		} else {
-			e = c ? '`' : '';
-			if (s && (selected.slice(0, 1) === '~' || val.substring(end, end + 1) === '~'))
-				openTag = openTag.slice(0, 1), closeTag = closeTag.slice(0, 1);
-			markedText = cont === null ? (sp || c ? openTag + e + '\n' + getext + '\n' + e + closeTag :
-				selected.replace(typex('gm'), '$1'+ openTag +'$2'+ closeTag +'$3')) :
-				cont[1] + openTag + cont[2] + closeTag + cont[3];
+			TextArea.setSelectionRange(start + offsetS, start + (offsetE || markedText.length));
+			TextArea.classList.add('ta-inact');
 		}
-		eOfs = markedText.length, sOfs = 0;
-		if (cont != null && !cont[2] && !ql) {
-			sOfs = openTag.length;
-			eOfs = sOfs + selected.length;
+		if (TextArea.safe_text)
+			_z.sessionS.set('SafeText', JSON.stringify(TextArea.value));
+	}
+	
+	function keyMarks(e) {
+		try {
+			var TextArea, TA, K;
+			if (e.target.tagName === 'TEXTAREA') {
+				TextArea = e.target;
+				TA = true;
+			} else {
+				TextArea = Nagato['ReplyText'];
+				TA = false;
+			}
+			var YRT = TextArea.id === 'yuki-replyText',
+				CED = TextArea.id === 'code_edit_ta',
+				key = String.fromCharCode(e.charCode),
+				val = TextArea.value,
+				end = TextArea.selectionEnd,
+				start = TextArea.selectionStart,
+				selected = val.substring(start, end),
+				active = selected.length > 0;
+				function autoselect() {
+					if (!active) {
+						var fw = val.substring(start, val.length).match(/^(.*?)(?:\s|$)/);
+						return (fw[1] ? false : true);
+					} else return true;
+				}
+			if (YRT && TA && KeyCodes.symbs.isThere(key)) {
+				if (active) {
+					K = KeyCodes.symbs.indexOf(key) >= 4 ? [key + key, key + key] : KeyCodes.balance(key);
+					wmarkText(TextArea, K[0], K[1]);
+					return _z.fall(e);
+				}
+			}
+			if (CED && TA && KeyCodes.codew.isThere(key)) {
+				if (autoselect()) {
+					K = KeyCodes.balance(key);
+					wmarkText(TextArea, K[0], K[1]);
+					return _z.fall(e);
+				}
+			}
+			if (YRT && KeyCodes.quots.isThere(key)) {
+				var sSp = val.substring(start - 1, start);
+				if (['\n', ''].isThere(sSp) || selected.isThere('\n')) {
+					key = key === '^' ? '*' : key;
+					wmarkText(TextArea, key +' ', '\n'+ key +' ');
+					return _z.fall(e);
+				}
+			}
+			if (TA && e.keyCode != 8) { HM.LastKey = key;
+				if (TextArea.classList.contains('ta-inact')) {
+					TextArea.setSelectionRange(end, end);
+					TextArea.classList.remove('ta-inact');
+				}
+			}
+		} catch(e) {
+			_z.dbg(e);
 		}
-		_z.setup(TextArea, {'class': 'ta-inact', 'value': val.substring(0, start) + markedText + val.substring(end)}, null).focus();
-		_z.setlSVal('SafeText', JSON.stringify(TextArea.value), true);
-		TextArea.setSelectionRange(start + sOfs, start + eOfs);
 	}
 	
 	/*** Strike Converter ***/
@@ -420,167 +688,215 @@ document.head.appendChild(GlobalStyle);
 		})
 	}
 	
-	/*** Enchanted Hanabira ***/
+	/*** Charming Hanabira ***/
 	//* @ original code 	http://dobrochan.com/js/hanabira-0.5.1311-.js
 	//* @ copyright 		Dobrochan
-	function BindDragRef(e) {
-		if (HM.RefTab) {
-			HM.RefTab.style.top = 9 + e.pageY - HM.RefTab.offsetHeight +'px';
-			HM.RefTab.style.left = 9 + e.pageX - HM.RefTab.offsetWidth +'px';
-		}
-	}
-	function RemoveAllRefs(e) {
-		var popups = document.getElementsByClassName('popup'),
-			i = popups.length - 1;
-		if (popups[0]) {
-			switch (e.type) {
-				case 'keydown':
-					if (i == 0)
-						HM.zIndex = 0;
-					popups[i].remove();
-					break;
-				case 'click':
-					HM.zIndex = 0;
-					_z.remove(popups);
-					break;
-			}
-		}
-	}
-	function BindCloseRef(reftab) {
-		var tr = _z.setup('tbody', {'style': 'line-height:15px;', 'html': '<tr><td>'}, null),
-			drag = _z.setup('span', {'class': 'dpop txt-btn', 'text': '\n.:'}, {
-				'mousedown': function(e) {
-					reftab.style['z-index'] = HM.zIndex + 1
-					HM.RefTab = reftab; 
-					return _z.fall(e) }}),
-			close = _z.setup('span', {'class': 'cpop txt-btn font-s-a', 'title': LC.clos[lng], 'text': '\n✕'}, {
-				'click': function(e) { reftab.remove() }}),
-			closeAll = _z.setup('span', {'class': 'callpop txt-btn', 'title': LC.clos[lng] + LC.all[lng], 'text': '\n☒'}, {
-				'click': RemoveAllRefs });
-			_z.setup(reftab, {}, {
-				'click': function(e) {
-					HM.zIndex++
-					reftab.style['z-index'] = HM.zIndex }}).appendChild(tr).click();
-		_z.append(tr.firstChild.firstChild, [close, closeAll, drag]);
-	}
-	function BindRemoveRef(a, reftab) {
-		var to, timer = function(e) {
-			to = setTimeout(function() {
-				reftab.remove()
-			}, 300) }
-		reftab.onmouseleave = a.onmouseleave = timer;
-		reftab.onmouseenter = a.onmouseenter = function(e) {
-			clearTimeout(to);
-			to = 0;
-		}
-	}
-	
-	function MagicPostView(e) {
-		var a = e.target, attach = HM.AttachPopups, L = ParseUrl(a.href),
-			brd = L.board, tid = L.thread, pid = L.pid, op = tid === pid,
-			postid = (op ? 'post_' : 'reply') + pid, id = brd +'-'+ postid,
-			refl = _z.route(a, '.reflink a'), href = refl.getAttribute('href'),
-			reftab = _z.setup('table', {'class': (op ? 'oppost popup' : 'popup'), 'id': 'ref-'+ id,
-				'html': '<tbody><tr><td class="loading"><span class="waiting'+ Math.floor(Math.random() * 3) +
-				' icon"><img src="/images/blank.png"></span>\n'+ LC.wsec[lng] +'</td></tr></tbody>'}, null),
-			loading = reftab.querySelector('.loading'), active = document.getElementById('ref-'+ id),
-			post = HM.LoadedPosts[id] || document.getElementById(postid);
-		function add_mapping(mapp) {
-			if (!mapp)
+	function CharmingHanabira(h) {
+		var Chana = this, Popups = document.getElementsByClassName('popup'),
+			ChLC = {
+				wsec: ['Wait a Second...', 'Секунду...'],
+				postdel: ["Post is deleted.", "Пост удалён."]},
+			Timrs = {
+				clear: function(name) {
+					clearTimeout(this[name]);
+				},
+				set: function(name, Fn) {
+					this.clear(name);
+					this[name] = setTimeout(Fn, 300);
+				}},
+			post_stub = _z.setup('td', {'class': 'die stub', 'text': ChLC.postdel[lng]});
+			this.closeLastPopup = RemoveAllRefs;
+			this.MagicPostView  = MagicPostView;
+			this.MagicHighlight = MagicHighlight;
+		function MagicHighlight(e) {
+			Timrs.clear('PopupOpen');
+			var L = e.target.id.split('-'), tid = L[2], pid = L[3],
+				post = document.getElementById('post_'+ pid);
+			if (post) {
+				if (!post.classList.contains('highlighted')) {
+					var prevhlight = document.getElementsByClassName('highlighted')[0],
+						hanalight = document.getElementsByClassName('highlight')[0];
+					if (prevhlight)
+						prevhlight.classList.remove('highlighted');
+					if (hanalight)
+						hanalight.className = 'reply';
+					post.classList.add('highlighted');
+				}
+				post.scrollIntoView({block: (L[0] === 'cvl' ? 'end' : 'start'), behavior: 'smooth'});
+			} else if (HM.URL.thread !== tid)
 				return;
-			mapp.classList.add('mapped');
-			if (attach) {
-				mapp.classList.add('locked');
-				mapp.removeEventListener('mouseover', MagicPostView, false);
-			} else {
-				a.onmouseout = function(e) {
-					mapp.classList.remove('mapped');
-				}
-			}
+			_z.fall(e);
 		}
-		function set_style(r) {
-			var w = window.innerWidth, mw,
-			x = e.pageX, y = e.pageY + 30,
-			wx = w - x, y2 = y - r.offsetHeight - 45;
-			if (a.classList[1] !== 'cview') {
-				if (y2 > 0)
-					y = y2;
-				if ((wx < 600 || wx < w / 2) && r.offsetWidth > wx) {
-					mw = w - 400;
-					x = null;
-				}
-			}
-			r.setAttribute('style', 'top:'+ y +'px;max-width:'+
-				(mw || wx) +'px;'+ (x == null ? 'right:0' : 'left:'+ x) +'px'+
-				(attach ? ';z-index:'+ HM.zIndex : ''));
-		}
-		function binded(el) {
-			var load = !el ? _z.setup('td', {'class': 'stub', 'text': LC.postdel[lng]}, null) :
-				_z.setup(el.cloneNode(true), {'id': 'load-' + id, 'class': undefined}, null);
-			attachEvents(load);
-			if (el && attach) {
-				BindCloseRef(reftab);
-			} else {
-				BindRemoveRef(a, reftab);
-			}
-			_z.replace(loading, load);
-			add_mapping(reftab.querySelector('a[href="'+ href +'"]'));
-		}
-		if (active) {
-			var loc = active.querySelector('.locked');
-			if (loc && loc.hash !== refl.hash) {
-				loc.className = 'reply-link cview';
-				attachEvents(active);
-			}
-			add_mapping(active.querySelector('a[href="'+ href +'"]'));
-			set_style(active);
-			return active.click();
-		} else if (post) {
-			binded(post == 'stub' ? null : post);
-		} else if (HM.URL.thread == tid) {
-			binded(null);
-		} else {
-			getDataResponse('/api/post/'+ brd +'/'+ tid +'/'+ pid +'.xhtml',
-			function(status, sText, xhtml, xhr) {
-				var node;
-				if (status !== 200) {
-					loading.innerHTML = Btn['ErrorMsg'].replace('r{Text}', status +' '+ sText);
-					setTimeout(function() {
-						reftab.remove();
-					}, 7000)
-					return;
-				} else if (xhtml == "Specified element does not exist.") {
-					node = 'stub';
+		function MagicPostView(e) {
+			if (e.target.classList[0] !== 'reply-link' || e.target.classList.contains('locked'))
+				return;
+			var a = e.target, np = this;
+			Timrs.set('PopupOpen', function() {
+				var L = a.id.split('-'), brd = L[1], tid = L[2], pid = L[3], op = tid === pid, patch_id = brd +'_'+ tid +'_'+ pid,
+					id = brd +'-'+ pid, map = np.getAttribute('patch-id').split('_'),
+					post = HM.LoadedPosts[patch_id] || document.getElementById('post_'+ pid), loading,
+					reftab = document.getElementById('ref-'+ id), binded = function (el) {
+						var load = (el.querySelector('.reply') || el).cloneNode(true);
+						_z.remove(load.querySelectorAll('form.edit'));
+						if (HM.AttachPopups && load.classList[1] !== 'stub') {
+							BindCloseRef(reftab);
+						} else {
+							BindRemoveRef(a, reftab);
+						}
+						_z.replace(loading, _z.setup(load, {'id': 'load-' + id, 'class': el.cast}));
+						_z.each(reftab.querySelectorAll('a[href="/'+ map[0] +'/res/'+map[1]+'.xhtml#i'+map[2]+'"]'), add_mapping);
+					}
+				if (reftab) {
+					_z.each(reftab.querySelectorAll('.locked, a[href="/'+ map[0] +'/res/'+map[1]+'.xhtml#i'+map[2]+'"]'), function(lnk) {
+						if (lnk.classList.contains('locked'))
+							lnk.className = 'reply-link';
+						else
+							add_mapping(lnk);
+					});
 				} else {
-					node = _z.setup('td', {'id': 'load-'+ id, 'html': xhtml}, null);
-					hooLinksElement(GetElements(node).links);
-					genReplyMap([node]);
+					reftab = _z.setup('table', {'class': (op ? 'oppost popup' : 'popup'), 'id': 'ref-'+ id, 'patch-id': patch_id,
+						'html': '<tbody><tr><td class="loading"><span class="waiting'+ Math.floor(Math.random() * 3) +
+						' icon"><img src="/images/blank.png"></span>\n'+ ChLC.wsec[lng] +'</td></tr></tbody>'}, {
+						'click': PDownListener, 'mouseover': MagicPostView});
+					loading = reftab.querySelector('.loading');
+					if (post) {
+						binded(post);
+					} else if (HM.URL.thread == tid) {
+						binded(post_stub);
+					} else {
+						getDataResponse('/api/post/'+ brd +'/'+ tid +'/'+ pid +'.xhtml',
+						function(status, sText, xhtml, xhr, node) {
+							if (status !== 200) {
+								setTimeout(function() {
+									reftab.remove();
+								}, 7000)
+								return _z.replace(loading, _z.setup('strong', {'class': 'err-msg', 'text': status +' '+ sText}));
+							} else if (['Specified element does not exist.', 'Post is deleted.'].isThere(xhtml)) {
+								node = post_stub;
+							} else {
+								node = _z.setup('td', {'id': 'load-'+ id, 'html': xhtml});
+								node.cast = 'stored';
+								handleLinks(node, {board: brd, thread: tid, pid: pid});
+								handleElements(node);
+								genReplyMap([node]);
+							}
+							HM.LoadedPosts[patch_id] = node;
+							binded(node);
+							set_style(reftab);
+						});
+					}
 				}
-				HM.LoadedPosts[id] = node;
-				binded(node == 'stub' ? null : node);
+				document.body.appendChild(reftab);
 				set_style(reftab);
 			});
+			e.target.onmouseout = function(e) {
+				Timrs.clear('PopupOpen');
+			}
+			function add_mapping(mapp) {
+				if (mapp) {
+					mapp.classList.add('mapped');
+					mapp.classList.add('locked');
+				}
+			}
+			function set_style(r) {
+				var w = window.innerWidth, mw,
+					x = e.pageX, y = e.pageY + 30,
+					wx = w - x, y2 = y - r.offsetHeight - 45;
+				if (a.id.split('-')[0] !== 'cvl') {
+					if (y2 > 0)
+						y = y2;
+					if ((wx < 600 || wx < w / 2) && r.offsetWidth > wx) {
+						mw = w - 400;
+						x = null;
+					}
+				}
+				r.setAttribute('style', 'top:'+ y +'px;max-width:'+ (mw || wx) +'px;'+ (x == null ? 'right:0' : 'left:'+ x) +'px;z-index:'+ HM.zIndex);
+			}
 		}
-		document.body.appendChild(reftab);
-		set_style(reftab);
+		function BindCloseRef(reftab) {
+			var rtb = _z.setup('tbody', {'style': 'line-height:15px;', 'html': '<tr><td>'}),
+				drag = _z.setup('span', {'class': 'dpop txt-btn', 'text': '\n.:'}, {
+					'mousedown': function(e) {
+						reftab.style['z-index'] = HM.zIndex + 1;
+						HM.RefTab = reftab; 
+					}}),
+				close = _z.setup('span', {
+					'id': 'rf-cb-ty',
+					'class': 'cpop txt-btn font-s-a',
+					'title': LC.clos[lng],
+					'text': '\n✕'}),
+				closeAll = _z.setup('span', {
+					'id': 'rf-cb-all',
+					'class': 'callpop txt-btn',
+					'title': LC.clos[lng] + LC.all[lng],
+					'text': '\n☒'});
+				_z.setup(reftab, {}, {
+					'click': function(e) {
+						HM.zIndex++;
+						this.style['z-index'] = HM.zIndex;
+						switch (e.target.id) {
+							case 'rf-cb-ty': this.remove(); break;
+							case 'rf-cb-all': RemoveAllRefs(e);
+						}
+					}
+				}).appendChild(rtb).click();
+			_z.append(rtb.firstChild.firstChild, [close, closeAll, drag]);
+		}
+		function BindRemoveRef(a, reftab) {
+			reftab.onmouseleave = RemoveAllRefs;
+			reftab.onmouseenter = function(e) {
+				var _this = this;
+				Timrs.set('PopupsClose', function() {
+					var i = Popups.length - 1;
+					while (Popups[i] !== _this) {
+						Popups[i].remove();
+						i--;
+					}
+				});
+				Timrs.clear(a.href);
+			}
+			a.onmouseleave = function(e) {
+				Timrs.set(this.href, function() {
+					reftab.remove();
+				});
+			}
+		}
+		function RemoveAllRefs(e) {
+			var i = Popups.length - 1, _this = this;
+			if (Popups.length > 0) {
+				switch (e.type) {
+					case 'keydown':
+						if (i == 0)
+							HM.zIndex = 1;
+						Popups[i].remove();
+						break;
+					case 'click':
+						HM.zIndex = 1;
+						_z.remove(Popups);
+						break;
+					case 'mouseleave':
+						Timrs.set('PopupsClose', function() {
+							_z.remove(Popups);
+						})
+				}
+			}
+		}
 	}
 	
 	function genReplyMap(posts) {
 		_z.each(posts, function(post) {
-			var cid = _cid(post.id), replies_links = new Array(0);
+			var cid = _cid(post.id), replies_links = new Array(0),
+				replylink_tamplate = '<a class="reply-link" href="/r{brd}/res/r{tid}.xhtml#ir{pid}" id="cvl-r{brd}-r{tid}-r{pid}">&gt;&gt;r{L}r{pid}</a>';
 			if (HM.RepliesMap[cid]) {
 				_z.each(HM.RepliesMap[cid], function(Id) {
-					replies_links.push(Btn['reflink'].allReplace({'r{N}': 'class="reply-link cview"', 'r{brd}': Id[0], 'r{tid}':
+					replies_links.push(replylink_tamplate.allReplace({'r{brd}': Id[0], 'r{tid}':
 					(!Id[1] ? Id[2] : Id[1]), 'r{pid}': Id[2], 'r{L}': (Id[3] ? Id[0] +'/' : '')}));
 				});
-				var replies_div_arr = post.getElementsByClassName('replylinks'),
-					replies_div = _z.setup('div', {'class': 'replylinks'}, null);
-				if (replies_div_arr.length == 0)
-					post.getElementsByClassName('abbrev')[0].appendChild(replies_div);
-				else
-					replies_div = replies_div_arr[0];
-				replies_div.innerHTML = LC.repl[lng] + LC.few['u-c'][lng] +': '+ replies_links.join(', ');
-				attachEvents(replies_div);
+				if (!post.repliesNode) {
+					post.repliesNode = _z.setup('div', {'class': 'replylinks'});
+					post.getElementsByClassName('abbrev')[0].appendChild(post.repliesNode);
+				}
+				post.repliesNode.innerHTML = LC.repl[lng] + LC.few['u-c'][lng] +': '+ replies_links.join(', ');
 			}
 		})
 	}
@@ -593,102 +909,94 @@ document.head.appendChild(GlobalStyle);
 			img.src = '/images/'+ img.alt +'.png'
 		}
 	}
-	function MagicSpoirate(e) {
-		if (this.classList[3]) {
-			var finf = _z.route(this, '.fileinfo'), iMg = this,
-				href = this.parentNode.href,
-				fid = this.parentNode.parentNode.id.split('_'),
-				btnRate = _z.setup('a', {'class': 'sp-r txt-btn', 'text': this.alt}, {
-					'click': function(e) { hRate(this, iMg) }
-				}),
-				buttons = Btn['default'].allReplace({'r{Fn}': "edit_", 'r{title}': LC.edit[lng], 'r{alt}': '✎', 
-				'r{Act}': 'href="/utils/image/edit/'+ fid[2] +'/'+ fid[1] +'"'}) +'\n'+
-			Btn['Google'] +'\n'+ Btn['Iqdb'] +'\n'+ Btn['Derpibooru'] +'\n'+ Btn['Saucenao'];
+	function MagicSpoirate(el) {
+		if (el.classList.contains('rated')) {
+			var finf = _z.route(el, '.fileinfo'),
+				href = el.parentNode.href,
+				fid = el.parentNode.parentNode.id.split('_'),
+				btnRate = _z.setup('a', {'class': 'sp-r txt-btn', 'text': el.alt}),
+				buttons = Btn['tamplate'].allReplace({'r{Fn}': "edit_", 'r{title}': LC.edit[lng], 'r{alt}': 'edit', 'r{Act}':
+					'href="/utils/image/edit/'+ fid[2] +'/'+ fid[1] +'"'}) + Btn.get('Google') + Btn.get('Iqdb') + Btn.get('Derpibooru') + Btn.get('Saucenao');
 			finf.replaceChild(btnRate, finf.lastChild);
 			finf.insertAdjacentHTML('beforeend', buttons.replace(/@img_src/g, href));
-			this.classList.remove('rated');
-			this.src = href;
-		} else if (this.alt.fext() == 'svg') {
-			this.alt = this.src;
-			this.src = this.parentNode.href;
+			el.classList.remove('rated');
+			el.src = href;
+		} else if (el.alt.fext() == 'svg') {
+			el.alt = el.src;
+			el.src = el.parentNode.href;
 		}
-		this.classList.toggle('unexpanded')
-		this.classList.toggle('expanded')
-		return _z.fall(e);
+		el.classList.toggle('unexpanded');
+		el.classList.toggle('expanded');
 	}
 	
-	function hooLinksElement(links) {
-		_z.each(links, function(link) {
-			var href = link.href;
-			if (href && href.isThere("/res/") && href.isThere("dobrochan")) {
-				var targ = ParseUrl(href), refl = _z.route(link, '.reflink a'),
-					from = ParseUrl(refl.href);
+	function handlePost(post) {
+		var reflink = post.querySelector('.reflink > a[href*="/res/"]'),
+			url = ParseUrl(reflink.href),
+			patchId = url.board +'_'+ url.thread +'_'+ url.pid;
+		HM.LoadedPosts[patchId] = _z.setup(post, {'patch-id': patchId}, {'click': PDownListener, 'mouseover': Chanabira.MagicPostView});
+		_z.setup(post.querySelector('.abbrev a[onclick^="GetFullText"]'), {'class': 'Get-Full-Text', 'onclick': undefined});
+		handleElements(post);
+		handleLinks(post, url);
+	}
+	
+	function handleLinks(node, map) {
+		_z.each((node || document).querySelectorAll(
+		'.message a[href*="/res/"]'
+		), function(link) {
+			if (link.href.isThere("dobrochan")) {
+				var targ = ParseUrl(link.href);
 				if (targ != null && targ.thread) {
-					var reply_id = !targ.pid ? targ.thread : targ.pid,
-						diffb = (targ.board !== from.board) || (from.board !== HM.URL.board),
-						dataArr = [from.board, from.thread, from.pid, (diffb ? targ.board : '')];
-					if (!link.textContent.isThere(">>"))
-						_z.setup(link, {'href': href.replace(/https?:\/\/dobrochan\.\w+/, ''), 'onclick': 'Highlight(event, "'+ reply_id +'")',
-						'text': '>>'+ (diffb ? targ.board +'/' : '') + reply_id}, null);
-					_z.setup(link, {'class': 'reply-link', 'onmouseover': undefined}, {
-						'mouseover': MagicPostView
-					});
+					var reply_id = (targ.pid || targ.thread),
+						diffb = (targ.board !== map.board) || (map.board !== HM.URL.board),
+						dataArr = [map.board, map.thread, map.pid, (diffb ? targ.board : '')];
+					_z.replace(link, _z.setup('a', {'class': 'reply-link', 'href': '/'+ targ.board +'/res/'+ targ.thread +'.xhtml#i'+ reply_id,
+						'id': 'rl-'+targ.board+'-'+ targ.thread +'-'+ reply_id, 'text': '>>'+ (diffb ? targ.board +'/' : '') + reply_id}));
 					if (!HM.RepliesMap[reply_id])
 						HM.RepliesMap[reply_id] = new Array(0);
 					if (!JSON.stringify(HM.RepliesMap[reply_id]).isThere(JSON.stringify(dataArr)))
 						HM.RepliesMap[reply_id].push(dataArr);
 				}
 			}
-			switch (link.classList[0]) {
-				case 'search_iqdb':
-					var img_src = link.href.split('=').pop(),
-						buttons = '\n'+ Btn['Derpibooru'] +'\n'+ Btn['Saucenao'];
-					link.insertAdjacentHTML('afterend', buttons.replace(/@img_src/g, img_src));
-					break;
-				case 'reflink':
-					var url = ParseUrl(link.firstElementChild.href),
-						targ = _z.setup('a', {'class': 'reply-button txt-btn font-s-a', 'title': LC.repl[lng], 'text': '➤➤'}, {
-							'click': function(e) {
-								HM.Form.getForm(e, url.board, url.thread, url.pid)
-							}
-						});
-					_z.after(link, targ)
-					break;
-				case 'thumb':
-					var a = link.parentNode;
-					if (!a.href) {
-						var finf = _z.route(link, '.fileinfo'),
-							na = _z.setup('a', {'href': finf.querySelector('a').href, 'target': "_blank"}, null);
-						if (Files.image.isThere(na.href.fext())) {
-							link.parentNode.appendChild(na); na.appendChild(link);
-							_z.setup(link, {'class': 'spr-image thumb expanded rated'}, {'click': MagicSpoirate});
-						}
-					} else if (a.href.fext() == 'svg')
-						_z.setup(link, {'class': 'spr-image thumb unexpanded', 'onclick': undefined}, {'click': MagicSpoirate});
-			}
 		});
 	}
 	
-	function attachEvents(node) {
-		_z.each(GetElements(node).hoos, function(a) {
-			switch (a.classList[0]) {
-				case 'reply-link':
-					if (a.classList[2] !== 'locked')
-						a.addEventListener('mouseover', MagicPostView, false)
+	function handleElements(node) {
+		_z.each((node || document).querySelectorAll(
+		'img.thumb[alt="unrated"], img.thumb[alt^="r-1"], img.thumb[alt="illegal"], .file > a[href$=".svg"] > img, a.search_iqdb.icon, .fileinfo, .reply_, .postername'
+		), function(el) {
+			switch (el.classList[0]) {
+				case 'reply_':
+					var ref = _z.route(el, '.reflink a')
+					_z.replace(el, _z.setup('span', {'class': 'reply-button txt-btn font-s-a', 'title': LC.repl[lng], 'text': '➤➤'}));
+					_z.before(
+						_z.setup(ref, {'class': 'inj-refl', 'onclick': undefined}),
+						_z.setup('a', {'class': 'edit-post txt-btn', 'title': LC.edit_post[lng], 'text': '✎'})
+					);
 					break;
-				case 'sp-r':
-					a.addEventListener('click', function(e) {
-						hRate(this, this.parentNode.parentNode.querySelector('img.spr-image'))
-					}, false)
+				case 'fileinfo':
+					var a = el.firstElementChild, name = getPageName(a.href);
+					_z.setup(a, {'class': 'download-link', 'download': name, 'title': name});
 					break;
-				case 'spr-image':
-					a.addEventListener('click', MagicSpoirate, false)
+				case 'postername':
+					if (lng === 0)
+						el.textContent = Names.get('', el.textContent);
 					break;
-				case 'reply-button':
-					var url = ParseUrl(_z.route(a, '.reflink a').href)
-					a.addEventListener('click', function(e){
-						HM.Form.getForm(e, url.board, url.thread, url.pid)
-					}, false)
+				case 'search_iqdb':
+					var img_src = el.href.split('=').pop(),
+						buttons = Btn.get('Derpibooru') + Btn.get('Saucenao');
+					el.insertAdjacentHTML('afterend', buttons.replace(/@img_src/g, img_src));
+					break;
+				case 'thumb':
+					var a = el.parentNode;
+					if (!a.href) {
+						var fa = _z.route(el, '.fileinfo > a');
+							a = _z.setup('a', {'href': fa.href, 'target': "_blank"});
+						if (Files.image.isThere(a.href.fext())) {
+							el.parentNode.appendChild(a);
+							a.appendChild(_z.setup(el, {'class': 'spr-image thumb expanded rated'}));
+						}
+					} else if (a.href.fext() == 'svg')
+						_z.setup(el, {'class': 'spr-image thumb unexpanded', 'onclick': undefined});
 			}
 		});
 	}
@@ -772,465 +1080,524 @@ document.head.appendChild(GlobalStyle);
 	/*** Yuki ReplyForm ***/
 	//* @ original code 	https://github.com/tranquility-yuki/yukiscript
 	//* @ copyright 		2013+, You
-	function Yuki(h) {
-		var Yu = this, fileList = [],
-		LCY = {
-			acap: ["Attach Captcha Image", 'Прикрепить капчу'],
-			subj: ["Subject", "Тема"],
-			newt: ["New Thread in", "Новый тред в"],
-			post: ["Post", "Отправить"],
-			txar: ["Message Text", "Текст сообщения"],
-			inps: ['In Progress...', 'Работаем...'],
-			ufrm: ['Unhide form', 'Раскрыть форму'],
-			rmv: ["Remove", "Убирать"],
-			fnm: ["File Name", "имя файла"],
-			wmark: {
-				'~': ['Wakabamark Strike Conversion', 'Перевод символов страйка в нотацию wakabamark'],
-				'ul': ['Unordered List', 'Неупорядоченный список'],
-				's': ['Strike', 'Зачеркнутый'],
-				'i': ['Italic', 'Курсивный'],
-				'b': ['Bold', 'Жирный'],
-				'c': ['Code', 'Код'],
-				'sp': ['Spoiler', 'Спойлер'],
-				'q': ['Quote Selected', 'Цитировать выделенное']
+	function Yuki(stored) {
+		var Yu = this, fileList = [], 
+			Yum = {brd: HM.URL.board, tid: (HM.URL.thread || 0), funct: function(){}},
+			LCY = {
+				acap: ["Attach Captcha Image", 'Прикрепить капчу'],
+				subj: ["Subject", "Тема"],
+				newt: ["New Thread in", "Новый тред в"],
+				post: ["Post", "Отправить"],
+				txar: ["Message Text", "Текст сообщения"],
+				ufrm: ['Unhide form', 'Раскрыть форму'],
+				hfrm: ['Hide form', 'Скрыть форму'],
+				rmv: ["Remove", "Убирать"],
+				fnm: ["file name", "имя файла"],
+				send: ['Sending...', 'Отправка...'],
+				ten: ['Ten', 'Десять'],
+				fiv: ['Five', 'Пять'],
+				via: ['via', 'по'],
+				f_limit: [' files limit on this board.', ' файлов это максимум на этой доске.'],
+				paste_lnk: ['Paste links here', 'Вставьте ссылки сюда'],
+				wmark: {
+					'~': ['Wakabamark Strike Conversion', 'Перевод символов страйка в нотацию wakabamark'],
+					'ul': ['Unordered List', 'Неупорядоченный список'],
+					's': ['Strike', 'Зачеркнутый'],
+					'i': ['Italic', 'Курсивный'],
+					'b': ['Bold', 'Жирный'],
+					'c': ['Code', 'Код'],
+					'sp': ['Spoiler', 'Спойлер'],
+					'q': ['Quote Selected', 'Цитировать выделенное']
+				},
+				cerr: {
+					'en': ['captcha', 'human.'],
+					'ru': ['капча', 'человек.']
+				}
 			},
-			cerr: {
-				'en': ['captcha', 'human.'],
-				'ru': ['капча', 'человек.']
-			}
-		},
-		style = '#yuki-captcha,#yuki-pass{width:295px;}#yuki-captcha-image{vertical-align:middle;margin:2px;}#yuki-dropBox{width:7em;height:18em;border:3px dashed rgba(99,99,99,.3);padding:2px;}\
-#convert-strike,.topformtr #yuki-replyForm #yuki-close-form{visibility:hidden;}.sagearrow{background:url(/src/svg/1409/Sage.svg)no-repeat center bottom;}.wmark-button .spoiler{text-shadow:none;}\
-#yuki-errorMsg{text-align:center;color:#FFF;background-color:#E04000;}.wmark-button{color:#fefefe;text-shadow:0 1px 0 rgba(0,0,0,.4);}.inactive{opacity:.4;}\
-.rating_SFW{background:green;}.rating_R15{background:yellow;}.rating_R18{background:orange;}.rating_R18G{background:red;}.line-sect,.yukiFile{display:inline-block;}\
-.yukiFile,.yukiFileSets{font-size:66%;}.yukiFile{text-align:center;width:210px;background:#fefefe;-webkit-border-radius:5px;margin:5px;padding:2px;}\
-#yuki-files-placeholder > *{vertical-align:top;}.yukiFile img{max-width:150px;margin:5px 0;}.yukiFile span{max-width:200px;word-wrap:break-word;}\
-#yuki-replyForm{text-align:left;padding:4px 8px;}.selected:before{content:"✓ ";color:green;}.reply #yuki-newThread-create{display:none!important;}\
-#yuki-dropBox tr{display:block;text-align:center!important;}.droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em;}';
-		filepreview_tamplate = '[\n<a class="yuki_clickable">убрать</a>\n]<br><img class="preview_img" src="r{img}"><br><span class="file_name">r{fname}</span><br>'+
-			'<span class="file_name">r{size}&nbsp;</span><select name="file_1_rating" class="rating_SFW" onchange="$(this).attr(\'class\', $(this).find(\'option:checked\')[0].className)">'+
-			'<option class="rating_SFW">SFW</option><option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select>',
-		replyform_tamplate = '<input id="yuki-targetThread" name="thread_id" value="'+ (HM.URL.thread || 0) +'" type="hidden"><input name="task" value="post" type="hidden">'+
+		ratingselect_tamplate = '<select name="file_1_rating" class="rating_SFW" id="file_rating_sel"><option class="rating_SFW">SFW</option><option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select>',
+		filepreview_tamplate = '<div class="yf_remove">[\n<a class="yuki_clickable">'+LCY['rmv'][lng].toLowerCase()+'</a>\n]</div><img class="yf_preview" src="#transparent"><div class="yf_info">r{fname}</div><span class="yf_info">r{size}</span>'+ ratingselect_tamplate,
+		replyform_tamplate = '<input id="yuki-targetThread" name="thread_id" value="" type="hidden"><input name="task" value="post" type="hidden"><input name="goto" value="thread" type="hidden">'+
 			'<div id="yuki-errorMsg"></div>'+
-			'<table><tbody id="yuki-dropBox" class="line-sect"><tr class="post-count"></tr><tr class="droparrow inactive"></tr></tbody><tbody class="line-sect">'+
-			'<tr id="trname"><td><input placeholder="'+ HM.defaultName() +'" name="name" size="30" value="" type="text">'+
-				'<label class="sagearrow'+ (HM.Sage ? '' : ' inactive') +'"><input id="yuki-sage" name="sage" type="checkbox" hidden><img src="/src/png/1411/blank20.png"></label>'+
-				'<label id="yuki-newThread-create" class="yuki_clickable inactive">'+ LCY.newt[lng] +'<span class="t-sec">\n/'+ HM.URL.board +
-				'/</span></label><span>&nbsp;<a id="yuki-close-form" title="'+ LC.remv[lng] +'"><img src="/images/delete.png" alt="✖︎"></a></span></td></tr>'+
+			'<table><tbody id="yuki-dropBox" class="line-sect"><tr class="etch-text"></tr><tr class="droparrow inactive"></tr></tbody><tbody class="line-sect">'+
+			'<tr id="trname"><td><input id="yuki-poster-name" placeholder="" name="name" size="30" value="" type="text">'+
+				'<label class="sagearrow line-sect txt-btn inactive" style="right:24px;"><input id="yuki-sage" name="sage" type="checkbox" hidden></label>'+
+				'<label id="yuki-newThread-create" class="yuki_clickable inactive">'+ LCY.newt[lng] +'<span class="t-sec">\n/'+ Yum.brd +
+				'/</span></label><span class="txt-btn yuki_clickable" id="yuki-close-form" title="'+ LC.remv[lng] +'">✕</span></td></tr>'+
 			'<tr id="trsubject"><td><input placeholder="'+ LCY.subj[lng] +'" name="subject" size="30" maxlength="64" value="" type="text">'+
-				'<label class="submit-button"><input type="submit" value="'+ LCY.post[lng] +'"></label>\n'+
-				'<span class="wmark-buttons-panel">'+
-					'<a class="wmark-button" id="convert-strike" title="'+ LCY.wmark['~'][lng] +'"><strong>{~}</strong>&nbsp;</a>'+
-					'<a class="wmark-button" id="list-mark" title="'+ LCY.wmark['ul'][lng] +'"><span>◉</span></a>&nbsp;'+
-					'<a class="wmark-button" id="strike-mark" title="'+ LCY.wmark['s'][lng] +'"><img src="/src/svg/1405/~S-mark.svg" alt="~$"></a>&nbsp;'+
-					'<a class="wmark-button" id="ital-mark" title="'+ LCY.wmark['i'][lng] +'"><img src="/src/svg/1405/i-mark.svg" alt="i"></a>&nbsp;'+
-					'<a class="wmark-button" id="bold-mark" title="'+ LCY.wmark['b'][lng] +'"><img src="/src/svg/1405/-b-mark.svg" alt="b"></a>&nbsp;'+
-					'<a class="wmark-button" id="code-mark" title="'+ LCY.wmark['c'][lng] +'"><img src="/src/svg/1405/[c]-mark.svg" alt="[c]"></a>&nbsp;'+
-					'<a class="wmark-button" id="spoiler-mark" title="'+ LCY.wmark['sp'][lng] +'"><span class="spoiler">&middot;<strong>%%</strong>&middot;</span></a>&nbsp;'+
-					'<a class="wmark-button" id="quote-mark" title="'+ LCY.wmark['q'][lng] +'"><img src="/src/svg/1405/„q”-mark.svg" alt="&gt;"></a>'+
+				'<label class="submit-button">\n<input id="yuki-submit-button" type="submit" value="'+ LCY.post[lng] +'"></label>\n'+
+				'<span id="wmark-buttons-panel">'+
+					'<a title="'+ LCY.wmark['~'][lng] +'"><strong class="wmark-button" id="convert-strike">{~}</strong>&nbsp;</a>'+
+					'<a title="'+ LCY.wmark['ul'][lng] +'"><strong class="wmark-button" id="list-mark">◉</strong></a>&nbsp;'+
+					'<a title="'+ LCY.wmark['s'][lng] +'"><img class="wmark-button" id="strike-mark" src="/src/svg/1405/~S-mark.svg" alt="~$"></a>&nbsp;'+
+					'<a title="'+ LCY.wmark['i'][lng] +'"><img class="wmark-button" id="ital-mark" src="/src/svg/1405/i-mark.svg" alt="i"></a>&nbsp;'+
+					'<a title="'+ LCY.wmark['b'][lng] +'"><img class="wmark-button" id="bold-mark" src="/src/svg/1405/-b-mark.svg" alt="b"></a>&nbsp;'+
+					'<a title="'+ LCY.wmark['c'][lng] +'"><img class="wmark-button" id="code-mark" src="/src/svg/1405/[c]-mark.svg" alt="[c]"></a>&nbsp;'+
+					'<a title="'+ LCY.wmark['sp'][lng] +'"><span class="spoiler">&middot;<strong class="wmark-button" id="spoiler-mark" >%%</strong>&middot;</span></a>&nbsp;'+
+					'<a title="'+ LCY.wmark['q'][lng] +'"><img class="wmark-button" id="quote-mark"src="/src/svg/1405/„q”-mark.svg" alt="&gt;"></a>'+
 				'</span></td></tr>'+
 			'<tr id="trmessage"><td>'+
-				'<textarea placeholder="'+ LCY.txar[lng] +'" id="yuki-replyText" name="message" cols="80" rows="8" style="resize:both;height:180px;">'+
+				'<textarea placeholder="'+ LCY.txar[lng] +'" id="yuki-replyText" name="message" style="resize:both;width:538px;height:208px;">'+
 			'</textarea></td></tr><tr id="trcaptcha"><td><span>'+
-					'<img alt="Капча" id="yuki-captcha-image" src="">&nbsp;'+
-					'<span id="yuki-attach-captcha-button" class="txt-btn yuki_clickable" title="'+ LCY.acap[lng] +'">[+]</span></span><br>'+
-					'<input id="yuki-captcha" autocomplete="off" name="captcha" type="text" hidden></td></tr>'+
-			'<tr id="trrempass"><td><input id="yuki-pass" name="password" size="35" value="'+ pass +'" type="password" hidden></td></tr>'+
-			'<tr id="trfile"><td id="files_parent"><div id="file_1_div">\n<input id="dumb_file_field" type="file" hidden multiple><input type="button" value="'+
-			LC.add[lng] +' '+ LC.file[lng] + LC.few['u-c'][lng] +'" id="yuki-add-files">\n<span class="yukiFileSets"><label><input id="yuki-removeExif" type="checkbox">\n'+
-			LCY.rmv[lng] +' Exif</label>\n<label><input id="yuki-removeFilename" type="checkbox">\n'+ LCY.rmv[lng] +' '+ LCY.fnm[lng] +
-		'</label></span></div></td></tr></tbody></table><div id="yuki-files-placeholder"></div><style>'+style+'</style>';
-		this.$ = function(child) { return this['ReplyForm'].querySelector(child) }
+				'<img alt="Капча" id="yuki-captcha-image" src="">&nbsp;'+
+				'<span id="yuki-attach-captcha-button" class="txt-btn yuki_clickable" title="'+ LCY.acap[lng] +'">[+]</span></span><br>'+
+				'<input id="yuki-captcha" autocomplete="off" name="captcha" type="text" '+ (HM.User.tokens[0] && HM.User.tokens[0].token === 'no_user_captcha' ? 'hidden' : '') +
+			'></td></tr><tr id="trrempass"><td><input id="yuki-pass" name="password" size="35" value="'+ HM.User.password +'" type="password" hidden></td></tr>'+
+			'<tr id="trfile"><td id="files_parent"><div id="file_1_div"><span class="yukiFileAdds"><input type="button" value="'+ LC.add[lng] +' '+ LC.file[lng] + LC.few['u-c'][lng] +
+			'" id="yuki-add-files"><input id="dumb_file_field" type="file" hidden multiple><input id="yuki-add-files-by-url" type="button" value="'+ LCY.via[lng] +' URL"></span>\n<span class="yukiFileSets"><label><input id="yuki-RemoveExif" type="checkbox" '+
+			(HM.RemoveExif ? 'checked ' : '') +'>\n'+ LCY.rmv[lng] +' Exif</label>\n<label><input id="yuki-RemoveFileName" type="checkbox" '+ (HM.RemoveFileName ? 'checked ' : '') +
+			'>\n'+ LCY.rmv[lng] +' '+ LCY.fnm[lng] +'</label></span></div></td></tr></tbody></table><div id="yuki-files-placeholder"></div>';
 		this.submitForm = yukiPleasePost;
-		this.getForm = function(e, brd, tid, pid) {
-			if (e.target.classList[0] == 'reply-button')
-				makeReplyForm(e, brd, tid, pid)
-			else
-				makeGlobalForm(e)
-		}
+		this.getForm = makeReplyForm;
 		this['ReplyForm'] = _z.setup('form', {
-				'id': "yuki-replyForm",
-				'class': 'line-sect',
-				'method': "post",
-				'enctype': "multipart/form-data",
-				'html': replyform_tamplate
-			}, {
-				'submit': yukiPleasePost
-			});
-		this['TargetThread'] = this.$('#yuki-targetThread');
-		this['ErrorMassage'] = this.$('#yuki-errorMsg');
-		this['NewThreadCreate'] = _z.setup(this.$('#yuki-newThread-create'), {}, {
+			'id': "yuki-replyForm",
+			'class': 'line-sect',
+			'method': "post",
+			'enctype': "multipart/form-data",
+			'html': replyform_tamplate
+		}, {'submit': yukiPleasePost,
 			'click': function(e) {
-				var sel = this.classList[1] === 'selected';
-				if (HM.URL.thread) {
-					Yu['TargetThread'].value = sel ? HM.URL.thread : 0;
-					this.classList.toggle('selected')
-					this.classList.toggle('inactive')
+				switch (e.target.id) {
+					case 'yuki-replyText':
+						e.target.classList.remove('ta-inact');
+						break;
+					case 'yuki-add-files':
+						Yu['FileInput'].click();
+						break;
+					case 'yuki-add-files-by-url':
+						var input = prompt('http://exemple.com/image.jpg http://exemple.org/music.mp3 https://exemple.ru/archive.rar\n\n'+ LCY.paste_lnk[lng] +':');
+						_z.each(input.split(' '), function(uri) {
+							getUrlData('Blob', uri, yAdd);
+						});
+						break;
+					case 'yuki-captcha-image':
+						e.target.src = '/captcha/'+ Yum.brd +'/'+ _t() +'.png';
+						break;
+					case 'yuki-close-form':
+						Yu['ReplyForm'].remove();
+						break;
+					case 'yuki-submit-button':
+						StrikeConvert(Yu['ReplyText']);
+						break;
+					case 'yuki-attach-captcha-button':
+						yukiAttachCapcha(Yu['CaptchaImage']);
+						break;
+					case 'yuki-newThread-create':
+						if (HM.URL.thread) {
+							Yu['TargetThread'].value = e.target.classList.contains('selected') ? HM.URL.thread : 0;
+							e.target.classList.toggle('selected')
+							e.target.classList.toggle('inactive')
+						}
+				}
+		}, 'change': function(e) {
+			switch (e.target.id) {
+				case 'dumb_file_field':
+					yukiAddFile(e.target);
+					break;
+				case 'file_rating_sel':
+					e.target.className = e.target.querySelector('option:checked').className;
+					break;
+				case 'yuki-RemoveExif':
+				case 'yuki-RemoveFileName':
+					setupOptions(e.target, e.target.id.split('-')[1], 'local');
+					break;
+				case 'yuki-sage':
+					e.target.parentNode.classList.toggle('inactive');
+					break;
+			}
+		}});
+		this['TargetThread'] = el$('#yuki-targetThread');
+		this['ErrorMassage'] = el$('#yuki-errorMsg');
+		this['NewThreadCreate'] = el$('#yuki-newThread-create');
+		this['CaptchaImage'] = el$('#yuki-captcha-image');
+		this['Submit'] = el$('#yuki-submit-button');
+		this['FileInput'] = el$('#dumb_file_field');
+		this['PosterName'] = el$('#yuki-poster-name');
+		this['FilesPlaceholder'] = el$('#yuki-files-placeholder');
+		this['ReplyText'] = _z.setup(el$('#yuki-replyText'), {
+			'value': stored ? JSON.parse(_z.sessionS.get('SafeText', JSON.stringify(el$('#yuki-replyText').value))) : ''
+		}, {'keyup': function(e) {
+			var height = _cid(this.style['height']);
+			if (height + 26 < this.scrollHeight)
+				this.style['height'] = this.scrollHeight +'px';
+			if (this.safe_text)
+				_z.sessionS.set('SafeText', JSON.stringify(this.value));
+		}});
+		this['ReplyText'].safe_text = stored;
+		this['Captcha'] = _z.setup(el$('#yuki-captcha'), {}, 
+			{'focus': function(e) {
+				Yu['CaptchaImage'].src = '/captcha/'+ Yum.brd +'/'+ _t() +'.png';
+			},'keypress': function(e) {
+				var key = e.charCode;
+				if (key > 38 && !e.ctrlKey) {
+					var keychar = SwapL(String.fromCharCode(key), LC.lng[lng]);
+					wmarkText(this, keychar, '\r')
+					_z.fall(e);
 				}
 			}
 		});
-		this['CloseForm'] = _z.setup(this.$('#yuki-close-form'), {}, {
-				'click': function(e) { Yu['ReplyForm'].remove() }
-			});
-		this['ReplyText'] = _z.setup(this.$('#yuki-replyText'), {
-				'value': JSON.parse(_z.getlSVal('SafeText', JSON.stringify(this.$('#yuki-replyText').value), true))
-			}, {
-				'click': function(e) {
-					this.classList.remove('ta-inact');
-				},
-				'keyup': function(e) {
-					var height = _cid(this.style['height']);
-					if (height + 26 < this.scrollHeight)
-						this.style['height'] = this.scrollHeight +'px';
-					_z.setlSVal('SafeText', JSON.stringify(this.value), true);
+		this['DropBox'] = _z.setup(el$("#yuki-dropBox"), {}, {
+			'dragover': _z.fall,
+			'dragenter': function(e) {
+				var items = e.dataTransfer.mozItemCount || '';
+				if (this.classList[0] != 'thumb') {
+					this.firstChild.textContent = LC.add[lng] +' '+ items +' '+ LC.file[lng].toLowerCase() +
+						(items == 1 ? '' : !items ? LC.few['u-c'][lng] : items < 5 ? LC.few['u-a'][lng] : LC.few['u-b'][lng]);
+					this.classList.add('thumb');
 				}
-			});
-		this['FilesPlaceholder'] = this.$('#yuki-files-placeholder');
-		this['Captcha'] = _z.setup(this.$('#yuki-captcha'), {}, {
-				'focus': function(e) {
-					Yu['CaptchaImage'].click()
-				},
-				'keypress': function(e) {
-					CaptchaProcess(e, LC.lng[lng])
+			},'dragout': function(e) {
+				this.firstChild.textContent = '';
+				this.classList.remove('thumb');
+			}, 'drop': function(e) {
+				if (e.dataTransfer.mozSourceNode && e.dataTransfer.mozSourceNode.id === 'yuki-captcha-image') {
+					yukiAttachCapcha(e.dataTransfer.mozSourceNode);
+				} else {
+					yukiAddFile(e.dataTransfer);
 				}
-			});
-		this['CaptchaImage'] = _z.setup(this.$('#yuki-captcha-image'), {}, {
-				'click': function(e) {
-					this.src = '/captcha/'+ Target.board +'/'+ _t() +'.png'
-				}
-			});
-		this['DumbFileField'] = _z.setup(this.$('#dumb_file_field'), {}, {
-				'change': yukiAddFile
-			});
-			_z.setup(this.$('#yuki-removeExif'), {'checked': HM.RemoveExif}, {
-				'change': function(e) {
-					setupOptions(this, 'RemoveExif');
-				}
-			});
-			_z.setup(this.$('#yuki-removeFilename'), {'checked': HM.RemoveFileName}, {
-				'change': function(e) {
-					setupOptions(this, 'RemoveFileName');
-				}
-			});
-			_z.setup(this.$('#yuki-add-files'), {}, {
-				'click': function(e) {
-					this.previousElementSibling.click();
-				}
-			});
-		this['Submit'] = _z.setup(this.$('input[type="submit"]'), {}, {
-				'click': function(e) {
-					StrikeConvert(Yu['ReplyText']) }
-			});
-		this['DropBox'] = _z.setup(this.$("#yuki-dropBox"), {}, {
-				'dragover': _z.fall,
-				'dragenter': function(e) {
-					var items = e.dataTransfer.mozItemCount || '';
-					if (this.classList[0] != 'thumb') {
-						this.firstChild.textContent = LC.add[lng] +' '+ items +' '+ LC.file[lng] +
-							(items == 1 ? '' : !items ? LC.few['u-c'][lng] : items < 5 ? LC.few['u-a'][lng] : LC.few['u-b'][lng]);
-						this.classList.add('thumb');
-					}
-				},
-				'dragout': function(e) {
-					this.firstChild.textContent = '';
-					this.classList.remove('thumb');
-				},
-				'drop': function(e) {
-					yukiAddFile(e);
-					this.firstChild.textContent = '';
-					this.classList.remove('thumb');
-					return _z.fall(e);
-				}
-			});
-		this['Sage'] = _z.setup(this.$('#yuki-sage'), {
-				'checked': HM.Sage
-			}, {
-				'change': function(e) {
-					setupOptions(this, 'Sage', true);
-					this.parentNode.classList.toggle('inactive');
-				}
-			});
-		this['AttachCaptchaButton'] = _z.setup(this.$('#yuki-attach-captcha-button'), {}, {
-				'click': yukiAttachCapcha
-			});
-		this['OpenBottomForm'] = _z.setup('div', {'id': 'open-bottom-form', 'class': 'hideinfo', 'html': '[\n<a>'+ LCY.ufrm[lng] +'</a>\n]'}, null);
-		this['OpenBottomForm'].firstElementChild.addEventListener('click', makeGlobalForm, false);
-		_z.each(this['ReplyForm'].querySelectorAll('.wmark-button'), function(btn) {
-			var Fn = wmarkText, O, C;
-			switch (btn.id) {
-				case 'convert-strike': Fn = StrikeConvert
-					break;
-				case 'list-mark'   : O = '* ', C = '\n* '
-					break;
-				case 'strike-mark' : O = C = '~~'
-					break;         
-				case 'ital-mark'   : O = C = '_'
-					break;
-				case 'bold-mark'   : O = C = '**'
-					break;
-				case 'code-mark'   : O = C = '`'
-					break;
-				case 'spoiler-mark': O = C = '%%'
-					break;
-				case 'quote-mark'  : O = '> ', C = '\n> '
+				this.firstChild.textContent = '';
+				this.classList.remove('thumb');
+				return _z.fall(e);
 			}
-			btn.addEventListener('click', function(e) {
-				Fn(Yu['ReplyText'], O, C)
-			}, false);
 		});
-		function yukiAttachCapcha(e) {
-			var el = e.target, exist;
+		this['GlobalFormArea'] = _z.setup('div', {'id': 'global-form-area', 'class': 'postarea hidout', 'html': '<table><tbody><tr><td id="hide-global-form" class="hideinfo">[\n<a id="hgf-btn">'+
+			LCY.hfrm[lng] +'</a>\n]</a></td></tr><tr><td id="global-form-sect"></td></tr><tr><td id="board-rules-sect"></td></tr></tbody></table>'});
+		this['OpenTopForm'] = _z.setup('div', {'id': 'open-top-form', 'class': 'hideinfo', 'html': '[\n<a id="otf-btn">'+ LCY.ufrm[lng] +'</a>\n]'}, {'click': makeGlobalForm});
+		this['OpenBottomForm'] = _z.setup('div', {'id': 'open-bottom-form', 'class': 'hideinfo', 'html': '[\n<a id="obf-btn">'+ LCY.ufrm[lng] +'</a>\n]'}, {'click': makeGlobalForm});
+		this['HideGlobalForm'] = _z.setup(gfa$('#hide-global-form'), {}, {'click': makeGlobalForm});
+		this['GlobalFormSect'] = gfa$('#global-form-sect');
+		this['BoardRulesSect'] = gfa$('#board-rules-sect');
+		el$('#wmark-buttons-panel').addEventListener('click', function(e) {
+			var btn = e.target, Fn = wmarkText, O, C;
+			if (btn.classList[0] === 'wmark-button') {
+				switch (btn.id) {
+					case 'convert-strike': Fn = StrikeConvert
+						break;
+					case 'list-mark'   : O = '* ', C = '\n* '
+						break;
+					case 'strike-mark' : O = C = '~~'
+						break;         
+					case 'ital-mark'   : O = C = '_'
+						break;
+					case 'bold-mark'   : O = C = '**'
+						break;
+					case 'code-mark'   : O = C = '`'
+						break;
+					case 'spoiler-mark': O = C = '%%'
+						break;
+					case 'quote-mark'  : O = '> ', C = '\n> '
+				}
+				Fn(Yu['ReplyText'], O, C);
+			}
+		}, false);
+		function el$(child) { return Yu['ReplyForm'].querySelector(child) }
+		function gfa$(child) { return Yu['GlobalFormArea'].querySelector(child) }
+		
+		function yukiAttachCapcha(captchaImg) {
 			if (checkfilesLimit())
 				return;
-			var img = el.previousElementSibling;
-			if (img.nodeName.toLowerCase() === 'img') {
-				var canvas = document.createElement("canvas");
-				canvas.width = img.width;
-				canvas.height = img.height;
-				var ctx = canvas.getContext("2d");
-				ctx.drawImage(img, 0, 0);
-				var dataURL = canvas.toDataURL("image/png");
-				_z.each(fileList, function(obj) {
-					if (obj.dataURL === dataURL)
-						exist = true;
-				});
-				if (exist)
-					return;
-				f = {
-					"name": 'talking_captcha.png',
-					"size": dataURL.length * 6 / 8,
-					"type": 'image/png'
-				};
-				fileList.push({
-					file: f,
-					renamed: false,
-					f_name: 'talking_captcha.png',
-					jpegStripped: true,
-					el: _z.setup('div', {'class': "yukiFile", 'html': filepreview_tamplate.allReplace({
-						'r{img}': dataURL, 'r{fname}': f.name, 'r{size}': bytesMagnitude(f.size)
-					})}, null),
-					dataURL: dataURL
-				});
-				attachthisFile();
+			var canvas = _z.setup('canvas', {'width': captchaImg.width, 'height': captchaImg.height}),
+				ctx = canvas.getContext("2d"),
+				iw = captchaImg.width;
+				ctx.drawImage(captchaImg, 0, 0);
+			while (iw) {
+				var pixel = ctx.getImageData(iw - 1, 4, 1, 1),
+					data = pixel.data;
+					if (data[0] + data[1] + data[2] !== 765) {
+						canvas.width = iw + 2;
+						canvas.height = 15;
+						ctx.drawImage(captchaImg, 0, 0, iw + 2, 15, 0, 0, iw + 2, 15);
+						break;
+					}
+				iw--;
 			}
+			for (var i = 0, dataURL = canvas.toDataURL('image/png'); i < fileList.length; i++) {
+				if (fileList[i].dataURL === dataURL)
+					return;
+			}
+			new YukiFile({
+				blob: dataURLtoBlob(dataURL, 'image/png'),
+				upload_name: 'talking_captcha.png',
+				original_name: 'talking_captcha.png',
+				jpegStripped: false,
+				dataURL: dataURL
+			})
 		}
 		function checkfilesLimit() {
-			var limit, mu = (Target.board === 'mu');
+			var limit, mu = (Yum.brd === 'mu');
 			if (fileList.length >= (mu ? 10 : 5)) {
-				alert((mu ? 'Дес' : 'П') +'ять файлов это максимум на этой доске.');
+				alert(LCY[(mu ? 'ten' : 'fiv')][lng] + LCY.f_limit[lng]);
 				limit = true;
 			}
 			return limit;
 		}
-		function attachthisFile() {
-			fileList[fileList.length - 1].el.querySelector('.yuki_clickable').onclick = (function(data) {
-				return function(e) {
-					var idx = fileList.indexOf(data);
-					data.el.remove();
-					delete fileList[idx];
-					fileList.splice(idx, 1)
-				}
-			}(fileList[fileList.length - 1]))
-			Yu['FilesPlaceholder'].appendChild(fileList[fileList.length - 1].el);
+		function checkfileName(file_name) {
+			var ext = file_name.fext()
+			return (file_name.match(/videoplayback\?/) || file_name.match(/[?=&]/g) && ext.match(/[?=&]/g) && ext.length > 12)
 		}
-		function yukiAddFile(e) { // FileList object
-			var data = (e.dataTransfer || e.target),
-				files = data.files;
+		function YukiFile(fileObj) {
+			var YF = this , Id = makeRandId(6),
+				yfElement = _z.setup('div', {'id': 'yuki-file-'+ Id, 'class': "yukiFile", 'html': '<div class="yf_remove">[\n<a id="yf-remove" class="yuki_clickable">'+
+					LCY['rmv'][lng].toLowerCase() +'</a>\n]</div><img id="yf-preview" class="yf_preview" src="'+ (fileObj.dataURL || '#transparent') +'"><div id="yf-name" class="yf_info">'+
+					fileObj.upload_name +'</div><span id="yf-size" class="yf_info">'+ bytesMagnitude(fileObj.blob.size) +'</span><select class="rating_SFW" id="file_rating_sel"><option class="rating_SFW">SFW</option><option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select>'},
+					{'change': function(e) {
+						if (e.target.type === 'select-one') {
+							fileObj.rating = e.target.value;
+						}
+					},'click': function(e) {
+						switch (e.target.id) {
+							case 'yf-name':
+								if (fileObj.upload_name !== fileObj.original_name) {
+									YF['FileName'].textContent = fileObj.upload_name = fileObj.original_name;
+								} else {
+									YF['FileName'].textContent = fileObj.upload_name = (makeRandId(32) +'.'+ fileObj.upload_name.fext());
+								}
+								break;
+							case 'yf-remove':
+								var idx = fileList.indexOf(fileObj);
+								yfElement.remove();
+								delete fileList[idx];
+								fileList.splice(idx, 1);
+						}
+					}
+				});
+				this['Preview'] = yfElement.querySelector('#yf-preview');
+				this['FileName'] = yfElement.querySelector('#yf-name');
+				this['FileSize'] = yfElement.querySelector('#yf-size');
+				fileObj['rating'] = 'SFW';
+				fileObj['overlay'] = this;
+				fileList.push(fileObj);
+				Yu['FilesPlaceholder'].appendChild(yfElement);
+			return fileObj;
+		}
+		// Loop through the FileList and render image files as thumbnails.
+		function makeYukiFile(f) {
 			if (checkfilesLimit())
 				return;
-			// Loop through the FileList and render image files as thumbnails.
-			for (var i = 0, f; f = files[i++];) {
-				var exist, reader, renamed = false,
-					f_name = f.name, f_ext = f_name.fext()
-				_z.each(fileList, function(obj) {
-					if (obj.file.size === f.size)
-						exist = true;
-				});
-				if (exist || checkfilesLimit())
+			for (var i = 0; i < fileList.length; i++) {
+				if (fileList[i].blob.size === f.size && fileList[i].blob.type === f.type)
 					return;
-				if (HM.RemoveFileName) {
-					f_name = (makeRandId(32) + (f.name.match(/\.[^\.]+$/) || [''])[0]).toLowerCase();
-					renamed = true;
-				}
-				fileList.push({
-					file: f,
-					f_name: f_name,
-					renamed: renamed,
-					el: _z.setup('div', {'class': "yukiFile", 'html': filepreview_tamplate.allReplace({
-						'r{img}': Files.arch.isThere(f_ext) ? '/thumb/generic/archive.png' :
-								  Files.audio.isThere(f_ext) ? '/thumb/generic/sound.png' :
-								  Files.video.isThere(f_ext) ? '/src/png/1501/video.png' : '/thumb/generic/text.png',
-						'r{fname}': f_name, 'r{size}': bytesMagnitude(f.size)})
-					}, null)
+			}
+			var f_ext = f.name.fext(), f_type = f.type.split('/'),
+				theFile = new YukiFile({
+					blob: f,
+					upload_name: HM.RemoveFileName ? (makeRandId(32) +'.'+ f_ext) : f.name,
+					original_name: f.name,
+					jpegStripped: false
 				});
-				attachthisFile();
-		
-				// Closure to capture the file information.
-				reader = new FileReader();
-				reader.onload = (function(theFile) {
-					return function(e) {
+				
+			// Closure to capture the file information.
+			switch (f_type[0]) {
+				case 'image':
+					if (checkfileName(f.name))
+						theFile.overlay['FileName'].textContent = theFile.upload_name = theFile.original_name = (makeRandId(32) +'.'+ f_type[1].replace('+xml', ''));
+					// Read in the image file as a data URL.
+					getFileReaderData('DataURL', f, function(base64) {
 						// Render thumbnail.
-						if (HM.RemoveExif && theFile.file.type.toLowerCase() === 'image/jpeg') {
-							theFile.dataURL = jpegStripExtra(e.target.result);
+						if (HM.RemoveExif && theFile.blob.type.toLowerCase() === 'image/jpeg') {
+							var JSE = jpegStripExtra(base64);
+							base64 = JSE.base64String;
 							theFile['jpegStripped'] = true;
+							theFile.blob = new Blob(JSE.arrayBuffer, {type: theFile.blob.type})
+						}
+						theFile.overlay['Preview'].src = theFile.dataURL = base64;
+					});
+					break;
+				case 'text':
+					if (checkfileName(f.name))
+						theFile.overlay['FileName'].textContent = theFile.upload_name = theFile.original_name = (makeRandId(32) +'.txt');
+					// Read in the text file as a UTF-8 encoding text.
+					getFileReaderData('Text', f, function(text) {
+						var canvas = _z.setup('canvas', {'class': 'yf_preview _text', 'width': 150, 'height': 150}),
+							context = canvas.getContext("2d");
+							context.font = "10px serif";
+						for (var i = 0, x = 3, y = 11, cars = text.split("\n"); i < cars.length; i++) {
+							context.fillText(cars[i], x, y);
+							y += 11;
+						}
+						_z.replace(theFile.overlay['Preview'], canvas);
+						theFile.overlay['Preview'] = canvas;
+					});
+					break;
+				default:
+					if (checkfileName(f.name)) {
+						if (!f.type || f.type === 'binary/octet-stream') {
+							f_ext = 'bin';
 						} else {
-							theFile.dataURL = e.target.result;
-							theFile['jpegStripped'] = false;
+							f_ext = f_type[1].replace('x-', '');
 						}
-						if (theFile.file.type.match('image.*')) {
-							theFile.el.querySelector('.preview_img').setAttribute('src', theFile.dataURL);
-						}
-					};
-				})(fileList[fileList.length - 1]);
-				// Read in the image file as a data URL.
-				reader.readAsDataURL(f);
+						theFile.overlay['FileName'].textContent = theFile.upload_name = theFile.original_name = (makeRandId(32) +'.'+ f_ext);
+					}
+					theFile.overlay['Preview'].src = Files.arch.isThere(f_ext) ? '/thumb/generic/archive.png' :
+							Files.audio.isThere(f_ext) ? '/thumb/generic/sound.png' :
+							Files.video.isThere(f_ext) ? (
+								Files.video.indexOf(f_ext) > 5 ? '/thumb/generic/flash.png' : '/src/png/1501/video.png') : '#transparent';
+			}
+		}
+		function yukiAddFile(data) { // FileList object
+			var files = data.files,
+				dataURL = data.getData ? data.getData(data.effectAllowed === 'copyLink' ? 'Text' : 'URL') : null;
+			if (checkfilesLimit())
+				return;
+			if (files.length === 0 && dataURL) {
+				getUrlData('Blob', dataURL, yAdd);
+			} else 
+				_z.each(files, makeYukiFile);
+		}
+		function yAdd(blob, f_url) {
+			try {
+				if (blob.type !== 'text/html') {
+					blob.name = getPageName(f_url);
+					makeYukiFile(blob);
+				}
+			} catch(e) {
+				_z.dbg(e);
 			}
 		}
 		function submitProcess(st) {
 			_z.setup(Yu['Submit'], {
 				'disabled': (st ? "disabled" : undefined),
-				'value': (st ? LCY.inps[lng] : LCY.post[lng])
-			}, null);
+				'value': (st ? LCY.send[lng] : LCY.post[lng])
+			});
 		}
 		function yukiPleasePost(e) {
-			var form = e.target, formData = serializeArray(e.target),
-				ajaxPost = new XMLHttpRequest(), fd = new FormData(),
-				action = form.action +'?X-Progress-ID='+ _t() * 10000;
-			for (var i = 0; i < formData.length; i++) {
-				fd.append(formData[i].name, formData[i].value);
-			};
-			switch (form.id) {
-				case 'yuki-replyForm': Fn = function() {
+			try {
+				var form = e.target, formData = serializeArray(form),
+					ajaxPost = new XMLHttpRequest(), fd = new FormData(),
+					action = form.action +'?X-Progress-ID='+ _t() * 10000;
+				for (var i = 0; i < formData.length; i++) {
+					fd.append(formData[i].name, formData[i].value);
+				}
+				switch (form.id) {
+					case 'yuki-replyForm': Fn = function() {
+							if (this.readyState !== 4)
+								return;
+							if (this.status === 304) {
+								Yu['ErrorMassage'].textContent = 'Не получилось отправить пост.\n'+
+									'Попробуйте чуть попозже ещё разок или перезагрузить страницу.'+
+									'〔\n'+ this.statusText+ '\n〕';
+								submitProcess(false);
+							} else {
+								var rText = this.responseText,
+									errPost = rText.match(/\/error\/post\/\d+/),
+									newThread = rText.match(/\/\w*\/(?:res\/)?\w+\.xhtml/);
+								if (errPost) {
+									getDataResponse(errPost, function(status, sText, err, xhr) {
+										var msg = (/<td colspan='\d+' class='post-error'>(.+)<\/td>/).exec(err);
+										Yu['ErrorMassage'].textContent = msg[1];
+										if (LCY.cerr[LC.lng[lng]].isThere(msg[1].split(' ').pop()))
+											Yu['Captcha'].hidden = false;
+										return submitProcess(false);
+									});
+								} else if (newThread && Yu['TargetThread'].value == 0) {
+									document.location.href = newThread;
+								} else {
+									if (Yu['ReplyForm'].classList[0] !== 'global')
+										Yu['ReplyForm'].remove();
+									Yu['ReplyText'].value = '';
+									Yu['ErrorMassage'].textContent = '';
+									Yu['FilesPlaceholder'].innerHTML = '';
+									Yu['Captcha'].hidden = true;
+									submitProcess(false); Yum.funct(this);
+									if (Yu['ReplyText'].safe_text)
+										_z.sessionS.set('SafeText', JSON.stringify(Yu['ReplyText'].value));
+									if (HM.ThreadListener[Yum.tid]) {
+										if (fileList.length === 0) {
+											HM.ThreadListener[Yum.tid].updateThread(true, false);
+										} else {
+											setTimeout(function(){
+												HM.ThreadListener[Yum.tid].updateThread(true, false);
+											}, 1500);
+										}
+									}
+									fileList = [];
+								}
+							}
+						}
+						for (var i = 0; i < fileList.length; i++) {
+							if (HM.RemoveExif && fileList[i].blob.type.toLowerCase() == 'image/jpeg' && !fileList[i]['jpegStripped'] && fileList[i].dataURL) {
+								fileList[i].blob = new Blob(jpegStripExtra(fileList[i].dataURL).arrayBuffer, {type: 'image/jpeg'});
+							}
+							fd.append('file_'+ (i + 1), fileList[i].blob, fileList[i].upload_name);
+							fd.append('file_'+ (i + 1) +'_rating', fileList[i].rating);
+						};
+						fd.append('post_files_count', fileList.length)
+						submitProcess(true);
+						break;
+					case 'delete_form': Fn = function() {
 						if (this.readyState !== 4)
 							return;
 						if (this.status === 304) {
-							alert('Не получилось отправить пост.\nПопробуйте чуть попозже ещё разок или перезагрузить страницу.\n\n-----------------------------\n'+ this.statusText);
-							submitProcess(false);
+							console.warn('304 '+ this.statusText);
 						} else {
-							var rText = this.responseText, len = fileList.length,
-								errPost = rText.match(/\/error\/post\/\d+/),
-								newThread = rText.match(/\/\w*\/res\/\d+\.xhtml/);
-							if (errPost) {
-								getDataResponse(errPost, function(status, sText, err, xhr) {
-									var msg = (/<td colspan='\d+' class='post-error'>(.+)<\/td>/).exec(err);
-									Yu['ErrorMassage'].textContent = msg[1];
-									if (LCY.cerr[LC.lng[lng]].isThere(msg[1].split(' ').pop()))
-										Yu['Captcha'].removeAttribute('hidden');
-									return submitProcess(false);
-								});
-							} else if (newThread && Yu['TargetThread'].value == 0) {
-								document.location.href = newThread;
+							if (this.responseURL === action) {
+								var rText = this.responseText,
+									msg = (/<center><h2>(.+)<\/h2><\/center>/).exec(rText);
+								alert(msg[1]);
 							} else {
-								if (Yu['ReplyForm'].classList[1] === 'reply')
-									Yu['ReplyForm'].remove();
-								Yu['ReplyText'].value = '';
-								Yu['ErrorMassage'].textContent = '';
-								Yu['FilesPlaceholder'].innerHTML = '';
-								Yu['Captcha'].setAttribute('hidden', '');
-								submitProcess(false);
-								_z.setlSVal('SafeText', JSON.stringify(Yu['ReplyText'].value), true);
-								switch (len) {
-									case 0: updateThread(null); break;
-									default: setTimeout(updateThread, 1000);
+								var del_checks = document.querySelectorAll('.delete_checkbox:checked');
+								if (del_checks.length === 1) {
+									document.getElementById('post_'+ del_checks[0].name).className = 'postdeleted';
+									del_checks[0].remove();
+								} else {
+									document.location.reload();
 								}
-								fileList = [];
-							}
-						}
-					}
-					for (var i = 0; i < fileList.length; i++) {
-						if (HM.RemoveExif && fileList[i].file.type.toLowerCase() == 'image/jpeg' && !fileList[i].jpegStripped) {
-							fileList[i].dataURL = jpegStripExtra(fileList[i].dataURL);
-						}
-						if (HM.RemoveFileName && !fileList[i].renamed) {
-							fileList[i].f_name = (makeRandId(32) + (fileList[i].f_name.match(/\.[^\.]+$/) || [''])[0]).toLowerCase();
-						}
-						fd.append("file_" + (i + 1), dataURLtoBlob(fileList[i].dataURL, fileList[i].file.type), fileList[i].f_name);
-						fd.append("file_" + (i + 1) + "_rating", fileList[i].el.querySelector("select[name='file_1_rating']").value);
-					};
-					fd.append("post_files_count", fileList.length)
-					submitProcess(true);
-					break;
-				case 'delete_form': Fn = function() {
-					if (this.readyState !== 4)
-						return;
-					if (this.status === 304) {
-						alert('304 ' + this.statusText);
-					} else {
-						if (this.responseURL === action) {
-							var rText = this.responseText,
-								msg = (/<center><h2>(.+)<\/h2><\/center>/).exec(rText);
-							alert(msg[1]);
-						} else {
-							var chek = document.querySelectorAll('.post a.delete.icon.checked > .delete_checkbox');
-							if (chek.length === 1) {
-								_z.setup(document.getElementById('post_'+ chek[0].name), {'class': "deleted"}, null)
-								.querySelector('.doubledash').setAttribute('style', 'display:inline-block;');
-							} else {
-								document.location.reload();
 							}
 						}
 					}
 				}
+				ajaxPost.onreadystatechange = Fn;
+				ajaxPost.open('POST', action, true);
+				ajaxPost.send(fd);
+			} catch(e) {
+				_z.dbg(e)
+			} finally {
+				return _z.fall(e);
 			}
-			ajaxPost.open('POST', action, true);
-			ajaxPost.onreadystatechange = Fn;
-			ajaxPost.send(fd);
-			return _z.fall(e);
 		}
-		function makeReplyForm(e, brd, tid, pid) {
-			if (Target.thread(tid) && HM.URL.thread != tid)
-				Target.tid = tid;
-			if (Target.board != brd)
-				Target.board = brd;
-			Yu['TargetThread'].value = tid;
-			Yu['CaptchaImage'].src = '/captcha/'+ brd +'/'+ _t() +'.png';
-			_z.setup(Yu['ReplyForm'], {'class': 'line-sect' + (!e ? '' : ' reply'), 'action': '/'+ brd +'/post/new.xhtml'}, null);
-			if (document.getElementById('captcha'))
-				Yu['Captcha'].removeAttribute('hidden');
-			var post = !e ? topForm : _z.route(e.target, function(el) {
-					var nodes = el.className.split(' ');
-					return nodes.isThere('post') || nodes.isThere('popup');
-				}), classes = post.className.split(' ');
-				if (classes.isThere('post') || !e) _z.after(post, Yu['ReplyForm']);
-			else
-				if (classes.isThere('popup')) post.firstChild.firstChild.firstChild.appendChild(Yu['ReplyForm']);
-				if (pid && !Yu['ReplyText'].value.isThere('>>'+ pid)) wmarkText(Yu['ReplyText'], '>>'+ pid +'\r\n', '++');
-				if (e) makeGlobalForm(null);
+		function makeReplyForm(map, params) {
+			Yu['TargetThread'].value = Yum.tid = map[1]; Yum.brd = map[0];
+			Yu['CaptchaImage'].src = '/captcha/'+ Yum.brd +'/'+ _t() +'.png';
+			Yu['PosterName'].placeholder = Names.get(Yum.brd);
+			switch (params.type) {
+				case 'reply':
+					_z.each([Yu['OpenTopForm'], Yu['OpenBottomForm']], _show);
+					_hide(Yu['HideGlobalForm']);
+				case 'report':
+					if (map[2] && !Yu['ReplyText'].value.isThere('>>'+ map[2])) {
+						wmarkText(Yu['ReplyText'], '>>'+ map[2], '\r\n');
+					}
+					break;
+				case 'edit':
+					Yu['ReplyText'].value = params.text;
+					el$('[name="name"]').value = params.name;
+					el$('[name="subject"]').value = params.subj;
+					Yum.funct = params.funct;
+					for (var i = 0, len = params.files.length - fileList.length; i < len; i++) {
+						getUrlData('Blob', params.files[i].href, yAdd)
+					}
+			}
+			return _z.setup(Yu['ReplyForm'], {'class': params.type +' line-sect', 'action': '/'+ Yum.brd +'/post/new.xhtml'});
 		}
 		function makeGlobalForm(e) {
-			switch (e) {
-				case null:
-					_z.each([hideinfo, Yu['OpenBottomForm']], _show);
-					_hide(showinfo);
+			switch (e.target.id) {
+				case 'otf-btn':
+					_DWG(document.getElementById('postform_placeholder'), 'OpenTopForm', 'OpenBottomForm');
 					break;
-				default:
-					switch (e.target.parentNode.id) {
-						case 'hideinfotd':
-							_z.each([hideinfo, Yu['OpenBottomForm']], _show);
-							_hide(postForm);
-							break;
-						case 'open-bottom-form':
-							_z.after(Yu['OpenBottomForm'], postForm)
-							_hide(Yu['OpenBottomForm']);
-							break;
-					}
-					switch (e.target.parentNode.id) {
-						case 'hideinfodiv':
-							pfplaceh.appendChild(postForm);
-							_show(Yu['OpenBottomForm']);
-							_hide(hideinfo);
-						case 'open-bottom-form':
-							_z.each([showinfo, postForm], _show);
-							makeReplyForm(null, HM.URL.board, (HM.URL.thread || 0));
-							Yu['NewThreadCreate'].className = (HM.URL.thread ? 'yuki_clickable ' : '') +
-								(Yu['TargetThread'].value > 0 ? 'inactive' : 'selected');
-							break;
-					}
-					return _z.fall(e);
+				case 'obf-btn':
+					_DWG(Yu['OpenBottomForm'], 'OpenBottomForm', 'OpenTopForm');
+					break;
+				case 'hgf-btn':
+					_z.each([Yu['OpenBottomForm'], Yu['OpenTopForm']], _show);
+					_hide(Yu['GlobalFormArea']);
+					break;
 			}
-		}
-		function _t(last) { 
-			return (new Date).getTime() - (last ? parseInt(last) : 0);
+			function _DWG(node, A, B) {
+				var RPForm = makeReplyForm([HM.URL.board, (HM.URL.thread && Yu['TargetThread'].value !== '0' ? HM.URL.thread : 0)], {type: 'global'});
+				_z.each([Yu['HideGlobalForm'], Yu[B], Yu['GlobalFormArea']], _show);
+				_z.after(node, Yu['GlobalFormArea']);
+				_hide(Yu[A]);
+				Yu['GlobalFormSect'].appendChild(RPForm);
+				Yu['NewThreadCreate'].className = (HM.URL.thread ? 'yuki_clickable ' : '') + (Yu['TargetThread'].value !== '0' ? 'inactive' : 'selected');
+			}
 		}
 		function makeRandId(size) {
 			var text = "", 
@@ -1243,13 +1610,13 @@ document.head.appendChild(GlobalStyle);
 			return text;
 		}
 		function arrayBufferDataUri(raw) {
-			var base64 = ''
-			var encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-			var bytes = new Uint8Array(raw)
-			var byteLength = bytes.byteLength
-			var byteRemainder = byteLength % 3
-			var mainLength = byteLength - byteRemainder
-			var a, b, c, d, chunk
+			var base64 = '';
+			var encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+			var bytes = new Uint8Array(raw);
+			var byteLength = bytes.byteLength;
+			var byteRemainder = byteLength % 3;
+			var mainLength = byteLength - byteRemainder;
+			var a, b, c, d, chunk;
 			// Main loop deals with bytes in chunks of 3
 			for (var i = 0; i < mainLength; i = i + 3) {
 				// Combine the three bytes into a single integer
@@ -1274,11 +1641,11 @@ document.head.appendChild(GlobalStyle);
 				b = (chunk & 1008) >> 4 // 1008 = (2^6 - 1) << 4
 				// Set the 2 least significant bits to zero
 				c = (chunk & 15) << 2 // 15 = 2^4 - 1
-				base64 += encodings[a] + encodings[b] + encodings[c] + '='
+				base64 += encodings[a] + encodings[b] + encodings[c] + '=';
 			}
-			return base64
+			return base64;
 		}
-		function jpegStripExtra(input) { // result e.target.result;
+		function jpegStripExtra(input) {
 			// Decode the dataURL
 			var binary = atob(input.split(',')[1]);
 			// Create 8-bit unsigned array
@@ -1287,7 +1654,7 @@ document.head.appendChild(GlobalStyle);
 				array.push(binary.charCodeAt(i));
 			}
 			var orig = new Uint8Array(array);
-			var outData = new ArrayBuffer(orig.byteLength)
+			var outData = new ArrayBuffer(orig.byteLength);
 			var output = new Uint8Array(outData);
 			var posO = 2,
 				posT = 2;
@@ -1316,7 +1683,13 @@ document.head.appendChild(GlobalStyle);
 			output[posT] = orig[posO];
 			output[posT + 1] = orig[posO + 1];
 			output = new Uint8Array(outData, 0, posT + 2);
-			return "data:image/Jpeg;base64," + arrayBufferDataUri(output);
+			return {
+				base64String: "data:image/Jpeg;base64," + arrayBufferDataUri(output),
+				arrayBuffer: output
+			}
+		}
+		function _t(last) {
+			return (new Date).getTime() - (last ? parseInt(last) : 0);
 		}
 		function bytesMagnitude(bytes) {
 			return (bytes < 1024 ? bytes +' B' :
@@ -1339,127 +1712,208 @@ document.head.appendChild(GlobalStyle);
 	}
 	
 	/************************************************************************/
-	
-	function ButtonTamplate(h) {
-		this['ErrorMsg'] = '<strong class="err-msg">r{Text}</strong>'
-		this['default'] = def = '<a class="r{Fn} icon" r{Act}><img src="/images/blank.png" title="r{title}" alt="r{alt}"></a>\n'
-		this['reflink'] = '<a r{N} href="/r{brd}/res/r{tid}.xhtml#ir{pid}" onclick="Highlight(event, \'r{pid}\')">&gt;&gt;r{L}r{pid}</a>'
-		this['Derpibooru'] = def.allReplace({'r{Fn}': "search_derpibooru", 'r{Act}': 'onclick="$(\'#rs-url\').val(\'@img_src\').parent().submit()"', 'r{title}': 'Derpibooru reverse search', 'r{alt}': 'derp'}),
-		this['Saucenao'] = def.allReplace({'r{Fn}': "search_saucenao", 'r{title}': LC.fnd_src_wth[lng] +' SauceNAO', 'r{alt}': 'sauce',
-			'r{Act}': 'href="//saucenao.com/search.php?url=@img_src" onclick="window.open(this.href,\'_blank\');return false"'}),
-		this['Google'] = def.allReplace({'r{Fn}': "search_google", 'r{title}': LC.fnd_src_wth[lng] +' Google', 'r{alt}': 'ggl',
-			'r{Act}': 'href="//www.google.com/searchbyimage?image_url=@img_src" onclick="window.open(this.href,\'_blank\');return false"'}),
-		this['Iqdb'] = def.allReplace({'r{Fn}': "search_iqdb", 'r{title}': LC.fnd_src_wth[lng] +' iqdb', 'r{alt}': 'iqdb',
-			'r{Act}': 'href="//iqdb.org/?url=@img_src" onclick="window.open(this.href,\'_blank\');return false"'}),
-		this['ReverseSearch'] = _z.setup('form', {'method': "post", 'action': "https://derpibooru.org/search/reverse", 'target': "_blank", 'enctype': "multipart/form-data",
-			'hidden': '', 'html': '<input id="rs-url" name="url" type="text" value=""><input id="fuzziness" name="fuzziness" type="text" value="0.25">'}, null);
-	}
-
 	function SimpleSets(h) {
-		var Ss = this;
-		this.$ = function(child) { return this['SmallSetsPanel'].querySelector(child) }
-		this['SpStyle'] = _z.setup('style', {'text': '.spoiler, .spoiler * {color:inherit!important;}'}, null);
-		this['PostCountStat'] = _z.setup('label', {'class': 'post-count', 'text': HM.Elems.posts.length + LC.omit[lng]}, null);
-		this['SmallSetsPanel'] = _z.setup('span', {'id': 'small-settings-panel', 'html': '<div id="update-stat"><a>'+ LC.loadnew[lng] +
-			'</a></div><label id="set-notif"><input type="checkbox">\n'+ LC.snd_notify[lng] +'</label><br><label id="set-clip-popups"><input type="checkbox">\n'+
-			LC.clipopup[lng] +'</label><br><label id="set-show-spoilers"><input type="checkbox">\n'+ LC.txtspoils[lng] +'</label>'}, null);
-		this['UpdateStatBox'] = this.$('#update-stat');
-		this['LoadButton'] = _z.setup(this['UpdateStatBox'].firstElementChild, {}, {
-			'click': updateThread
-		});
-		this['SetNotify'] = this.$('#set-notif');
-		_z.setup(Ss['SetNotify'].firstElementChild, {'checked': HM.SoundNotify}, {
-			'change': function(e) {
-				setupOptions(this, 'SoundNotify', true);
+		var Ss = this, SsLC = {
+				snd_notify: ["Sound Notifications", "Звуковые уведомления"],
+				txtspoils: ["Disclose text spoilers", "Раскрывать текстовые спойлеры"],
+				clipopup: ["Clipping Popup Posts", "Закреплять превью постов"]
+			};
+		this['StyleSet'] = {
+				spoiler: _z.setup('style', {'text': '.spoiler, .spoiler * {color:inherit!important;}'}),
+				true: function(style) { document.body.appendChild(this[style]) },
+				false: function(style) { this[style].remove() }
 			}
-		});
-		this['SetClipPopups'] = this.$('#set-clip-popups');
-		_z.setup(Ss['SetClipPopups'].firstElementChild, {'checked': HM.AttachPopups}, {
-			'change': function(e) {
-				setupOptions(this, 'AttachPopups');
+		this['SmallSetsPanel'] = _z.setup('span', {'id': 'small-settings-panel', 'html': 
+				'<div class="stat-line"><input id="SoundNotify-session-chbx" type="checkbox"'+ (HM.SoundNotify ? ' checked' : '') +'>\n'+ SsLC.snd_notify[lng] +
+				'</div><div class="stat-line"><input id="AttachPopups-local-chbx" type="checkbox"'+ (HM.AttachPopups ? ' checked' : '') +'>\n'+ SsLC.clipopup[lng] +
+				'</div><div class="stat-line"><input id="DiscloseTextSpoilers-local-chbx" type="checkbox"'+ (HM.DiscloseTextSpoilers ? ' checked' : '') +'>\n'+ SsLC.txtspoils[lng] +
+				'</div><form method="post" action="//derpibooru.org/search/reverse" target="_blank" enctype="multipart/form-data" hidden><input id="rs-url" name="url" type="text" value=""><input id="fuzziness" name="fuzziness" type="text" value="0.25"></form>'
+			}, {'change': function(e) {
+					switch (e.target.id) {
+						case 'DiscloseTextSpoilers-local-chbx':
+							Ss['StyleSet'][e.target.checked]('spoiler');
+						default:
+							var param = e.target.id.split('-');
+							setupOptions(e.target, param[0], param[1]);
+					}
+				}
+			});
+	}
+	
+	function PDownListener(e) {
+		try {
+			var Phis = this, patchId = this.getAttribute('patch-id'), Map = patchId.split('_'), RPForm, _Params;
+			if (this.classList.contains('new'))
+				markAsRead(this);
+			switch (e.target.classList[0]) {
+				case 'reply-link': Chanabira.MagicHighlight(e); break;
+				case 'delete_checkbox':
+					if (this.classList.contains('popup')) {
+						confirm(['Want to delete this post ?', 'Удалить этот пост ?'][lng]) ? delPost(e.target) : null;
+					} else
+						e.target.parentNode.classList[(e.target.checked ? 'add' : 'remove')]('checked');
+					break;
+				case 'reply-button':
+					RPForm = Nagato.getForm(Map, {type: 'reply'})
+					if (this.classList.contains('post')) {
+						_z.after(this, RPForm);
+					} else if (this.classList.contains('popup')) {
+						this.firstElementChild.firstElementChild.firstElementChild.appendChild(RPForm);
+					}
+					if (this.offsetTop < pageYOffset || this.offsetTop > (pageYOffset + window.innerHeight))
+						this.scrollIntoView();
+					break;
+				case 'edit-post':
+					var name = (this.querySelector('.postertrip')
+							|| this.querySelector('.postername')),
+						title = this.querySelector('.replytitle'),
+						dlinks = this.getElementsByClassName('download-link'),
+						message = this.querySelector('.message'),
+						params = {type: 'edit', name: name.textContent, subj: (title ? title.textContent : ''), text: textSource(message), funct: function(){
+							delPost(_z.setup(Phis.querySelector('#delbox_'+ Map[2]), {'checked': true}));
+						}, files: dlinks};
+					if (!HM.LoadedPosts[patchId].edit_form)
+						HM.LoadedPosts[patchId].edit_form = new Yuki(false);
+					RPForm = HM.LoadedPosts[patchId].edit_form.getForm(Map, params)
+					_z.after(this.querySelector('.cpanel + br'), RPForm);
+					break;
+				case 'Get-Full-Text':
+					_Params = {'class': 'Get-Short-Text', 'text': ['Short version', 'Укороченная версия'][lng]};
+				case 'Get-Short-Text':
+					_z.each(this.getElementsByClassName('postbody'), function(pbody) {
+						pbody.classList.toggle('alternate');
+					});
+					_z.setup(e.target, (_Params || {'class': 'Get-Full-Text', 'text': ['Full version', 'Полная версия'][lng]}));
+					_z.fall(e);
+					break;
+				case 'excat-button':
+					var eXcaT = e.target.id.split('-')[1]
+					HM.ThreadListener[Map[1]][eXcaT +'Thread'](e);
+					_z.fall(e);
+					break;
+				case 'sp-r':
+					hRate(e.target, e.target.parentNode.parentNode.querySelector('img.spr-image'));
+					break;
+				case 'spr-image':
+					MagicSpoirate(e.target);
+					_z.fall(e);
+					break;
+				case 'inj-refl':
+					wmarkText(Nagato['ReplyText'], '>>'+ (Map[0] !== HM.URL.board ? Map[0] +'/' : '') + Map[2], '\x20');
+					_z.fall(e);
 			}
-		});
-		this['SetShowSpoilers'] = this.$('#set-show-spoilers');
-		_z.setup(Ss['SetShowSpoilers'].firstElementChild, {'checked': HM.DiscloseTextSpoilers}, {
-			'change': function(e) {
-				setupOptions(this, 'DiscloseTextSpoilers');
-				spDisclosing();
-			}
-		});
-		function spDisclosing() {
-			if (HM.DiscloseTextSpoilers)
-				document.body.appendChild(Ss['SpStyle']);
-			else
-				Ss['SpStyle'].remove()
+		} catch(e) {
+			_z.dbg(e)
 		}
-		spDisclosing();
+		function textSource(mNode) {
+			var	soucHTML = mNode.innerHTML, soucText, links = mNode.querySelectorAll('a:not(.reply-link)'),
+				patcHTML = soucHTML.allReplace({'<del>': '~~', '</del>': '~~', '<div class="spoiler">': '%%\n', '</div>': '\n%%', '<pre>': '`\n', '</pre>': '\n`',
+					'<code>': '`', '</code>': '`', '<span class="spoiler">': '%%', '</span>': '%%', '<em>': '_', '</em>': '_', '<strong>': '**', '</strong>': '**',
+					'<li>  ': '\n* * ', '<li>\n  ': '* * ', '<li>\n ': '\n* ', '>&gt; ': '>\n&gt; ', '&gt; \n': '&gt;'});
+				for (var i = 0; i < links.length; i++) {
+					patcHTML = patcHTML.replace(links[i].outerHTML, links[i].href)
+				}
+				soucText = _z.setup('div', {'html': patcHTML}).textContent
+			return soucText.replace(/^[\n]+/, '');
+		}
+		function delPost(delbox) {
+			var form = _z.setup('form', {'id': 'delete_form', 'action': '/'+ Map[0] +'/delete', 'method': 'post', 'html':
+				'<input name="task" value="delete"><input name="password" value="'+ HM.User.password +'"><input name="'+ delbox.name +'" value="'+ delbox.value +'">'})
+			Nagato.submitForm({target: form})
+		}
 	}
 	
 	function insertListenerS(event) {
-		var target = event.target;
-		if (event.animationName == "onReady") {
-			lng = Hanabira.LC_ru;
-			if (target.className === 'postername') {
-				target.textContent = HM.defaultName(target.textContent)
-			} else {
-				hideinfo = document.getElementById('hideinfodiv');
-				showinfo = document.getElementById('hideinfotd');
-				postForm = document.getElementById('postFormDiv');
-				pfplaceh = document.getElementById('postform_placeholder');
-				topForm = document.getElementById('postform');
-				delForm = document.getElementById('delete_form'),
-				deli = delForm.querySelector('input[name="password"]'),
-				pass = deli.value, Btn = new ButtonTamplate(), HM.Elems = GetElements(), HM.Form = new Yuki(), HM.Settings = new SimpleSets();
-				
-				_z.each([showinfo.firstElementChild, hideinfo.firstElementChild], function(el) {
-					_z.setup(el, {'onclick': undefined, 'href': undefined}, {'click': HM.Form.getForm});
-				});
-				hideinfo.removeAttribute('style');
-				_hide(postForm);
-				hooLinksElement(HM.Elems.links);
-				genReplyMap(HM.Elems.posts);
-				if (HM.URL.thread) {
-					_z.append(delForm, [
-						HM.Form['OpenBottomForm'],
-						HM.Settings['SmallSetsPanel'],
-						Btn['ReverseSearch']]);
-					_z.after(Target.thread(), HM.Settings['PostCountStat']);
-					updateTimer();
-				} else {
-					_z.before(delForm.querySelector('.pages'), [
-						HM.Form['OpenBottomForm'],
-						HM.Settings['SetClipPopups'],
-						document.createElement('br'),
-						HM.Settings['SetShowSpoilers'],
-						Btn['ReverseSearch']]);
-				}
-				delForm.addEventListener('submit', HM.Form.submitForm, false);
+		try {
+			switch (event.animationName) {
+				case 'onReady':
+					switch (event.target.className) {
+						case 'footer':
+							var locationThread = document.getElementById('thread_'+ HM.URL.thread);
+								hideinfodiv = document.getElementById('hideinfodiv')
+								delForm = document.getElementById('delete_form'),
+								rules = document.getElementsByClassName('rules')[0],
+								posts = document.getElementsByClassName('post');
+								
+								_z.each(posts, handlePost);
+								genReplyMap(posts);
+							if (hideinfodiv) {
+								_z.after(hideinfodiv, Nagato['OpenTopForm']);
+								Nagato['BoardRulesSect'].appendChild(rules);
+							}
+							if (locationThread) {
+								HM.ThreadListener[HM.URL.thread] = new MagicThreadListener(locationThread);
+								_z.append(delForm, [Nagato['OpenBottomForm'], SettingsPanel['SmallSetsPanel']]);
+								_z.prepend(SettingsPanel['SmallSetsPanel'], HM.ThreadListener[HM.URL.thread]['NewPostLoader']);
+								_z.after(locationThread, HM.ThreadListener[HM.URL.thread]['PostsCount']);
+								HM.ThreadListener[HM.URL.thread].updateTimer();
+							} else if (!locationThread && HM.URL.thread) {
+								var LoadingMsg = _z.setup('strong', {'class': 'err-msg', 'text':['Loading from Archive', 'Загружается из архива'][lng] +' ...', 'style': 'display:block;text-align:center;font-size:1.4em;'});
+								getDataResponse('/api/thread/expand/'+ HM.URL.board +'/'+ HM.URL.thread, function(status, sText, xhtml, xhr) {
+									var arcThr = _z.setup('div', {'id': 'thread_'+ HM.URL.thread, 'class': 'thread', 'html': xhtml}),
+										arcPsts = arcThr.getElementsByClassName('post');
+									if (arcPsts.length === 0) {
+										LoadingMsg.textContent = xhtml;
+									} else {
+										arcThr.querySelector('.abbrev a[onclick^="Truncate"]').parentNode.remove();
+										_z.each(arcPsts, handlePost);
+										genReplyMap(arcPsts);
+										_z.replace(LoadingMsg, arcThr);
+										_z.after(arcThr.nextElementSibling, SettingsPanel['SmallSetsPanel']);
+									}
+								});
+								_z.replace('center', LoadingMsg);
+							} else {
+								if (hideinfodiv)
+									_z.before(delForm.querySelector('.pages'), [Nagato['OpenBottomForm'], SettingsPanel['SmallSetsPanel']]);
+								_z.each('.thread', function(thread) {
+									if (!thread.querySelector('img[src="/images/sticky.png"]')) {
+										var CiD = _cid(thread.id)
+										HM.ThreadListener[CiD] = new MagicThreadListener(thread, true);
+										_z.after(thread, HM.ThreadListener[CiD]['NewPostLoader']);
+										_z.setup(thread.querySelector('.abbrev a[onclick^="ExpandThread"]'), {'class': 'excat-button', 'id': 'thread-expand', 'onclick': undefined});
+									}
+								});
+							}
+							if (delForm)
+								delForm.addEventListener('submit', Nagato.submitForm, false);
+							SettingsPanel['StyleSet'][HM.DiscloseTextSpoilers ? true : false]('spoiler');
+					}
 			}
+		} catch(e) {
+			_z.dbg(e);
 		}
 	}
 	
 	_z.setup(window, {}, {
-		'mousemove': BindDragRef,
+		'keypress': keyMarks,
+		'mousemove': function(e) {
+			if (HM.RefTab) {
+				HM.RefTab.style.top = 9 + e.pageY - HM.RefTab.offsetHeight +'px';
+				HM.RefTab.style.left = 9 + e.pageX - HM.RefTab.offsetWidth +'px';
+				_z.fall(e);
+			}
+		},
+		'dblclick': function(e) {
+			if (!['TEXTAREA', 'INPUT'].isThere(e.target.tagName))
+				markAsRead();
+		},
 		'mouseup': function(e) {
 			HM.RefTab = null; },
 		'keydown': function(e) {
-			if (e.keyCode === 27)
-				RemoveAllRefs(e);
-			if (e.keyCode === 82 && !['TEXTAREA', 'INPUT'].isThere(e.target.tagName)) {
-				_z.each('.reply.new', function(masRp) {
-					masRp.classList.remove('new')
-					masRp.removeEventListener('click', markAsRead, false)
-				});
-				Tinycon.setBubble(0);
-				unread_count = 0;
-			}
-		},
-		'keypress': function(e) {
-			var TextArea = e.target;
-			if (TextArea.className === 'ta-inact' && e.keyCode !== 8) {
-				var end = TextArea.selectionEnd;
-				TextArea.setSelectionRange(end, end);
-				TextArea.removeAttribute('class');
+			switch (e.keyCode) {
+				case 27:
+					Chanabira.closeLastPopup(e);
+					break;
+				case 82:
+					if (!['TEXTAREA', 'INPUT'].isThere(e.target.tagName))
+						markAsRead();
+					break;
+				case 9:
+					if (e.target.id === 'code_edit_ta') {
+						wmarkText(e.target, '\t', '\n\t');
+						return _z.fall(e);
+					}
 			}
 		}
 	});
@@ -1477,4 +1931,4 @@ document.head.appendChild(GlobalStyle);
 			document.addEventListener(pfx[p]+type, callback, false);
 		}
 	}
-})();
+}
