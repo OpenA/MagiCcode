@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraSimpleMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.3.0
+// @version 		1.3.1
 // @grant   		none
 // ==/UserScript==
 
@@ -167,7 +167,7 @@ a:hover > .wmark-button{color:inherit;}.spoiler > .wmark-button{vertical-align:i
 #yuki-errorMsg{text-align:center;color:#FFF;background-color:#E04000;}.wmark-button{color:#fefefe;text-shadow:0 1px 0 rgba(0,0,0,.4);}.inactive{opacity:.4;}\
 .rating_SFW{background:green;}.rating_R15{background:yellow;}.rating_R18{background:orange;}.rating_R18G{background:red;}.line-sect,.yukiFile,.postdeleted .doubledash{display:inline-block;}\
 .yukiFile,.yukiFileSets{font-size:66%;}.yukiFile{text-align:center;width:210px;background:#fefefe;-webkit-border-radius:5px;margin:5px;padding:2px;}img[src="#transparent"]{width:150px;opacity:0;}\
-#yuki-files-placeholder > *{vertical-align:top;}.yukiFile .yf_preview{max-width:150px;margin:5px 0;}.yf_info{padding:0 2px;word-wrap:break-word;}.yf_preview._text{border:1px inset #aaa;}\
+#yuki-files-placeholder > *{vertical-align:top;}.yf_preview{max-width:150px;margin:5px 0;}.yf_info{padding:0 2px;word-wrap:break-word;}.yf_preview._text{border:1px inset #aaa;}\
 #yuki-replyForm{text-align:left;padding:4px 8px;}.selected:before{content:"✓ ";color:green;}\
 #yuki-dropBox tr{display:block;text-align:center!important;}.droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em;}\
 @keyframes onReady{50% {opacity:0;}} @-webkit-keyframes onReady{50% {opacity:0;}}'});
@@ -209,7 +209,7 @@ function SimpleMagicExtension() {
 	Files = {
 		audio: ["m4a", "m4r", "aac", "opus", "alac", "flac", "ogg", "mp3", "wav"],
 		video: ['ogv', 'ogm', 'm4v', "3gp", 'mp4', 'webm', 'flv', 'swf'],
-		image: ["jpeg", "jpg", "png", "svg", "gif", 'bmp'],
+		image: ["jpeg", "jpg", "png", "svg", "gif", 'bmp', 'ico', 'webp'],
 		arch: ['zip', 'rar', '7z']},
 	Names = {
 		'en': ['Anonymous', 'Developer', 'Lawrense', 'Anonymous Expert', 'Slowpoke', 'Experimenter'],
@@ -297,7 +297,7 @@ function SimpleMagicExtension() {
 		return new Array(num + 1).join(this);
 	}
 	String.prototype.fext = function() {
-		return this.split('.').pop().toLowerCase();
+		return (this.match(/[^\.]+$/) || [''])[0].toLowerCase();
 	}
 	function matchIndex(str) {
 		return this.indexOf(str) >= 0;
@@ -337,7 +337,7 @@ function SimpleMagicExtension() {
 	function _shide(el) { el.classList.toggle('hidout') }
 	function _hide (el) { el.classList.add('hidout') }
 	function _cid(pid) {
-		var n = new RegExp(/(\d+)/).exec(pid);
+		var n = /(\d+)/.exec(pid);
 		return Number((n[1] || 0));
 	}
 	
@@ -364,7 +364,7 @@ function SimpleMagicExtension() {
 	}
 	function getUrlData(TYPE, Source, Fn) {
 		if (typeof GM_xmlhttpRequest !== 'undefined') {
-			new GM_xmlhttpRequest({
+			GM_xmlhttpRequest({
 				method: 'GET',
 				responseType: TYPE.toLowerCase(),
 				url: Source,
@@ -597,7 +597,7 @@ function SimpleMagicExtension() {
 				}
 		}
 		TextArea.value = val.substring(0, start) + markedText + val.substring(end);
-		if (CASM == '\r' || CASM == '\x20' ) {
+		if (CASM == '\r' || CASM == '\x20') {
 			TextArea.selectionStart = TextArea.selectionEnd = TextArea.value.length;
 		} else {
 			TextArea.setSelectionRange(start + offsetS, start + (offsetE || markedText.length));
@@ -1315,9 +1315,7 @@ function SimpleMagicExtension() {
 			}
 			new YukiFile({
 				blob: dataURLtoBlob(dataURL, 'image/png'),
-				upload_name: 'talking_captcha.png',
 				original_name: 'talking_captcha.png',
-				jpegStripped: false,
 				dataURL: dataURL
 			})
 		}
@@ -1331,42 +1329,54 @@ function SimpleMagicExtension() {
 		}
 		function checkfileName(file_name) {
 			var ext = file_name.fext()
-			return (file_name.match(/videoplayback\?/) || file_name.match(/[?=&]/g) && ext.match(/[?=&]/g) && ext.length > 12)
+			return (file_name.match(/videoplayback\?/) || file_name.match(/[?=&]/g) && ext.match(/[?=&]/g));
 		}
 		function YukiFile(fileObj) {
-			var YF = this , Id = makeRandId(6),
-				yfElement = _z.setup('div', {'id': 'yuki-file-'+ Id, 'class': "yukiFile", 'html': '<div class="yf_remove">[\n<a id="yf-remove" class="yuki_clickable">'+
-					LCY['rmv'][lng].toLowerCase() +'</a>\n]</div><img id="yf-preview" class="yf_preview" src="'+ (fileObj.dataURL || '#transparent') +'"><div id="yf-name" class="yf_info">'+
-					fileObj.upload_name +'</div><span id="yf-size" class="yf_info">'+ bytesMagnitude(fileObj.blob.size) +'</span><select class="rating_SFW" id="file_rating_sel"><option class="rating_SFW">SFW</option><option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select>'},
+			try {
+				for (var key in fileObj) {
+					this[key] = fileObj[key];
+				}
+				if (!fileObj['upload_name'])
+					this['upload_name'] = fileObj['original_name'];
+				
+				var YF = this , Id = makeRandId(6);
+				this['frontend'] = _z.setup('div', {'id': 'yuki-file-'+ Id, 'class': "yukiFile", 'html': '<div class="yf_remove">[\n<a id="yf-remove" class="yuki_clickable">'+
+					LCY['rmv'][lng].toLowerCase() +'</a>\n]</div><img id="yf-preview" class="yf_preview" src="'+ (this.dataURL || '#transparent') +'"><div id="yf-name" class="yf_info">'+
+					this.upload_name +'</div><span id="yf-size" class="yf_info">'+ bytesMagnitude(this.blob.size) +'</span><select class="rating_SFW" id="file_rating_sel"><option class="rating_SFW">SFW</option><option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select>'},
 					{'change': function(e) {
 						if (e.target.type === 'select-one') {
-							fileObj.rating = e.target.value;
+							YF.rating = e.target.value;
 						}
 					},'click': function(e) {
 						switch (e.target.id) {
 							case 'yf-name':
-								if (fileObj.upload_name !== fileObj.original_name) {
-									YF['FileName'].textContent = fileObj.upload_name = fileObj.original_name;
+								if (YF.upload_name !== YF.original_name) {
+									YF['FileName'].textContent = YF.upload_name = YF.original_name;
 								} else {
-									YF['FileName'].textContent = fileObj.upload_name = (makeRandId(32) +'.'+ fileObj.upload_name.fext());
+									YF['FileName'].textContent = YF.upload_name = (makeRandId(32) +'.'+ YF.upload_name.fext());
 								}
 								break;
 							case 'yf-remove':
-								var idx = fileList.indexOf(fileObj);
-								yfElement.remove();
+								var idx = fileList.indexOf(YF);
+								YF.frontend.remove();
 								delete fileList[idx];
 								fileList.splice(idx, 1);
 						}
 					}
 				});
-				this['Preview'] = yfElement.querySelector('#yf-preview');
-				this['FileName'] = yfElement.querySelector('#yf-name');
-				this['FileSize'] = yfElement.querySelector('#yf-size');
-				fileObj['rating'] = 'SFW';
-				fileObj['overlay'] = this;
-				fileList.push(fileObj);
-				Yu['FilesPlaceholder'].appendChild(yfElement);
-			return fileObj;
+				this['Preview'] = _z.setup(YF['frontend'].querySelector('#yf-preview'), {}, {'load':
+					function(e) {
+						YF['FileSize'].textContent = bytesMagnitude(YF.blob.size) +', '+ this.naturalWidth +'×'+ this.naturalHeight;
+					}
+				});
+				this['FileName'] = YF['frontend'].querySelector('#yf-name');
+				this['FileSize'] = YF['frontend'].querySelector('#yf-size');
+				this['rating'] = 'SFW';
+				fileList.push(this);
+				Yu['FilesPlaceholder'].appendChild(this['frontend']);
+			} catch(e) {
+				_z.fall(e)
+			}
 		}
 		// Loop through the FileList and render image files as thumbnails.
 		function makeYukiFile(f) {
@@ -1376,12 +1386,26 @@ function SimpleMagicExtension() {
 				if (fileList[i].blob.size === f.size && fileList[i].blob.type === f.type)
 					return;
 			}
-			var f_ext = f.name.fext(), f_type = f.type.split('/'),
+			var ext = f.name.fext(), f_type = (
+				    f.type == "application/x-shockwave-flash"               ? ['video', 'swf'] :
+				    f.type == "audio/mpeg"                                  ? ['audio', 'mp3'] :
+				    f.type == "video/ogg"                  && ext == 'ogg'  ? ['audio', 'ogg'] :
+				    f.type == 'binary/octet-stream'        ? (ext == 'flac' ? ['audio', 'flac'] : ['', 'bin']) :
+				   !f.type                                 ? (ext == 'flac' ? ['audio', 'flac'] : ['', ''])    :
+				    f.type.split('/')),
+				
+				f_ext = ext.match(/[?=&]/g) ? f.type[1].replace('+xml', '').replace('x-', '') : ext,
+				
+				f_name = checkfileName(f.name) ? makeRandId(32) +
+				  (!f_ext                      ? ''    : '.'+ (
+				    f_type[0] == 'text'        ? 'txt' :
+				    f_type[1].replace('+xml', '').replace('x-', ''))
+				  ) : f.name,
+				  
 				theFile = new YukiFile({
 					blob: f,
-					upload_name: HM.RemoveFileName ? (makeRandId(32) +'.'+ f_ext) : f.name,
-					original_name: f.name,
-					jpegStripped: false
+					upload_name: HM.RemoveFileName ? makeRandId(32) + (f_ext ? '.'+ f_ext : '') : f_name,
+					original_name: f_name
 				});
 				
 			// Closure to capture the file information.
@@ -1392,18 +1416,13 @@ function SimpleMagicExtension() {
 					// Read in the image file as a data URL.
 					getFileReaderData('DataURL', f, function(base64) {
 						// Render thumbnail.
-						if (HM.RemoveExif && theFile.blob.type.toLowerCase() === 'image/jpeg') {
-							var JSE = jpegStripExtra(base64);
-							base64 = JSE.base64String;
+						if (HM.RemoveExif && theFile.blob.type === 'image/jpeg') {
 							theFile['jpegStripped'] = true;
-							theFile.blob = new Blob(JSE.arrayBuffer, {type: theFile.blob.type})
 						}
-						theFile.overlay['Preview'].src = theFile.dataURL = base64;
+						theFile['Preview'].src = theFile.dataURL = base64;
 					});
 					break;
 				case 'text':
-					if (checkfileName(f.name))
-						theFile.overlay['FileName'].textContent = theFile.upload_name = theFile.original_name = (makeRandId(32) +'.txt');
 					// Read in the text file as a UTF-8 encoding text.
 					getFileReaderData('Text', f, function(text) {
 						var canvas = _z.setup('canvas', {'class': 'yf_preview _text', 'width': 150, 'height': 150}),
@@ -1413,23 +1432,15 @@ function SimpleMagicExtension() {
 							context.fillText(cars[i], x, y);
 							y += 11;
 						}
-						_z.replace(theFile.overlay['Preview'], canvas);
-						theFile.overlay['Preview'] = canvas;
+						_z.replace(theFile['Preview'], canvas);
+						theFile['Preview'] = canvas;
 					});
 					break;
 				default:
-					if (checkfileName(f.name)) {
-						if (!f.type || f.type === 'binary/octet-stream') {
-							f_ext = 'bin';
-						} else {
-							f_ext = f_type[1].replace('x-', '');
-						}
-						theFile.overlay['FileName'].textContent = theFile.upload_name = theFile.original_name = (makeRandId(32) +'.'+ f_ext);
-					}
-					theFile.overlay['Preview'].src = Files.arch.isThere(f_ext) ? '/thumb/generic/archive.png' :
-							Files.audio.isThere(f_ext) ? '/thumb/generic/sound.png' :
-							Files.video.isThere(f_ext) ? (
-								Files.video.indexOf(f_ext) > 5 ? '/thumb/generic/flash.png' : '/src/png/1501/video.png') : '#transparent';
+					theFile['Preview'].src = Files.arch.isThere(f_ext)      ? '/thumb/generic/archive.png' :
+											 Files.audio.isThere(f_ext)     ? '/thumb/generic/sound.png'   :
+											 Files.video.isThere(f_ext)     ? (
+											 Files.video.indexOf(f_ext) > 5 ? '/thumb/generic/flash.png'   : '/src/png/1501/video.png') : '#transparent';
 			}
 		}
 		function yukiAddFile(data) { // FileList object
@@ -1513,8 +1524,8 @@ function SimpleMagicExtension() {
 							}
 						}
 						for (var i = 0; i < fileList.length; i++) {
-							if (HM.RemoveExif && fileList[i].blob.type.toLowerCase() == 'image/jpeg' && !fileList[i]['jpegStripped'] && fileList[i].dataURL) {
-								fileList[i].blob = new Blob(jpegStripExtra(fileList[i].dataURL).arrayBuffer, {type: 'image/jpeg'});
+							if (HM.RemoveExif && fileList[i].blob.type == 'image/jpeg' && fileList[i]['jpegStripped'] && fileList[i].dataURL) {
+								fileList[i].blob = dataURLtoBlob(jpegStripExtra(fileList[i].dataURL), fileList[i].blob.type);
 							}
 							fd.append('file_'+ (i + 1), fileList[i].blob, fileList[i].upload_name);
 							fd.append('file_'+ (i + 1) +'_rating', fileList[i].rating);
@@ -1683,10 +1694,7 @@ function SimpleMagicExtension() {
 			output[posT] = orig[posO];
 			output[posT + 1] = orig[posO + 1];
 			output = new Uint8Array(outData, 0, posT + 2);
-			return {
-				base64String: "data:image/Jpeg;base64," + arrayBufferDataUri(output),
-				arrayBuffer: output
-			}
+			return "data:image/Jpeg;base64," + arrayBufferDataUri(output);
 		}
 		function _t(last) {
 			return (new Date).getTime() - (last ? parseInt(last) : 0);
