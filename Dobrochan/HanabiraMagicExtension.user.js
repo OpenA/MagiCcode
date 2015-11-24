@@ -7,12 +7,12 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.5.5
+// @version 		1.6.0
 // @grant   		none
 // ==/UserScript==
 
 /* Tinycon - A small library for manipulating the Favicon Tom Moor, http://tommoor.com */
-!function(){var a={},b=null,c=null,d=null,e=null,f={},g=window.devicePixelRatio||1,h=16*g,i={width:7,height:9,font:10*g+"px arial",colour:"#fff",background:"#F03D25",fallback:!0,crossOrigin:!0,abbreviate:!0},j=function(){var a=navigator.userAgent.toLowerCase();return function(b){return-1!==a.indexOf(b)}}(),k={ie:j("msie"),chrome:j("chrome"),webkit:j("chrome")||j("safari"),safari:j("safari")&&!j("chrome"),mozilla:j("mozilla")&&!j("chrome")&&!j("safari")},l=function(){for(var a=document.getElementsByTagName("link"),b=0,c=a.length;c>b;b++)if((a[b].getAttribute("rel")||"").match(/\bicon\b/))return a[b];return!1},m=function(){for(var a=document.getElementsByTagName("link"),b=document.getElementsByTagName("head")[0],c=0,d=a.length;d>c;c++){var e="undefined"!=typeof a[c];e&&(a[c].getAttribute("rel")||"").match(/\bicon\b/)&&b.removeChild(a[c])}},n=function(){if(!c||!b){var a=l();c=b=a?a.getAttribute("href"):"/favicon.ico"}return b},o=function(){return e||(e=document.createElement("canvas"),e.width=h,e.height=h),e},p=function(a){if(a){m();var b=document.createElement("link");b.type="image/x-icon",b.rel="icon",b.href=a,document.getElementsByTagName("head")[0].appendChild(b)}},q=function(a,b){if(!o().getContext||k.ie||k.safari||"force"===f.fallback)return r(a);var c=o().getContext("2d"),b=b||"#000",e=n();d=document.createElement("img"),d.onload=function(){c.clearRect(0,0,h,h),c.drawImage(d,0,0,d.width,d.height,0,0,h,h),(a+"").length>0&&s(c,a,b),t()},!e.match(/^data/)&&f.crossOrigin&&(d.crossOrigin="anonymous"),d.src=e},r=function(a){if(f.fallback){var b=document.title;"("===b[0]&&(b=b.slice(b.indexOf(" "))),(a+"").length>0?document.title="("+a+") "+b:document.title=b}},s=function(a,b,c){"number"==typeof b&&b>99&&f.abbreviate&&(b=u(b));var d=(b+"").length-1,e=f.width*g+6*g*d,i=f.height*g,j=h-i,l=h-e-g,m=16*g,n=16*g,o=2*g;a.font=(k.webkit?"bold ":"")+f.font,a.fillStyle=f.background,a.strokeStyle=f.background,a.lineWidth=g,a.beginPath(),a.moveTo(l+o,j),a.quadraticCurveTo(l,j,l,j+o),a.lineTo(l,m-o),a.quadraticCurveTo(l,m,l+o,m),a.lineTo(n-o,m),a.quadraticCurveTo(n,m,n,m-o),a.lineTo(n,j+o),a.quadraticCurveTo(n,j,n-o,j),a.closePath(),a.fill(),a.beginPath(),a.strokeStyle="rgba(0,0,0,0.3)",a.moveTo(l+o/2,m),a.lineTo(n-o/2,m),a.stroke(),a.fillStyle=f.colour,a.textAlign="right",a.textBaseline="top",a.fillText(b,2===g?29:15,k.mozilla?7*g:6*g)},t=function(){o().getContext&&p(o().toDataURL())},u=function(a){for(var b=[["G",1e9],["M",1e6],["k",1e3]],c=0;c<b.length;++c)if(a>=b[c][1]){a=v(a/b[c][1])+b[c][0];break}return a},v=function(a,b){var c=new Number(a);return c.toFixed(b)};a.setOptions=function(a){f={};for(var b in i)f[b]=a.hasOwnProperty(b)?a[b]:i[b];return this},a.setImage=function(a){return b=a,t(),this},a.setBubble=function(a,b){return a=a||"",q(a,b),this},a.reset=function(){p(c)},a.setOptions(i),"function"==typeof define&&define.amd?define(a):"undefined"!=typeof module?module.exports=a:window.Tinycon=a}();
+!function(){var a={},b=null,c=null,d=null,e=null,f={},g=window.devicePixelRatio||1,h=16*g,i={width:7,height:9,font:10*g+"px arial",colour:"#fff",background:"#F03D25",fallback:!0,crossOrigin:!0,abbreviate:!0},j=function(){var a=navigator.userAgent.toLowerCase();return function(b){return-1!==a.indexOf(b)}}(),k={ie:j("msie"),chrome:j("chrome"),webkit:j("chrome")||j("safari"),safari:j("safari")&&!j("chrome"),mozilla:j("mozilla")&&!j("chrome")&&!j("safari")},l=function(){for(var a=document.getElementsByTagName("link"),b=0,c=a.length;c>b;b++)if((a[b].getAttribute("rel")||"").match(/\bicon\b/))return a[b];return!1},m=function(){for(var a=document.getElementsByTagName("link"),b=document.getElementsByTagName("head")[0],c=0,d=a.length;d>c;c++){var e="undefined"!=typeof a[c];e&&(a[c].getAttribute("rel")||"").match(/\bicon\b/)&&b.removeChild(a[c])}},n=function(){if(!c||!b){var a=l();c=b=a?a.getAttribute("href"):"/favicon.ico"}return b},o=function(){return e||(e=document.createElement("canvas"),e.width=h,e.height=h),e},p=function(a){if(a){m();var b=document.createElement("link");b.type="image/x-icon",b.rel="icon",b.href=a,document.getElementsByTagName("head")[0].appendChild(b)}},q=function(a,b){if(!o().getContext||k.ie||k.safari||"force"===f.fallback)return r(a);var c=o().getContext("2d"),b=b||"#000",e=n();d=document.createElement("img"),d.onload=function(){c.clearRect(0,0,h,h),c.drawImage(d,0,0,d.width,d.height,0,0,h,h),(a+"").length>0&&s(c,a,b),t()},!e.match(/^data/)&&f.crossOrigin&&(d.crossOrigin="anonymous"),d.src=e},r=function(a){if(f.fallback){var b=document.title;"("===b[0]&&(b=b.slice(b.indexOf(" "))),(a+"").length>0?document.title="("+a+") "+b:document.title=b}},s=function(a,b,c){"number"==typeof b&&b>99&&f.abbreviate&&(b=u(b));var d=(b+"").length-1,e=f.width*g+6*g*d,i=f.height*g,j=h-i,l=h-e-g,m=16*g,n=16*g,o=2*g;a.font=(k.webkit?"bold ":"")+f.font,a.fillStyle=f.background,a.strokeStyle=f.background,a.lineWidth=g,a.beginPath(),a.moveTo(l+o,j),a.quadraticCurveTo(l,j,l,j+o),a.lineTo(l,m-o),a.quadraticCurveTo(l,m,l+o,m),a.lineTo(n-o,m),a.quadraticCurveTo(n,m,n,m-o),a.lineTo(n,j+o),a.quadraticCurveTo(n,j,n-o,j),a.closePath(),a.fill(),a.beginPath(),a.strokeStyle="rgba(0,0,0,.3)",a.moveTo(l+o/2,m),a.lineTo(n-o/2,m),a.stroke(),a.fillStyle=f.colour,a.textAlign="right",a.textBaseline="top",a.fillText(b,2===g?29:15,k.mozilla?7*g:6*g)},t=function(){o().getContext&&p(o().toDataURL())},u=function(a){for(var b=[["G",1e9],["M",1e6],["k",1e3]],c=0;c<b.length;++c)if(a>=b[c][1]){a=v(a/b[c][1])+b[c][0];break}return a},v=function(a,b){var c=new Number(a);return c.toFixed(b)};a.setOptions=function(a){f={};for(var b in i)f[b]=a.hasOwnProperty(b)?a[b]:i[b];return this},a.setImage=function(a){return b=a,t(),this},a.setBubble=function(a,b){return a=a||"",q(a,b),this},a.reset=function(){p(c)},a.setOptions(i),"function"==typeof define&&define.amd?define(a):"undefined"!=typeof module?module.exports=a:window.Tinycon=a}();
 //Copyright (c) 2015 Tom Moor @license MIT Licensed @version 0.6.4
 
 /* SpelzZ - a lightweight Node Work Tool */
@@ -32,14 +32,13 @@
 			e.stack = e.stack.replace(new RegExp(e.fileName, 'g'), '');
 		console.error(e)
 	}
-	function $each(obj, Fn) {
-		var el = typeof obj === 'string' ? document.querySelectorAll(obj) : obj;
+	function $each(el, Fn) {
+		el = typeof el === 'string' ? document.querySelectorAll(el) : el;
 		Array.prototype.slice.call(el, 0).forEach(Fn)
 	}
-	function $setup(obj, attr, events) {
-		var el;
-		if (obj) {
-			el = typeof obj === 'string' ? document.createElement(obj) : obj;
+	function $setup(el, attr, events) {
+		if (el) {
+			el = typeof el === 'string' ? document.createElement(el) : el;
 			if (attr) {
 				for (var key in attr) {
 					attr[key] === undefined ? el.removeAttribute(key) :
@@ -67,36 +66,40 @@
 		return el;
 	}
 	function $nodeUtil(p, el, nodes) {
-		if (typeof el === 'string')
-			el = document.querySelector(el);
-		if (nodes && !Array.isArray(nodes))
-			nodes = [nodes];
-		var i, node, meth = p.toLowerCase(), Child, Parent = el.parentNode;
-		switch (meth) {
-			case 'append':
-				for (i = 0; node = nodes[i++];) {
-					el.appendChild(node);
-				}
-				break;
-			case 'remove':
-				$each(el, function(child) {
-					child.parentNode.removeChild(child);
-				});
-				break;
-			case 'replace':
-				Parent.replaceChild(nodes[0], el);
-				break;
-			default:
-				switch (meth) {
-					case 'after': Child = el.nextSibling;
-						break;
-					case 'before': Child = el;
-						break;
-					case 'prepend': Child = el.childNodes[0], Parent = el;
-				}
-				for (i = 0; node = nodes[i++];) {
-					Parent.insertBefore(node, Child);
-				}
+		if (el) {
+			var i, node, meth = p.toLowerCase(), Child, Parent;
+			switch (meth) {
+				case 'remove':
+					$each(el, function(child) {
+						child.parentNode.removeChild(child);
+					});
+					break;
+				default:
+					el = typeof el === 'string' ? document.querySelector(el) : el;
+					nodes = nodes && !Array.isArray(nodes) ? [nodes] : nodes;
+					Parent = el.parentNode;
+					switch (meth) {
+						case 'append':
+							for (i = 0; node = nodes[i++];) {
+								el.appendChild(node);
+							}
+							break;
+						case 'replace':
+							Parent.replaceChild(nodes[0], el);
+							break;
+						default:
+							switch (meth) {
+								case 'after': Child = el.nextSibling;
+									break;
+								case 'before': Child = el;
+									break;
+								case 'prepend': Child = el.childNodes[0], Parent = el;
+							}
+							for (i = 0; node = nodes[i++];) {
+								Parent.insertBefore(node, Child);
+							}
+					}
+			}
 		}
 	}
 	function $route(el, Fn) {
@@ -154,37 +157,50 @@
 })();
 
 (function initStore() {
-	var User = JSON.parse(localStorage.getItem('User'));
-	if (localStorage.getItem('oEmbedAPI') == 'false') {
-		sessionStorage.setItem('LinksCache', '{}');
-	}
-	if (!User || !User.tokens[0] || User.modified) {
-		var apiReq = new XMLHttpRequest();
-			apiReq.open('GET', '/api/user.json', true);
-			apiReq.onreadystatechange = function() {
-				if (this.readyState !== 4)
-					return;
-				if (this.status === 200) {
-					localStorage.setItem('User', this.responseText);
-					initScripts();
+	try { 
+		var User = JSON.parse(localStorage.getItem('User'));
+		if (localStorage.getItem('oEmbedAPI') == 'false') {
+			sessionStorage.setItem('LinksCache', '{}');
+		}
+		if (!User || !User.tokens[0] || User.modified) {
+			var apiReq = new XMLHttpRequest();
+				apiReq.open('GET', '/api/user.json', true);
+				apiReq.onreadystatechange = function() {
+					if (this.readyState !== 4)
+						return;
+					if (this.status === 200) {
+						localStorage.setItem('User', this.responseText);
+						initScripts();
+					}
 				}
-			}
-			apiReq.send(null);
-	} else {
-		initScripts();
+				apiReq.send(null);
+		} else {
+			initScripts();
+		}
+	} catch(e) {
+		_z.dbg(e)
+	} finally {
+		localStorage.removeItem('EmbedIn');
+		localStorage.removeItem('VideoSize');
+		localStorage.removeItem('AlbumArts');
+		localStorage.removeItem('LinksCache');
 	}
 })();
 
 function MagicExtension() {
 	var HM = {
-		MC: _z.localS.get('EmbedIn', 1), ThreadListener: {}, PostConstructor: {},
-		zIndex: 1, DragableObj: null, Played: null, LastKey: null,
-		VActive: [], RepliesMap: {}, AlbumArts: {}, URL: ParseUrl(),
+		zIndex: 1, UnreadCount: 0, DragableObj: null, Played: null, LastKey: null,
+		ThreadListener: {}, LoadedPosts: {}, VActive: [], RepliesMap: {}, AlbumArts: {}, URL: ParseUrl(),
+		APIKey: _z.localS.get('APIKey', '9cccaccb6ddc490a97bcd2ba6c282191'),
 		LinksMap: JSON.parse(_z.sessionS.get('LinksCache', '{}')),
 		oEmbedAPI: _z.localS.get('oEmbedAPI', true),
 		maXrating: _z.localS.get('maXrating', 'SFW'),
+		FormStyle: _z.localS.get('FormStyle', 1),
 		RemoveExif: _z.localS.get('RemoveExif', true),
 		AutoUpdate: _z.sessionS.get('AutoUpdate', true),
+		EmbedField: _z.localS.get('EmbedField', 1),
+		AspectRatio: _z.localS.get('AspectRatio', 1),
+		PictureView: _z.localS.get('PictureView', 1),
 		SoundNotify: _z.sessionS.get('SoundNotify', false),
 		AttachPopups: _z.localS.get('AttachPopups', true),
 		RemoveFileName: _z.localS.get('RemoveFileName', false),
@@ -193,16 +209,39 @@ function MagicExtension() {
 		User: JSON.parse(_z.localS.get('User', '{}'))
 	},
 	Megia = {
-		'video': new MagicContent(),
-		'scbc': new MagicContent(),
-		'docs': new MagicContent(true),
-		'pdf': new MagicContent(true)
+		'image': new MagicPicture(),
+		'video': new MagicEmbeds(),
+		'scbc': new MagicEmbeds(),
+		'docs': new MagicEmbeds(true),
+		'pdf': new MagicEmbeds(true)
 	},
+	AspectSize = {
+		W: [360, 480, 720, 854],
+		H: [270, 360, 480, 576]},
 	Files = {
 		audio: ['wav', 'm4a', 'm4r', 'aac', 'ogg', 'mp3', 'opus', 'flac', 'alac'],
-		video: ['webm', 'ogv', 'ogm', 'mp4', 'm4v', 'flv', '3gp', 'swf'],
-		image: ['jpeg', 'jpg', 'png', 'svg', 'gif'],
+		video: ['webm', 'ogv', 'ogm', 'mp4', 'm4v', 'flv', '3gp', 'swf', '3gpp'],
+		image: ['jpeg', 'jpg', 'png', 'svg', 'gif', 'bmp', 'ico', 'webp'],
 		arch: ['zip', 'rar', '7z']},
+	Names = {
+		'en': ['Anonymous', 'Developer', 'Lawrense', 'Anonymous Expert', 'Slowpoke', 'Experimenter'],
+		'ru': ['Анонимус', 'Доброкодер', 'Лоуренс', 'Анонимный эксперт', 'Добропок', 'Экспериментатор'],
+		 get: function(brd, name) {
+			var i, l = LC.lng[lng];
+			if (name) {
+				i = this['ru'].indexOf(name);
+				return (i >= 0 ? this[l][i] : name);
+			}
+			switch ((brd || HM.URL.board)) {
+				case 's'   : i = 1; break;
+				case 'sw'  : i = 2; break;
+				case 'wn'  : i = 3; break;
+				case 'slow': i = 4; break;
+				case 'mad' : i = 5; break;
+				default    : i = 0;
+			}
+			return this[l][i];
+		}},
 	KeyCodes = {
 		symbs: ['"', '*', '(', '`', '%', '~'],
 		codew: ['{', '[', '(', '\'', '"'],
@@ -224,11 +263,10 @@ function MagicExtension() {
 		omit: [" omited ", " ответов "],
 		delp: [" deleted ", " удаленных "],
 		pmod: [' pre-moderated', ' на премодерации'],
-		wsec: ['Wait a Second...', 'Секунду...'],
 		subscrb: ["Subscribe", "Отслеживать"],
-		postdel: ["Post is deleted.", "Пост удалён."],
 		txtspoils: ["Disclose text spoilers", "Раскрывать текстовые спойлеры"],
 		clck_img_to: [" - Click the image", " - Нажмите на картинку"],
+		broken_link: ["Broken and useless URL Link", "Нерабочая и абсолютно бесполезная ссылка"],
 		cens: ['Your censorship settings forbid this file.', 'Ваши настройки цензуры запрещают этот файл.'],
 		expd: [" to expand", " для увеличения"],
 		vitf: [" to view this file", " для просмотра"],
@@ -240,15 +278,12 @@ function MagicExtension() {
 		line: [" line", " строк"],
 		all: [" All", " все"],
 		add: ["Add", "Добавить"],
+		to: ['to', 'в'],
 		hidden: [
 			['Hidden ', 'Cкрытый '],
 			['Thread', 'тред'],
 			['Post', 'пост']
 		],
-		names: {
-			'en': ['Anonymous', 'Developer', 'Lawrense', 'Anonymous Expert', 'Slowpoke', 'Experimenter'],
-			'ru': ['Анонимус', 'Доброкодер', 'Лоуренс', 'Анонимный эксперт', 'Добропок', 'Экспериментатор']
-		},
 		tm: {
 			's': ['sec', 'cек'],
 			'm': ['min', 'мин'],
@@ -285,11 +320,11 @@ function MagicExtension() {
 			["(Fri)", "(Пт)"],
 			["(Sat)", "(Cб)"]
 		]
-	}
+	},
 	
-	var locationThread, UrlCache = HM.LinksMap, unread_count = 0,
-		lng = (LC.lng.indexOf(HM.User.language) > -1 ? LC.lng.indexOf(HM.User.language) : 1),
-		Chanabira = new CharmingHanabira(), mEl = new MagicElements(), Nagato = new Yuki(true);
+	UrlCache = JSON.parse(_z.sessionS.get('LinksCache', '{}')), stopCloseReact = false,
+	lng = (LC.lng.indexOf(HM.User.language) > -1 ? LC.lng.indexOf(HM.User.language) : 1),
+	Chanabira = new CharmingHanabira(), mEl = new MagicElements(), Nagato = new Yuki(true);
 	
 	/***--[ Utilites ]--***/
 	Array.prototype.isThere = matchIndex;
@@ -297,6 +332,19 @@ function MagicExtension() {
 	Array.prototype.last = getLast;
 	NodeList.prototype.last = getLast;
 	HTMLCollection.prototype.last = getLast;
+	HTMLCollection.prototype.indexOf = function(node) {
+		for (var idx = this.length -1; this[idx]; idx--) {
+			if (this[idx] === node)
+				return idx;
+		}
+		return -1;
+	};
+	Array.prototype.move = function (old_index, new_index) {
+		if (new_index >= this.length) {
+			return;
+		} else
+			this.splice(new_index, 0, this.splice(old_index, 1)[0]);
+	};
 	String.prototype.allReplace = function(obj, r) {
 		var retStr = this;
 		for (var x in obj) {
@@ -308,7 +356,7 @@ function MagicExtension() {
 		return new Array(num + 1).join(this);
 	}
 	String.prototype.fext = function() {
-		return this.split('.').pop().toLowerCase();
+		return (this.match(/[^\.]+$/) || [''])[0].toLowerCase();
 	}
 	String.prototype.hashCode = function() {
 		var hash = i = 0, chr, len,
@@ -328,11 +376,14 @@ function MagicExtension() {
 	function matchIndex(str) {
 		return this.indexOf(str) >= 0;
 	}
-	function setupOptions(obj, option, stor) {
-		if (obj.type === 'checkbox')
-			val = obj.checked;
-		if (obj.tagName === 'SELECT')
-			val = obj.value;
+	function setupOptions(input, option, stor, val) {
+		switch (input.type) {
+			case 'checkbox':
+				val = input.checked;
+				break;
+			default:
+				val = (input.value || val || 0);
+		}
 		HM[option] = val;
 		_z[stor +'S'].set(option, val);
 	}
@@ -343,20 +394,23 @@ function MagicExtension() {
 			left: box.left + pageXOffset
 		}
 	}
-	function getVSize(arg) {
-		var out, n = _z.localS.get('VideoSize', 2),
-			w = (n == 4 ? 854 : n == 3 ? 720 : n == 2 ? 480 : 360),
-			h = (n == 4 ? 576 : n == 3 ? 480 : n == 2 ? 360 : 270);
-		switch (arg) {
-			case 'html' : out = 'width="'+w+'" height="'+h+'"';
-				break;
-			case 'value': out = n;
-				break;
-			case 'text' : out = w+'×'+h;
-				break;
-			default     : out = [w, h];
+	function adaptSize(origS, sMax, sMin) {
+		var nW, nH,
+			ratio = origS[1] / origS[0];
+		if (sMin && sMin > origS[0] && sMin > origS[1]) {
+			nW = ratio <= 1 ? sMin : sMin / ratio;
+			nH = ratio <= 1 ? sMin * ratio : sMin;
+		} else if (sMin && sMax > origS[0] && sMax > origS[1]) {
+			nW = origS[0];
+			nH = origS[1];
+		} else if (ratio <= 1) {
+			nW = sMax;
+			nH = sMax * ratio;
+		} else {
+			nH = sMax;
+			nW = sMax / ratio;
 		}
-		return out;
+		return { width: nW, height: nH };
 	}
 	function escapeUrl(url) {
 		var eUrl = encodeURI(url).allReplace({'%2?5?E2%2?5?80%2?5?8B': '', '%2?5?3C/?\\w*%2?5?3E': '', '%2?5?22': ''});
@@ -373,15 +427,6 @@ function MagicExtension() {
 		var m = (url || document.location.href).match(/(?:https?:\/\/([^\/]+))?\/([^\/]+)\/(?:(\d+)|res\/(\d+)|(\w+))(?:\.x?html)?(#i?(\d+))?/);
 		return m ? {host: m[1], board: m[2], page: m[3], thread: m[4], desk: m[5], pointer: m[6], pid: m[7]} : {};
 	}
-	function GetElements(el) { 
-		var node = el || document;
-		return {
-			images: node.querySelectorAll('.file > a > img.thumb[onclick^="expand_image"], .file > a[href$=".svg"] > img'),
-			links: node.querySelectorAll('.message a:not(#cm-link):not(.reply-link)'),
-			elements: node.querySelectorAll('.fileinfo, .postername:not(.t-sec), .postertrip:not(.t-sec), .reply_, .file > a[href$=".swf"] > img, img[alt^="r-1"]:not(.spr-image), img[alt="unrated"]:not(.spr-image), img[alt="illegal"]:not(.spr-image), .file > a > img[src="/thumb/generic/sound.png"], .file > a[href$=".webm"] > img, .file > a[href$=".pdf"] > img, .file > a > img[onclick^="open_url"]')
-		}
-	}
-
 	function SwapL(str, lang) {
 		if (lang === 'ru') {
 			str = str.replace(/[\-=0-9]/,'').replace(/`/, "ё").replace(/q/i, "й").replace(/w/i, "ц").replace(/e/i, "у").replace(/r/i, "к").replace(/t/i, "е").replace(/y/i, "н").replace(/u/i, "г").replace(/i/i, "ш").replace(/o/i, "щ").replace(/p/i, "з").replace(/\[/, "х").replace(/[\]\\]/, "ъ").replace(/a/i, "ф").replace(/s/i, "ы").replace(/d/i, "в").replace(/f/i, "а").replace(/g/i, "п").replace(/h/i, "р").replace(/j/i, "о").replace(/k/i, "л").replace(/l/i, "д").replace(/;/, "ж").replace(/'/, "э").replace(/z/i, "я").replace(/x/i, "ч").replace(/c/i, "с").replace(/v/i, "м").replace(/b/i, "и").replace(/n/i, "т").replace(/m/i, "ь").replace(/,/, "б").replace(/[\.\/]/, "ю");
@@ -394,9 +439,8 @@ function MagicExtension() {
 	function _show (el) { el.classList.remove('hidout') }
 	function _shide(el) { el.classList.toggle('hidout') }
 	function _hide (el) { el.classList.add('hidout') }
-	function _cid(pid) {
-		var n = /(\d+)/.exec(pid);
-		return (Number(n[1]) || 0);
+	function _cid(ns) {
+		return Number(ns.match(/-?\d+(?:.\d+)?/));
 	}
 	function _unc(str, n) {
 		return (str || n || 'Unknown');
@@ -416,6 +460,10 @@ function MagicExtension() {
 			base64String += String.fromCharCode(arr[i]);
 		}
 		return btoa(base64String)
+	}
+	function _scrollIfOverPage(elem) {
+		if (elem.offsetTop < pageYOffset || elem.offsetTop > (pageYOffset + window.innerHeight))
+			elem.scrollIntoView();
 	}
 	
 	/************************************************************************/
@@ -440,11 +488,34 @@ function MagicExtension() {
 		}
 	}
 	function getUrlData(TYPE, Source, Fn){
-		var dtReq = new XMLHttpRequest();
-			dtReq.responseType = TYPE.toLowerCase();
-			dtReq.onload = Fn;
-			dtReq.open('GET', Source, true);
-			dtReq.send();
+		if (typeof GM_xmlhttpRequest !== 'undefined') {
+			GM_xmlhttpRequest({
+				method: 'GET',
+				responseType: TYPE.toLowerCase(),
+				url: Source,
+				onload: function(gm_xhr) {
+					if (gm_xhr.readyState !== 4)
+						return;
+					if (gm_xhr.status === 200) {
+						Fn(gm_xhr.response, gm_xhr.finalUrl, gm_xhr);
+						Fn = null;
+					}
+				}
+			});
+		} else {
+			var dtReq = new XMLHttpRequest();
+				dtReq.responseType = TYPE.toLowerCase();
+				dtReq.onload = function() {
+					if (this.readyState !== 4)
+						return;
+					if (this.status === 200) {
+						Fn(this.response, this.responseURL, this);
+						Fn = null;
+					}
+				};
+				dtReq.open('GET', Source, true);
+				dtReq.send(null);
+		}
 	}
 	function getFileReaderData(readAs, file, Fn) {
 		var reader = new FileReader();
@@ -553,36 +624,24 @@ function MagicExtension() {
 		}
 	}
 	
-	function getDefaultName(name) {
-		var i, l = LC.lng[lng];
-		if (name) {
-			i = LC.names['ru'].indexOf(name)
-			return (i >= 0 ? LC.names[l][i] : name)
-		} else {
-			switch (HM.URL.board) {
-				case 's'   : i = 1; break;
-				case 'sw'  : i = 2; break;
-				case 'wn'  : i = 3; break;
-				case 'slow': i = 4; break;
-				case 'mad' : i = 5; break;
-				default    : i = 0;
-			}
-			return LC.names[l][i]
-		}
-	}
-	
 	function markAsRead(new_post) {
 		if (new_post) {
-			unread_count--;
+			HM.UnreadCount--;
 			new_post.classList.remove('new');
-			Tinycon.setBubble(unread_count);
+			Tinycon.setBubble(HM.UnreadCount);
 		} else {
 			_z.each('.replypost.new', function(replypost_new) {
 				replypost_new.classList.remove('new');
 			});
 			Tinycon.setBubble(0);
-			unread_count = 0;
+			HM.UnreadCount = 0;
 		}
+	}
+	
+	function stepZup() {
+		HM.zIndex++;
+		stopCloseReact = true;
+		this.style['z-index'] = HM.zIndex;
 	}
 	
 	/*** Magic Thread Listener ***/
@@ -590,7 +649,7 @@ function MagicExtension() {
 		var MListen = this, CiD = HM.URL.thread, Posts, thread_updating, play_notify, Autosage,
 			Timer = { id: 0, offset: 0, ql: UpdateInterval(0) },
 			Count = { dif: 0, new: 0, del: 0, mod: 0 },
-			WarningMsg = _z.setup('strong', {'id': 'warning-massage', 'class': 'blink'}, null),
+			WarningMsg = _z.setup('strong', {'id': 'warning-massage', 'class': 'blink'}),
 			SageIcon = '<span class="sagearrow line-sect" style="right:6px;"></span>',
 			ExpCache = new Array(0),
 			Notif = _z.setup('audio', {'html': '<source src="/src/mp3/1406/musbox.mp3" type="audio/mpeg"><source src="/src/ogg/1404/musbox.ogg" type="audio/ogg">'}, {
@@ -599,14 +658,13 @@ function MagicExtension() {
 			}),
 			MLLC = {
 				snd_notify: ["Sound Notifications", "Звуковые уведомления"],
-				mrk_to_del: ["Mark to delete", "Отметить для удаления"],
 				loadnew: ["Load New Posts", "Подгрузить посты"],
 				updprog: ["Updating...", "Обновление..."],
 				updauto: ["Autoupdate Thread", "Автообновление треда"],
-				unexpt: ["Unexpand Thread", "Свернуть тред"],
+				unexpt: ["Truncate Thread", "Свернуть тред"],
 				expant: ["Expand Thread", "Развернуть тред"],
 				expdin: ["Expanding...", 'Разворачивается...'],
-				unexin: ["Unexpanding...", 'Сворачивается...'],
+				unexin: ["Truncating...", 'Сворачивается...'],
 				dsl: {
 					'quet': ['Quet Mode', 'Тихий режим'],
 					'autotimer': ['Аutotimer', 'Автотаймер'],
@@ -615,8 +673,8 @@ function MagicExtension() {
 			}
 		if (Thread) {
 			CiD = _cid(Thread.id);
-			Autosage = Thread.querySelector('img[src="/images/autosage.gif"]');
 			Posts = Thread.getElementsByClassName('post');
+			Autosage = Thread.querySelector('img[src="/images/autosage.gif"]');
 			this.updateThread = updateThread; this.updateTimer = updateTimer; this.expandThread = expandThread; this.truncatThread = truncatThread; this.getThread = getHanabiraFullThread;
 			function el$(child) { return MListen['NewPostLoader'].querySelector(child) }
 			this['NewPostLoader'] = _z.setup('span', {'id': 'new-post-loader', 'html': '<div class="stat-line"><a id="load-new">'+ MLLC.loadnew[lng] +
@@ -663,7 +721,7 @@ function MagicExtension() {
 			this['PostsCount'] = _z.setup('label', {'id': 'post-count', 'class': 'etch-text break-lines', 'html': (Autosage ? SageIcon : '') + Posts.length + LC.omit[lng]});
 			this['SpeedCount'] = _z.setup('label', {'id': 'speed-count', 'class': 'etch-text', 'html': speedMether(Posts)[0]});
 			this['AllowedPosts'] = _z.setup('label', {'id': 'allowed-posts', 'class': 'etch-text', 'html': '<span class="rl-inf">'+ LC.allw[lng] +':&nbsp;\n</span>'});
-			this['setInterval'] = _z.setup(el$('#int-val'), {'value': Timer.ql.int}, null);
+			this['setInterval'] = _z.setup(el$('#int-val'), {'value': Timer.ql.int});
 		} else {
 			return {
 				getSpeedCount: speedMether,
@@ -735,31 +793,31 @@ function MagicExtension() {
 			if (HM.AutoUpdate) {
 				Timer.ql = UpdateInterval(Timer.offset);
 				Timer.id = setTimeout(function() {
-						if (Timer.ql.value === 'quet') {
-							getDataResponse('/api/thread/'+ HM.URL.board +'/'+ CiD +'.json?new_format',
-								function(status, sText, json, xhr) {
-									if (json.result) {
-										Autosage = json.result.autosage;
-										updateCount(json.result.posts_count);
-										Timer.offset += Count.new > 0 ? 0 : 15;
-										var postStat = (Count.new > 0 ? '<span class="break-midot">\n+'+ Count.new + LC.newp[lng] +'</span>' : '') + (Count.del < 0 ? '<span class="break-midot">\n'+
-											Count.del + LC.delp[lng] +'</span>' : '') + (Count.mod > 0 ? '<span class="break-midot">\n'+ Count.mod + LC.pmod[lng] +'</span>' : '');
-										MListen['PostsCount'].innerHTML = (Autosage ? SageIcon : '') + Posts.length + LC.omit[lng] + (postStat ? '<span class="parensis">'+ postStat +'</span>' : '');
-									}
-								});
-							updateTimer();
-						} else
-							updateThread(15, true);
+					if (Timer.ql.value === 'quet') {
+						getDataResponse('/api/thread/'+ HM.URL.board +'/'+ CiD +'.json?new_format',
+							function(status, sText, json, xhr) {
+								if (json.result) {
+									Autosage = json.result.autosage;
+									updateCount(json.result.posts_count);
+									Timer.offset += Count.new > 0 ? 0 : 15;
+									var postStat = (Count.new > 0 ? '<span class="break-midot">\n+'+ Count.new + LC.newp[lng] +'</span>' : '') + (Count.del < 0 ? '<span class="break-midot">\n'+
+										Count.del + LC.delp[lng] +'</span>' : '') + (Count.mod > 0 ? '<span class="break-midot">\n'+ Count.mod + LC.pmod[lng] +'</span>' : '');
+									MListen['PostsCount'].innerHTML = (Autosage ? SageIcon : '') + Posts.length + LC.omit[lng] + (postStat ? '<span class="parensis">'+ postStat +'</span>' : '');
+								}
+							});
+						updateTimer();
+					} else
+						updateThread(15, true);
 				}, Timer.ql.int * 1000);
 			}
 		}
 		function expandThread(e) {
 			if (ExpCache.length === 0) {
-				statusButton(e.target, 0)
-				getHanabiraFullThread(e.target, ExpCache)
+				statusButton(e.target, 0);
+				getHanabiraFullThread(e.target, ExpCache);
 			} else {
-				_z.after(Thread.firstElementChild, ExpCache)
-				e.target.textContent = MLLC.unexpt[lng]
+				_z.after(Thread.firstElementChild, ExpCache);
+				e.target.textContent = MLLC.unexpt[lng];
 			}
 		}
 		function truncatThread(e) {
@@ -768,8 +826,7 @@ function MagicExtension() {
 		}
 		function statusButton(btn, v) {
 			switch (btn.id) {
-				case 'load-new': btn.textContent = [MLLC.updprog[lng], MLLC.loadnew[lng]][v];
-					break;
+				case 'load-new': 
 				case 'dummy-load': btn.textContent = [MLLC.updprog[lng], MLLC.loadnew[lng]][v];
 					break;
 				case 'thread-expand': btn.textContent = [MLLC.expdin[lng], MLLC.expant[lng]][v];
@@ -785,105 +842,114 @@ function MagicExtension() {
 			statusButton(UpdBtn, 0)
 			getDataResponse('/api/thread/'+ HM.URL.board +'/'+ CiD +'/new.json?new_format&message_html&last_post='+ _cid(Posts.last().id),
 			function(status, sText, json, xhr) {
-				var i, temp_post, el, pCount, len, error;
-				if (status !== 200 || json.error) {
-					error = _z.setup(WarningMsg, {'text': (json.error ? json.error.message +' '+ json.error.code : status +' '+ sText)});
-					error.dozZe = function(e) {
-						if (this.iterations >= 8) {
-							_z.replace(this, UpdBtn);
-							if (rexk)
-								updateTimer();
-							this.iterations = 0;
-						}
-					}
-					_z.replace(UpdBtn, error);
-				} else {
-					Autosage = json.result.autosage;
-					pCount = json.result.posts_count;
-					el = json.result.posts;
-					len = el ? el.length : 0;
-					Count.dif = Count.new = 0;
-					if (len > 0) {
-						Timer.offset = 0;
-						for (i = 0; i < len; i++) {
-							try {
-								temp_post = getHanabiraPost(el[i]);
-							} catch(e) { _z.dbg(e) } finally {
-								Thread.appendChild(temp_post);
+				try {
+					var i, temp_post, el, pCount, len, error;
+					if (status !== 200 || json.error) {
+						error = _z.setup(WarningMsg, {'text': (json.error ? json.error.message +' '+ json.error.code : status +' '+ sText)});
+						error.dozZe = function(e) {
+							if (this.iterations >= 8) {
+								_z.replace(this, UpdBtn);
+								if (rexk)
+									updateTimer();
+								this.iterations = 0;
 							}
 						}
-						Tinycon.setBubble(unread_count);
-						MListen['SpeedCount'].innerHTML = speedMether(Posts)[0];
-					} else if (typeof e === 'number')
-						Timer.offset += e;
-				}
-				if (rexk && !error) {
-					if (Posts.length != pCount + Count.mod) {
-						updateCount(pCount)
-						return getHanabiraFullThread(UpdBtn);
+						_z.replace(UpdBtn, error);
+					} else {
+						Autosage = json.result.autosage;
+						pCount = json.result.posts_count;
+						el = json.result.posts;
+						len = el ? el.length : 0;
+						Count.dif = Count.new = 0;
+						if (len > 0) {
+							Timer.offset = 0;
+							for (i = 0; i < len; i++) {
+								temp_post = getHanabiraPost(el[i]);
+								Thread.appendChild(temp_post);
+							}
+							Tinycon.setBubble(HM.UnreadCount);
+							MListen['SpeedCount'].innerHTML = speedMether(Posts)[0];
+						} else if (typeof e === 'number')
+							Timer.offset += e;
 					}
-					updateTimer();
+					if (rexk && !error) {
+						if (Posts.length != pCount + Count.mod) {
+							updateCount(pCount)
+							return getHanabiraFullThread(UpdBtn);
+						}
+						updateTimer();
+					}
+					if (e && !error) {
+						MListen['PostsCount'].innerHTML = (Autosage ? SageIcon : '') + pCount + LC.omit[lng] + (Count.mod > 0 ? '<span class="parensis">\n+'+ Count.mod + LC.pmod[lng] +'\n</span>' : '');
+						genReplyMap(Posts);
+					}
+				} catch(e) {
+					_z.dbg(e);
+				} finally {
+					statusButton(UpdBtn, 1);
+					thread_updating = false;
 				}
-				if (e && !error) {
-					MListen['PostsCount'].innerHTML = (Autosage ? SageIcon : '') + pCount + LC.omit[lng] + (Count.mod > 0 ? '<span class="parensis">\n+'+ Count.mod + LC.pmod[lng] +'\n</span>' : '');
-					genReplyMap(Posts);
-				}
-				statusButton(UpdBtn, 1)
-				thread_updating = false;
 			});
 		}
 		function getHanabiraFullThread(UpdBtn, ExpandMap) {
 			getDataResponse('/api/thread/'+ HM.URL.board +'/'+ CiD +'/all.json?new_format&message_html',
 			function(status, sText, json, xhr) {
-				var jsonPosts = json.result.posts, pCount = json.result.posts_count;
-				function pnid(n) { return !Posts[n] ? 99999999 : _cid(Posts[n].id) }
-				function jpid(n) { return !jsonPosts[n] ? 99999999 : jsonPosts[n].display_id }
-				if (jsonPosts.length == Posts.length) {
-					Count.dif = Count.del = 0;
-					Count.mod = Posts.length - pCount;
-				} else {
-					for (var i = 0, derefl, temp_post; i < (Posts.length + Count.new); i++) {
-						switch (true) {
-							case (pnid(i) < jpid(i)):
-								while (pnid(i) < jpid(i)) {
-									var patchId = HM.URL.board +'_'+ json.result.display_id +'_'+ pnid(i);
-									Posts[i].className = 'postdeleted';
-									HM.PostConstructor[patchId].delete_input.remove();
-								}
-								break;
-							case (pnid(i) > jpid(i)):
-								while (pnid(i) > jpid(i)) {
-									var derefl, temp_post = getHanabiraPost(jsonPosts[i], [json.result.archived, json.result.autosage]);
-									if (!Posts[i])
-										Thread.appendChild(temp_post);
-									else
-										_z.before(Posts[i], temp_post);
-									if (ExpandMap) {
-										ExpandMap.push(temp_post);
-									} else {
-										derefl = _z.setup('a', {'class': 'reply-link celrly', 'id': 'nrl-'+ HM.URL.board +'-'+ CiD +'-'+ jpid(i),
-											'href': '/'+ HM.URL.board +'/res/'+ CiD +'.xhtml#i'+ jpid(i), 'text': '>>'+ jpid(i)}, {
-											'click': Chanabira.MagicHighlight, 'mouseover': Chanabira.MagicPostView
-										});
-										_z.after(Thread, MListen['AllowedPosts'])
-										_z.before(MListen['AllowedPosts'].lastElementChild, derefl);
+				try {
+					var jsonPosts = json.result.posts, pCount = json.result.posts_count,
+						pnid = function (n) {
+							return !Posts[n] ? 99999999 : _cid(Posts[n].id)},
+						jpid = function (n) {
+							return !jsonPosts[n] ? 99999999 : jsonPosts[n].display_id}
+					if (jsonPosts.length == Posts.length) {
+						Count.dif = Count.del = 0;
+						Count.mod = Posts.length - pCount;
+					} else {
+						for (var i = 0, derefl, temp_post; i < (Posts.length + Count.new); i++) {
+							switch (true) {
+								case (pnid(i) < jpid(i)):
+									while (pnid(i) < jpid(i)) {
+										var patchId = HM.URL.board +'_'+ json.result.display_id +'_'+ pnid(i);
+										Posts[i].className = 'postdeleted';
+										HM.LoadedPosts[patchId].delete_input.remove();
 									}
-								}
-							default: continue;
+									break;
+								case (pnid(i) > jpid(i)):
+									while (pnid(i) > jpid(i)) {
+										var derefl, temp_post = getHanabiraPost(jsonPosts[i], [json.result.archived, json.result.autosage]);
+										if (!Posts[i]) {
+											Thread.appendChild(temp_post);
+										} else
+											_z.before(Posts[i], temp_post);
+										if (ExpandMap) {
+											ExpandMap.push(temp_post);
+										} else {
+											derefl = _z.setup('a', {'class': 'reply-link celrly', 'id': 'nrl-'+ HM.URL.board +'-'+ CiD +'-'+ jpid(i),
+												'href': '/'+ HM.URL.board +'/res/'+ CiD +'.xhtml#i'+ jpid(i), 'text': '>>'+ jpid(i)}, {
+												'click': Chanabira.MagicHighlight, 'mouseover': Chanabira.MagicPostView
+											});
+											_z.after(Thread, MListen['AllowedPosts'])
+											_z.before(MListen['AllowedPosts'].lastElementChild, derefl);
+										}
+									}
+								default: continue;
+							}
+						}
+						Tinycon.setBubble(HM.UnreadCount);
+						genReplyMap(Posts);
+						Count = { dif: 0, new: 0, del: 0, mod: 0 }
+						if (pCount !== Posts.length && jsonPosts.length === Posts.length) {
+							Count.mod = Posts.length - pCount;
 						}
 					}
-					Tinycon.setBubble(unread_count);
-					genReplyMap(Posts);
-					Count = { dif: 0, new: 0, del: 0, mod: 0 }
-					if (pCount !== Posts.length && jsonPosts.length === Posts.length) {
-						Count.mod = Posts.length - pCount;
-					}
+				} catch(e) {
+					_z.dbg(e);
+				} finally {
+					statusButton(UpdBtn, 1)
+					thread_updating = false;
+					if (!ExpandMap)
+						updateTimer();
+					MListen['PostsCount'].innerHTML = (Autosage ? SageIcon : '') + pCount + LC.omit[lng] + (Count.mod > 0 ? '<span class="parensis">\n+'+ Count.mod + LC.pmod[lng] +'\n</span>' : '');
 				}
-				statusButton(UpdBtn, 1)
-				thread_updating = false;
-				if (!ExpandMap)
-					updateTimer();
-				MListen['PostsCount'].innerHTML = (Autosage ? SageIcon : '') + pCount + LC.omit[lng] + (Count.mod > 0 ? '<span class="parensis">\n+'+ Count.mod + LC.pmod[lng] +'\n</span>' : '');
 			});
 		}
 		function getHanabiraPost(postJson, threadStat, mapArr) {
@@ -896,7 +962,7 @@ function MagicExtension() {
 				len = files.length,
 				op = postJson.op,
 				patchId = board +'_'+ threadId +'_'+ postId,
-				wrap = _z.setup((op ? 'div' : 'table'), {'id': 'post_'+ postId, 'class': (op ? 'oppost' : 'replypost' + (archive ? '' : ' new')) +' post', 'patch-id': patchId}, {'click': PDownListener}),
+				wrap = _z.setup((op ? 'div' : 'table'), {'id': 'post_'+ postId, 'class': (op ? 'oppost' : 'replypost' + (archive ? '' : ' new')) +' post', 'patch-id': patchId}, {'click': PDownListener, 'mouseover': Chanabira.MagicPostView}),
 				html = (op ? '' : '<tbody><tr><td class="doubledash">&gt;&gt;</td><td id="replyr{post_id}" class="reply">') + '<a name="ir{post_id}"></a><label>'+
 						(archive ? '&nbsp;\n' : '<ul class="dropdown line-sect"><li class="dropdown-toggle"><label class="postermenu dropdown-label el-li"></label><ul class="dropdown-menu"><li class="edit-post dropdown-item el-li">Редактировать</li><li class="mod-report dropdown-item el-li">Пожаловаться</li><li class="hide-post dropdown-item el-li">Скрыть</li><li class="delete-post dropdown-item el-li">Удалить<span class="chek-to-del dropdown-input line-sect"></span></li></ul></li></ul>\n') +
 						(op ? '<a class="unsigned icon" onclick="sign_thread(event, \'r{board}\',r{post_id});"><img src="/images/blank.png" title="'+
@@ -904,109 +970,102 @@ function MagicExtension() {
 							'<span class="ipmark" style="background:rgba(0,0,0,.5)">&nbsp;</span><span class="ipmark" style="background:rgba(255,255,255,.5)">&nbsp;</span>'+
 							'<span class="ipmark" style="background:rgba(25,25,25,.6)">&nbsp;</span><span class="ipmark" style="background:rgba(99,99,99,.6)">&nbsp;</span>'+
 							'<span class="ipmark" style="background:rgba(175,175,175,.6)">&nbsp;</span></span>\n<img class="geoicon" src="/src/png/1408/polandball_kawaii_16.png" alt="(^ ^)" title="Polandball (^ ^)">\n' : '') +
-				'<span class="replytitle">'+ postJson.subject +'</span>\n<span class="postername">'+ getDefaultName(postJson.name) +'</span>\n'+
+				'<span class="replytitle">'+ postJson.subject +'</span>\n<span class="postername">'+ Names.get(board, postJson.name) +'</span>\n'+
 				(op && archive ? '<img src="/images/archive.gif" alt="В архиве" title="В архиве">\n' : '') +
 				(op && blimit ? '<img src="/images/autosage.gif" alt="Бамп-лимит" title="Бамп-лимит">\n' : '') + getDateTime(postJson.date) +
-				'\n</label><span class="reflink"><a onclick="Highlight(0, r{post_id})" href="/r{board}/res/r{thread_id}.xhtml#ir{post_id}">No.r{post_id}</a></span>\n<span class="cpanel">'+
+				'\n</label><span class="reflink"><a class="inj-refl" href="/r{board}/res/r{thread_id}.xhtml#ir{post_id}">No.r{post_id}</a></span>\n<span class="cpanel">'+
 				(archive ? '&nbsp;\n' : '<a title="'+ LC.repl[lng] +'" id="r{board}-r{thread_id}-r{post_id}" class="reply-button line-sect txt-btn"></a>') +'</span><br>';
 			for (var i = 0; i < len; i++) {
-				html += getHanabiraFile(files[i], postJson.post_id, board, threadId, postId, (len === 1));
+				html += getHanabiraFile(files[i], postJson.post_id, (len === 1), (board === 'b' || board === 'rf'));
 			}
 			wrap.insertAdjacentHTML('afterbegin', html.allReplace({'r{board}': board, 'r{thread_id}': threadId, 'r{post_id}': postId}) +
 				(len > 1 ? '<br style="clear:both;">' : '') +'<div class="postbody">'+ postJson.message_html +'</div><div class="abbrev"></div>' + (op ? '' : '</td></tr></tbody>'));
-			HM.PostConstructor[patchId] = { el: wrap }
+			HM.LoadedPosts[patchId] = wrap;
 			if (!archive) {
-				HM.PostConstructor[patchId].delete_input = _z.setup('input', {'id': 'delbox_'+ postId, 'class': 'delete_checkbox', 'type': 'checkbox', 'value': postJson.thread_id, 'name': postId});
-				mEl['DeleteOverlay'].appendChild(HM.PostConstructor[patchId].delete_input);
+				HM.LoadedPosts[patchId].delete_input = _z.setup('input', {'id': 'delbox_'+ postId, 'class': 'delete_checkbox', 'type': 'checkbox', 'value': postJson.thread_id, 'name': postId});
+				HM.LoadedPosts[patchId].formBinding  = function(el) { _z.after(this, el) }
+				mEl['DeleteOverlay'].appendChild(HM.LoadedPosts[patchId].delete_input);
 			}
 			if (!mapArr) {
-				unread_count++;
+				HM.UnreadCount++;
 				if (HM.SoundNotify && !play_notify)
 					Notif.play();
 			}
 			if (threadStat)
 				genReplyMap([wrap]);
-			hooLinks(GetElements(wrap).links);
+			handleLinks(wrap, {board: board, thread: threadId, pid: postId});
 			return wrap;
 		}
-		function getHanabiraFile(file, pid, brd, tId, pId, ONE) {
-			var name, meta, frontend, ieClass = cmClass = action = '',
-				src = file.src, fid = file.file_id, m = 0.01572,
-				fmd = file.metadata, imgW = fmd.width, metatype = fmd.type,
-				imgH = fmd.height, rating = file.rating,
+		function getHanabiraFile(file, pid, ONE, RFB) {
+			var meta = frontend = action = filetext = fileinfo = filediv = '',
+				src = file.src, fid = file.file_id, fmd = file.metadata,
+				imgW = fmd.width, metatype = fmd.type, lines = fmd.lines,
+				pages = fmd.pages, files = fmd.files_count, imgH = fmd.height,
+				rating = file.rating, type = (file.type || fmd.type),
 				size = bytesMagnitude(file.size), filename = getPageName(src),
 				maXr = HM.maXrating.toLowerCase(), ext = filename.fext(),
-				lines = fmd.lines, pages = fmd.pages, files = fmd.files_count,
-				type = file.type === 'code' ? 'text' : !file.type ? fmd.type : file.type,
-				R = maXr === rating || maXr.match(/\d+/) >= rating.match(/\d+g?/) || 
-					rating === 'sfw' ? false : true,
+				R = maXr === rating ? false : ((maXr.match(/\d+/)||NaN) >= (rating.match(/\d+g?/)||NaN) ? false : rating !== 'sfw'),
 				thumb = R ? 'images/'+ rating +'.png' : file.thumb,
-				thumbW = 'width="'+ (thumb !== file.thumb ? 200 : file.thumb_width) +'"',
-				thumbH = 'height="'+ (thumb !== file.thumb ? 200 : file.thumb_height) +'"',
-				isImage = ['image', 'vector'].isThere(type);
-			if (brd === 'b' || brd === 'rf') {
-				name = isImage ? getPageName(thumb).split('s')[0] +'.'+ ext :
-						type == 'video' ? fmd["File Name"] : fid.toString() + pid.toString() +'.'+ ext;
-			} else {
-				name = !ONE && filename.length > 17 ? filename.substring(0, 17) + '...' : filename;
-			}
+				thumbW = thumb !== file.thumb ? 200 : file.thumb_width,
+				thumbH = thumb !== file.thumb ? 200 : file.thumb_height,
+				name = RFB ? (['archive', 'flash', 'music'].isThere(type) ? pid +''+ fid +'.'+ ext : getPageName(file.thumb).split('s')[0] +'.'+ ext) :
+							 (!ONE && filename.length > 17 ? filename.substring(0, 17) + '...' : filename);
 			if (type == 'music') {
-				var brate = (fmd.bitrate / 1000).toFixed(0) + ' kbps',
-					srate = (fmd.sample_rate / 1000).toFixed(1) + ' kHz',
-					trlen = (fmd.length * m).toFixed(2).replace('.', ':'),
+				var brate = (fmd.bitrate / 1000).toFixed(0),
+					srate = (fmd.sample_rate / 1000).toFixed(1),
+					trlen = (fmd.length * 0.01572).toFixed(2).replace('.', ':'),
 					trnam = _unc(fmd.artist) +' — '+ _unc(fmd.album),
 					trnum = _unc(fmd.tracknumber, '0') +'/'+ _unc(fmd.totaltracks, '0'),
 					avid = Files.video.isThere(ext);
-				meta = trlen +' @ '+ brate +' / '+ srate +'<br>'+ (!ONE && trnam.length > 40 ? trnam.substring(0, 40) +'<br>'+ trnam.slice(40) : trnam) +' / '+ _unc(fmd.title) +' ['+ trnum +']';
+				meta = trlen +' @ '+ brate +' kbps / '+ srate +' kHz<br>'+ (!ONE && trnam.length > 40 ? trnam.substring(0, 40) +'<br>'+ trnam.slice(40) : trnam) +' / '+ _unc(fmd.title) +' ['+ trnum +']';
 				frontend = '<div class="magic-audio thumb '+ (avid ? 'movie' : 'artwork') +'"><div class="ma-controls"><a href="/'+src+'" class="'+ (avid ? 'cm' : 'ma') +'-button" id="ma-play"></a></div></div>';
 			} else {
-				if (isImage) {
-					var edit = '/utils/'+ type +'/edit/'+ fid +'/'+ pid;
+				var hash = encodeURI(HM.URL.host +'/'+ src).hashCode(),
+					fnc = 'vitf', classlist = 'mview ';
+				switch (type) {
+					case 'code':
+					case 'text':
+						meta = lines + LC.line[lng] + (lines === 1 ? LC.few['ru'][lng] : lines < 5 ? LC.few['u-d'][lng] : LC.few['en'][lng] );
+						HM.LinksMap[hash] = {Embed: '/utils/text/'+ fid +'/'+ pid, Type: 'docs'};
+						break;
+					case 'archive':
+						thumb = 'src/png/1405/archive-icon.png';
+						meta = files +' '+ LC.file[lng].toLowerCase() + (files === 1 ? '' : files < 5 ? LC.few['u-a'][lng] : LC.few['u-b'][lng] );
+						HM.LinksMap[hash] = {Embed: '/utils/archive/'+ fid +'/'+ pid, Type: 'pdf'};
+						break;
+					case 'pdf':
+						meta = imgW +'×'+ imgH +', '+ pages + LC.page[lng] + (pages === 1 ? LC.few['ru'][lng] : pages < 5 ? LC.few['u-c'][lng] : LC.few['en'][lng] );
+						HM.LinksMap[hash] = {Embed: 'iframe', Type: 'pdf'};
+						break;
+					case 'flash':
+						metatype = 'Flash Application';
+						thumb = 'src/png/1405/archive-icon.png';
+						HM.LinksMap[hash] = {Embed: 'flash', Type: 'video'};
+						break;
+					case 'video':
+						fnc = 'pvid';
+						action = 'contextmenu="image-context"';
+						metatype = fmd["File Type"] == 'WEBM' ? 'WebM' : fmd["File Type"];
+						meta = fmd["Image Size"] +' @ '+ fmd["Duration"];
+						HM.LinksMap[hash] = {Embed: 'html5', Type: 'video'};
+						break;
+					case 'vector':
+					case 'image':
+						fnc = 'expd';
 						metatype = ext.slice(0, 1).toUpperCase() + ext.slice(1);
 						meta = imgW +'×'+ imgH;
-					if (R) {
-						ieClass = 'spr-image expanded rated ';
-						thumbH = thumbW = '';
-					} else {
-						action = 'contextmenu="image-context" edit-tool="'+ edit +'"';
-						if (type === 'vector')
-							ieClass = 'spr-image unexpanded ';
-						else
-							action += ' onclick="expand_image(event, '+ imgW +', '+ imgH +')"';
-					}
-				} else {
-					var Type = type, Embed = '/utils/'+ type +'/'+ fid +'/'+ pid,
-						hash = encodeURI(HM.URL.host +'/'+ src).hashCode();
-						cmClass = 'class="cm-button"';
-						ieClass = 'mview '
-					switch (type) {
-						case 'text': Type = 'docs';
-							meta = lines + LC.line[lng] + (lines === 1 ? LC.few['ru'][lng] : lines < 5 ? LC.few['u-d'][lng] : LC.few['en'][lng] );
-							break;
-						case 'archive': Type = 'pdf'; thumb = 'src/png/1405/archive-icon.png';
-							meta = files +' '+ LC.file[lng].toLowerCase() + (files === 1 ? '' : files < 5 ? LC.few['u-a'][lng] : LC.few['u-b'][lng] );
-							break;
-						case 'pdf': Embed = 'iframe';
-							meta = imgW +'×'+ imgH +', '+ pages + LC.page[lng] + (pages === 1 ? LC.few['ru'][lng] : pages < 5 ? LC.few['u-c'][lng] : LC.few['en'][lng] );
-							break;
-						case 'flash': Embed = 'flash'; metatype = 'Flash Application'; Type = 'video';
-							break;
-						case 'video': Embed = 'html5'; size = fmd["File Size"];
-							metatype = fmd["File Type"] == 'WEBM' ? 'WebM' : fmd["File Type"];
-							meta = fmd["Image Size"] +' @ '+ fmd["Duration"];
-							break;
-						default: cmClass = ieClass = '';
-					}
-					if (cmClass)
-						HM.LinksMap[hash] = {Embed: Embed, Type: Type}
+						action = 'id="thmb_'+ hash +'" image-size="'+ meta +'" contextmenu="image-context" edit-tool="/utils/image/edit/'+ fid +'/'+ pid +'"';
+						classlist = 'iview ';
+						break;
+					default: classlist = '';
 				}
-				frontend = '<a href="/'+ src +'" '+ cmClass +'><img class="'+ ieClass +'thumb" '+ thumbW +' '+ thumbH +' src="/'+ thumb +'" '+ action +' alt="'+ (R ? rating : filename) +'"></a>'
+				frontend = (!src ? '<img class="' : '<a href="/'+ src +'"><img class="'+ classlist) +'thumb" width="'+ thumbW +'" height="'+ thumbH +'" src="/'+ thumb +'" '+ action +' alt="'+ (R ? rating : filename) + (!src ? '">' : '"></a>')
+				filetext = R ? '<br>'+ LC.cens[lng] : (ONE ? LC.clck_img_to[lng] + LC[fnc][lng] : '');
 			}
-			var filebtns = (type != 'music' && !R && ONE ? LC.clck_img_to[lng] + (type == 'video' ? LC.pvid[lng] : isImage ? LC.expd[lng] : LC.vitf[lng]) : '') +'<br>'+ (R ? LC.cens[lng] : '') +'</div>',
-				fileinfo = '<div class="fileinfo'+ (!ONE ? ' limited' : '') +'">'+ LC.file[lng] +': <a class="download-link" download="'+ filename +'" href="/'+ src +'" title="'+ filename +'">'+ name +'</a><br><em'+
-					(type == 'music' ? ' class="magic-info"' : '') +'>'+ metatype +', '+ size + (!meta ? '' : ', '+ meta) +'</em>',
-				filediv = '<div id="file_'+ pId +'_'+ fid +'" class="file">';
-			return (ONE ? fileinfo + filebtns + filediv : filediv + fileinfo + filebtns) + frontend +'\n</div>';
+			fileinfo = '<div class="fileinfo'+ (!ONE ? ' limited' : '') +'">'+ (!src ? '<em' : LC.file[lng] +': <a class="download-link" download="'+ filename +'" href="/'+ src +'" title="'+ filename +'">'+ name +'</a><br><em') +
+				(type == 'music' ? ' class="magic-info"' : '') +'>'+ metatype +', '+ size + (meta ? ', '+ meta : '') +'</em>'+ filetext +'</div>';
+			filediv = '<div id="file_r{post_id}_'+ fid +'" class="file">';
+			return (ONE ? fileinfo + filediv : filediv + fileinfo) + frontend +'\n</div>';
 		}
 	}
 	
@@ -1014,32 +1073,33 @@ function MagicExtension() {
 	//* @ original code 	http://dobrochan.com/js/hanabira-0.5.1311-.js
 	//* @ copyright 		Dobrochan
 	function CharmingHanabira(h) {
-		var Chana = this, Timrs = {
+		var Chana = this,
+			Popups = {
+				alive: document.getElementsByClassName('d--kk'),
+				durab: new Array(0)},
+			ChLC = {
+				wsec: ['Wait a Second...', 'Секунду...'],
+				postdel: ["Post is deleted.", "Пост удалён."]},
+			Timrs = {
 				clear: function(name) {
-					clearTimeout(this[name]);
-				},
+					clearTimeout(this[name])},
 				set: function(name, Fn) {
 					this.clear(name);
-					this[name] = setTimeout(Fn, 300);
-				}
+					this[name] = setTimeout(Fn, 300)}
 			},
-			Popups = document.getElementsByClassName('popup'),
-			post_stub = _z.setup('td', {'class': 'die stub', 'text': LC.postdel[lng]}, null);
+			post_stub = _z.setup('td', {'class': 'die stub', 'text': ChLC.postdel[lng]});
 		this.closeLastPopup = RemoveAllRefs;
 		this.MagicPostView  = MagicPostView;
 		this.MagicHighlight = MagicHighlight;
 		function MagicHighlight(e) {
 			Timrs.clear('PopupOpen');
-			var L = e.target.id.split('-'), tid = L[2], pid = L[3],
-				post = document.getElementById('post_'+ pid);
+			var L = e.target.id.split('-'),
+				post = document.getElementById('post_'+ L[3]);
 			if (post) {
 				if (!post.classList.contains('highlighted')) {
-					var prevhlight = document.getElementsByClassName('highlighted')[0],
-						hanalight = document.getElementsByClassName('highlight')[0];
-					if (prevhlight)
+					_z.each('.post.highlighted', function(prevhlight){
 						prevhlight.classList.remove('highlighted');
-					if (hanalight)
-						hanalight.className = 'reply';
+					});
 					post.classList.add('highlighted');
 				}
 				post.scrollIntoView({block: (L[0] === 'cvl' ? 'end' : 'start'), behavior: 'smooth'});
@@ -1048,134 +1108,147 @@ function MagicExtension() {
 			_z.fall(e);
 		}
 		function MagicPostView(e) {
-			if (this.classList.contains('locked'))
+			var _a = e.target, _p = this;
+			if (_a.classList[0] !== 'reply-link' || _a.classList.contains('locked'))
 				return;
-			var a = this, attach = HM.AttachPopups;
 			Timrs.set('PopupOpen', function() {
-				var L = a.id.split('-'), brd = L[1], tid = L[2], pid = L[3], op = tid === pid, patch_id = brd +'_'+ tid +'_'+ pid,
-					id = brd +'-'+ pid, refl = _z.route(a, '.reflink a'), href = refl.getAttribute('href'),
-					post = HM.PostConstructor[patch_id] ? HM.PostConstructor[patch_id].el : document.getElementById('post_'+ pid), loading,
-					reftab = document.getElementById('ref-'+ id), binded = function (el) {
-						var load = (el.querySelector('.reply:not(.autohidden)') || el).cloneNode(true)
-						_z.remove(load.querySelectorAll('form.edit'))
-						_z.each(load.querySelectorAll('.reply-link'), function(a) {
-							a.addEventListener('mouseover', Chana.MagicPostView, false);
-						});
-						if (attach && load.classList[1] !== 'stub') {
-							BindCloseRef(reftab);
-						} else {
-							BindRemoveRef(a, reftab);
-						}
-						_z.replace(loading, _z.setup(load, {'id': 'load-' + id, 'class': el.cast}, null));
-						add_mapping(reftab.querySelector('a[href="'+ href +'"]'));
-					}
-				if (reftab) {
-					loading = reftab.querySelector('.locked');
-					if (loading && loading.hash !== refl.hash)
-						loading.className = 'reply-link celrly';
-					if (document.body.lastElementChild !== reftab)
-						document.body.appendChild(reftab);
-					add_mapping(reftab.querySelector('a[href="'+ href +'"]'));
-				} else {
-					reftab = _z.setup('table', {'class': (op ? 'oppost popup' : 'popup'), 'id': 'ref-'+ id, 'patch-id': patch_id,
-						'html': '<tbody><tr><td class="loading"><span class="waiting'+ Math.floor(Math.random() * 3) +
-						' icon"><img src="/images/blank.png"></span>\n'+ LC.wsec[lng] +'</td></tr></tbody>'}, {'click': PDownListener});
-					loading = reftab.querySelector('.loading');
-					if (post) {
-						binded(post);
-					} else if (HM.URL.thread == tid) {
-						binded(post_stub);
-					} else {
-						getDataResponse('/api/post/'+ brd +'/'+ tid +'/'+ pid +'.json?message_html&new_format&thread',
-						function(status, sText, json, xhr) {
-							var temp_post, node, tstat, jpost, ErrorMSG;
-							if (status !== 200) {
-								ErrorMSG = _z.setup('strong', {'id': 'warning-massage', 'class': 'blink', 'text': status +' '+ sText}, null);
-								ErrorMSG.dozZe = function(e) {
-									if (this.iterations >= 7)
-										reftab.remove();
-								}
-								return _z.replace(loading, ErrorMSG);
-							} else if (json.error) {
-								node = post_stub;
+				try {
+					var L = _a.id.split('-'), brd = L[1], tid = L[2], pid = L[3], op = tid === pid, patch_id = brd +'_'+ tid +'_'+ pid,
+						id = brd +'-'+ pid, map = (_p.getAttribute('patch-id')||'').split('_'),
+						lpth = '[href="/'+ map[0] +'/res/'+map[1]+'.xhtml#i'+map[2]+'"]',
+						post = HM.LoadedPosts[patch_id] || document.getElementById('post_'+ pid), loading,
+						reftab = document.getElementById('ref-'+ id), binded = function (el) {
+							var load = (el.querySelector('.reply:not(.autohidden)') || el).cloneNode(true)
+							_z.remove(load.querySelectorAll('form.edit, .magic-picture'))
+							if (HM.AttachPopups && load.classList[1] !== 'stub') {
+								BindCloseRef(reftab);
 							} else {
-								tstat = [json.result.threads[0].archived, json.result.threads[0].autosage];
-								jpost = json.result.threads[0].posts[0];
-								temp_post = MagicThreadListener().getPost(jpost, tstat, [brd, tid, pid]);
-								node = temp_post;
-								node.cast = 'stored';
+								BindRemoveRef(_a, reftab);
 							}
-							binded(node);
-							hooLinks(GetElements(reftab).links);
-							set_style(reftab);
-						});
+							_z.replace(loading, _z.setup(load, {'id': 'load-' + id, 'class': el.cast}));
+							_z.each(reftab.querySelectorAll('a'+ lpth), add_mapping);
+						}
+					if (reftab) {
+						if (reftab.attached) {
+							simulateMouseEvent(reftab, "mousedown");
+						} else {
+							document.body.appendChild(reftab);
+						}
+						_z.each(reftab.querySelectorAll('.locked:not('+lpth+'), a'+lpth+':not(.locked)'), add_mapping);
+					} else {
+						reftab = _z.setup('table', {'class': (op ? 'oppost popup' : 'popup'), 'id': 'ref-'+ id, 'patch-id': patch_id,
+							'html': '<tbody><tr><td class="loading"><span class="waiting'+ Math.floor(Math.random() * 3) +
+							' icon"><img src="/images/blank.png"></span>\n'+ ChLC.wsec[lng] +'</td></tr></tbody>'}, {
+							'click': PDownListener, 'mouseover': MagicPostView});
+						reftab.formBinding = function(el) {this.firstElementChild.firstElementChild.firstElementChild.appendChild(el)}
+						loading = reftab.querySelector('.loading');
+						if (post) {
+							binded(post);
+						} else if (HM.URL.thread == tid) {
+							binded(post_stub);
+						} else {
+							getDataResponse('/api/post/'+ brd +'/'+ tid +'/'+ pid +'.json?message_html&new_format&thread',
+							function(status, sText, json, xhr) {
+								var temp_post, node, tstat, jpost, ErrorMSG;
+								if (status !== 200) {
+									ErrorMSG = _z.setup('strong', {'id': 'warning-massage', 'class': 'blink', 'text': status +' '+ sText});
+									ErrorMSG.dozZe = function(e) {
+										if (this.iterations >= 7)
+											reftab.remove();
+									}
+									return _z.replace(loading, ErrorMSG);
+								} else if (json.error) {
+									node = post_stub;
+								} else {
+									tstat = [json.result.threads[0].archived, json.result.threads[0].autosage];
+									jpost = json.result.threads[0].posts[0];
+									temp_post = MagicThreadListener().getPost(jpost, tstat, [brd, tid, pid]);
+									node = temp_post;
+									node.cast = 'stored';
+								}
+								binded(node);
+								set_style(_a, reftab);
+							});
+						}
+						document.body.appendChild(reftab);
 					}
-					document.body.appendChild(reftab);
+					set_style(_a, reftab);
+				} catch(e) {
+					_z.dbg(e)
 				}
-				set_style(reftab);
 			});
-			this.onmouseout = function(e) {
+			_a.onmouseout = function(e) {
 				Timrs.clear('PopupOpen');
 			}
-			function add_mapping(mapp) {
-				if (mapp) {
-					mapp.classList.add('mapped');
-					mapp.classList.add('locked');
-				}
-			}
-			function set_style(r) {
-				var w = window.innerWidth, mw,
-					x = e.pageX, y = e.pageY + 30,
-					wx = w - x, y2 = y - r.offsetHeight - 45;
-				if (a.id.split('-')[0] !== 'cvl') {
-					if (y2 > 0)
-						y = y2;
-					if ((wx < 600 || wx < w / 2) && r.offsetWidth > wx) {
-						mw = w - 400;
-						x = null;
-					}
-				}
-				r.setAttribute('style', 'top:'+ y +'px;max-width:'+
-					(mw || wx) +'px;'+ (x == null ? 'right:0' : 'left:'+ x) +'px'+
-					(attach ? ';z-index:'+ HM.zIndex : ''));
-			}
+		}
+		function add_mapping(mapp) {
+			var fn = mapp.classList.contains('locked') ? 'remove' : 'add';
+				mapp.classList[fn]('mapped');
+				mapp.classList[fn]('locked');
+		}
+
+		function set_style(_lnk, _rtab) {
+			var clientR = _lnk.getBoundingClientRect(),
+				offsetX = clientR.left + pageXOffset + _lnk.offsetWidth / 2,
+				offsetY = clientR.top + pageYOffset,
+				clientX = document.documentElement.clientWidth,
+				clientY = document.documentElement.clientHeight,
+				isLeft = offsetX < clientX / 2,
+				isTop = _rtab.offsetHeight + clientR.top + _lnk.offsetHeight < clientY && _lnk.id.split('-')[0] === 'cvl' || clientR.top - _rtab.offsetHeight < 5,
+				left = isLeft ? offsetX : offsetX - Math.min(parseInt(_rtab.offsetWidth, 10), offsetX - 10),
+				top = isTop ? offsetY + _lnk.offsetHeight : offsetY - _rtab.offsetHeight,
+				mw = clientX - left - 10;
+			_rtab.style['top'] = top +'px';
+			_rtab.style['left'] = left +'px';
+			_rtab.style['z-index'] = HM.zIndex;
+			_rtab.style['max-width'] = mw +'px';
 		}
 		function BindCloseRef(reftab) {
-			var rtb = _z.setup('tbody', {'html': '<tr><td>'}),
-				drag = _z.setup('span', {'class': 'dpop txt-btn'}, {
-					'mousedown': function(e) {
-						var coords = getCoords(reftab);
-						reftab.style['z-index'] = HM.zIndex + 1;
-						HM.DragableObj = { el: reftab, shiftY: e.pageY - coords.top, shiftX: e.pageX - coords.left }
-					}}),
-				close = _z.setup('span', {
-					'id': 'rf-cb-ty',
-					'class': 'cpop txt-btn',
-					'title': LC.clos[lng]}),
-				closeAll = _z.setup('span', {
-					'id': 'rf-cb-all',
-					'class': 'cpop txt-btn',
-					'title': LC.clos[lng] + LC.all[lng]});
-				_z.setup(reftab, {}, {
-					'click': function(e) {
-						HM.zIndex++;
-						this.style['z-index'] = HM.zIndex;
-						switch (e.target.id) {
-							case 'rf-cb-ty': this.remove(); break;
-							case 'rf-cb-all': RemoveAllRefs(e); break;
-						}
+			Popups.durab.push(reftab);
+			reftab.attached = true;
+			var rtb = _z.setup('tbody', {'html': '<tr><td><span title="'+ LC.clos[lng] +'" class="cpop txt-btn" id="rf-cb-ty"></span><span title="'+
+				LC.clos[lng] + LC.all[lng] +'" class="cpop txt-btn" id="rf-cb-all"></span><span id="rf-da-ty" class="dpop txt-btn"></span></td></tr>'});
+			_z.setup(reftab, {}, {
+				'mousedown': function(e) {
+					var idx = Popups.durab.indexOf(this);
+						stepZup.bind(this)()
+						Popups.durab.move(idx, Popups.durab.length -1);
+					switch (e.target.id) {
+						case 'rf-da-ty':
+							var coords = getCoords(this);
+								HM.DragableObj = {
+									el: this,
+									shift: [e.pageX - coords.left, e.pageY - coords.top],
+									position: 'absolute'
+								}
 					}
-				}).appendChild(rtb).click();
-			_z.append(rtb.firstChild.firstChild, [close, closeAll, drag]);
+				}, 'click': function(e) {
+					switch (e.target.id) {
+						case 'rf-cb-all':
+							RemoveAllRefs(e);
+							break;
+						case 'rf-cb-ty':
+							var idx = Popups.durab.indexOf(this);
+							this.remove();
+							delete Popups.durab[idx];
+							Popups.durab.splice(idx, 1);
+					}
+				}
+			}).appendChild(rtb);
 		}
 		function BindRemoveRef(a, reftab) {
-			reftab.onmouseleave = RemoveAllRefs;
+			reftab.classList.add('d--kk');
+			reftab.onmouseleave = function(e) {
+				Timrs.set('PopupsClose', function() {
+					_z.remove(Popups.alive);
+				});
+			};
 			reftab.onmouseenter = function(e) {
 				var _this = this;
 				Timrs.set('PopupsClose', function() {
-					var i = Popups.length - 1;
-					while (Popups[i] !== _this) {
-						Popups[i].remove();
+					var i = Popups.alive.length - 1;
+					while (Popups.alive[i] !== _this) {
+						Popups.alive[i].remove();
 						i--;
 					}
 				});
@@ -1188,22 +1261,17 @@ function MagicExtension() {
 			}
 		}
 		function RemoveAllRefs(e) {
-			var i = Popups.length - 1, _this = this;
-			if (Popups.length > 0) {
+			if (Popups.durab.length > 0) {
 				switch (e.type) {
-					case 'keydown':
-						if (i == 0)
-							HM.zIndex = 1;
-						Popups[i].remove();
-						break;
 					case 'click':
-						HM.zIndex = 1;
-						_z.remove(Popups);
+						_z.remove(Popups.durab);
+						Popups.durab = [];
 						break;
-					case 'mouseleave':
-						Timrs.set('PopupsClose', function() {
-							_z.remove(Popups);
-						})
+					case 'keydown':
+						var i = Popups.durab.length - 1;
+						Popups.durab[i].remove();
+						delete Popups.durab[i];
+						Popups.durab.splice(i, 1);
 				}
 			}
 		}
@@ -1220,6 +1288,7 @@ function MagicExtension() {
 			typex = function (gmi) {return new RegExp('^(\\s*)(.*?)(\\s*)$', (gmi || ''))},
 			cont = (typex()).exec(selected), offsetS = 0, offsetE, markedText, CASM = closeTag.slice(0, 1);
 		switch (CASM) {
+			case '\x20':
 			case '\r' :
 				markedText = openTag + (val.substring(start, start -1) !== '\n' ? CASM : closeTag);
 				break;
@@ -1248,8 +1317,8 @@ function MagicExtension() {
 					offsetE = offsetS + selected.length;
 				}
 		}
-		_z.setup(TextArea, {'value': val.substring(0, start) + markedText + val.substring(end)}).focus();
-		if (CASM == '\r') {
+		TextArea.value = val.substring(0, start) + markedText + val.substring(end);
+		if (CASM == '\r' || CASM == '\x20') {
 			TextArea.selectionStart = TextArea.selectionEnd = TextArea.value.length;
 		} else {
 			TextArea.setSelectionRange(start + offsetS, start + (offsetE || markedText.length))
@@ -1260,55 +1329,59 @@ function MagicExtension() {
 	}
 	
 	function keyMarks(e) {
-		var TextArea, TA, K;
-		if (e.target.tagName === 'TEXTAREA') {
-			TextArea = e.target;
-			TA = true;
-		} else {
-			TextArea = Nagato['ReplyText'];
-			TA = false;
-		}
-		var YRT = TextArea.id === 'yuki-replyText',
-			CED = TextArea.id === 'code_edit_ta',
-			key = String.fromCharCode(e.charCode),
-			val = TextArea.value,
-			end = TextArea.selectionEnd,
-			start = TextArea.selectionStart,
-			selected = val.substring(start, end),
-			active = selected.length > 0;
-			function autoselect() {
-				if (!active) {
-					var fw = val.substring(start, val.length).match(/^(.*?)(?:\s|$)/);
-					return (fw[1] ? false : true);
-				} else return true;
+		try {
+			var TextArea, TA, K;
+			if (e.target.tagName === 'TEXTAREA') {
+				TextArea = e.target;
+				TA = true;
+			} else {
+				TextArea = Nagato['ReplyText'];
+				TA = false;
 			}
-		if (YRT && TA && KeyCodes.symbs.isThere(key)) {
-			if (active) {
-				K = KeyCodes.symbs.indexOf(key) >= 4 ? [key + key, key + key] : KeyCodes.balance(key);
-				wmarkText(TextArea, K[0], K[1]);
-				return _z.fall(e);
+			var YRT = TextArea.id === 'yuki-replyText',
+				CED = TextArea.id === 'code_edit_ta',
+				key = String.fromCharCode(e.charCode),
+				val = TextArea.value,
+				end = TextArea.selectionEnd,
+				start = TextArea.selectionStart,
+				selected = val.substring(start, end),
+				active = selected.length > 0;
+				function autoselect() {
+					if (!active) {
+						var fw = val.substring(start, val.length).match(/^(.*?)(?:\s|$)/);
+						return (fw[1] ? false : true);
+					} else return true;
+				}
+			if (YRT && TA && KeyCodes.symbs.isThere(key)) {
+				if (active) {
+					K = KeyCodes.symbs.indexOf(key) >= 4 ? [key + key, key + key] : KeyCodes.balance(key);
+					wmarkText(TextArea, K[0], K[1]);
+					return _z.fall(e);
+				}
 			}
-		}
-		if (CED && TA && KeyCodes.codew.isThere(key)) {
-			if (autoselect()) {
-				K = KeyCodes.balance(key);
-				wmarkText(TextArea, K[0], K[1]);
-				return _z.fall(e);
+			if (CED && TA && KeyCodes.codew.isThere(key)) {
+				if (autoselect()) {
+					K = KeyCodes.balance(key);
+					wmarkText(TextArea, K[0], K[1]);
+					return _z.fall(e);
+				}
 			}
-		}
-		if (YRT && KeyCodes.quots.isThere(key)) {
-			var sSp = val.substring(start - 1, start);
-			if (['\n', ''].isThere(sSp) || selected.isThere('\n')) {
-				key = key === '^' ? '*' : key;
-				wmarkText(TextArea, key +' ', '\n'+ key +' ');
-				return _z.fall(e);
+			if (YRT && KeyCodes.quots.isThere(key)) {
+				var sSp = val.substring(start - 1, start);
+				if (['\n', ''].isThere(sSp) || selected.isThere('\n')) {
+					key = key === '^' ? '*' : key;
+					wmarkText(TextArea, key +' ', '\n'+ key +' ');
+					return _z.fall(e);
+				}
 			}
-		}
-		if (TA && e.keyCode != 8) { HM.LastKey = key;
-			if (TextArea.classList.contains('ta-inact')) {
-				TextArea.setSelectionRange(end, end);
-				TextArea.classList.remove('ta-inact');
+			if (TA && e.keyCode != 8) { HM.LastKey = key;
+				if (TextArea.classList.contains('ta-inact')) {
+					TextArea.setSelectionRange(end, end);
+					TextArea.classList.remove('ta-inact');
+				}
 			}
+		} catch(e) {
+			_z.dbg(e);
 		}
 	}
 	
@@ -1336,23 +1409,23 @@ function MagicExtension() {
 		})
 	}
 	
-	function MagicContent(scr){
-		var MaC = this;
+	function MagicEmbeds(scr){
+		var Mbed = this;
 		this['Frame'] = {};
 		this['Container'] = document.createElement('blockquote');
 		this['makePlayer'] = makePlayer;
 		this['matchPlayer'] = matchPlayer;
 		this['RegEx'] = GenrX;
 		this.object = {
-			iframe: _z.setup('iframe', {'frameborder': '0', 'scrolling': (scr ? 'auto' : 'no'), 'allowfullscreen': 'true', 'mozallowfullscreen': 'true', 'webkitallowfullscreen': 'true'}, null),
-			embed: _z.setup('embed', {'type': 'application/x-shockwave-flash'}, null),
-			video: _z.setup('video', {'controls': ''}, null)
+			iframe: _z.setup('iframe', {'frameborder': '0', 'scrolling': (scr ? 'auto' : 'no'), 'allowfullscreen': 'true', 'mozallowfullscreen': 'true', 'webkitallowfullscreen': 'true'}),
+			embed: _z.setup('embed', {'type': 'application/x-shockwave-flash'}),
+			video: _z.setup('video', {'controls': 'true'})
 		}
 		function cVl(tg, extras) {
-			return _z.setup(MaC.object[tg], extras, null)
+			return _z.setup(Mbed.object[tg], extras, null)
 		}
 		function makePlayer(uri, embc) {
-			var P, ext = uri.fext(), element = MaC['Container'].firstElementChild;
+			var P, ext = uri.fext(), element = Mbed['Container'].firstElementChild;
 			switch (embc) {
 				case 'Cb': P = cVl('iframe', {'src': uri.replace(GenrX('Coub'), "//coub.com/embed/$1?muted=false&autostart=false&originalSize=false&hideTopBar=true&noSiteButtons=true&startWithHD=false")}); break;
 				case 'YT': P = cVl('iframe', {'src': uri.replace(GenrX('YouTube'), "//www.youtube.com/embed/$1$3$5?$2$4$6&autohide=1&wmode=opaque&enablejsapi=1&theme=light&html5=1&rel=0&start=$7")}); break;
@@ -1362,7 +1435,7 @@ function MagicExtension() {
 				case 'VK': P = cVl('iframe', {'src': uri.replace(GenrX('VK.com'), "//vk.com/video_ext.php?oid=$1&id=$2&$3$4$5")}); break;
 				case 'Pbin': P = cVl('iframe', {'src': uri.replace(GenrX('Pastebin'), "//pastebin.com/embed_iframe.php?i=$1")}); break;
 				case 'Pleer': P = cVl('embed', {'src': uri.replace(GenrX('Pleer.com'), "//embed.pleer.com/track?id=$1"), 'class': 'prosto-pleer', 'width': '440', 'height': '40'});
-					MaC['Container'].className = 'pleer-container';
+					Mbed['Container'].className = 'pleer-container';
 					break;
 				default:
 					var tag = 'iframe';
@@ -1374,12 +1447,12 @@ function MagicExtension() {
 					}
 					P = cVl(tag, {'src': uri});
 			}
-			MaC['Frame'] = P;
+			Mbed['Frame'] = P;
 			if (!element)
-				MaC['Container'].appendChild(MaC['Frame']);
-			else if (element.tagName != MaC['Frame'].tagName)
-				MaC['Container'].replaceChild(MaC['Frame'], element);
-			return MaC['Container'];
+				Mbed['Container'].appendChild(Mbed['Frame']);
+			else if (element.tagName != Mbed['Frame'].tagName)
+				Mbed['Container'].replaceChild(Mbed['Frame'], element);
+			return Mbed['Container'];
 		}
 		function matchPlayer(uri, embc) {
 			var m, reg, result;
@@ -1421,7 +1494,7 @@ function MagicExtension() {
 		}
 	}
 	function loadMediaContainer(e) {
-		var embc, cont, last,
+		var embc, cont, last, vsize,
 			$btn = (!e.target.href ? e.target.parentNode : e.target),
 			href = escapeUrl($btn.href),
 			hash = href.hashCode(),
@@ -1438,7 +1511,7 @@ function MagicExtension() {
 					return node.previousElementSibling;
 				} else return false;
 			});
-		if ($btn.classList.contains('w-open') || wTYPES || HM.MC == 0 && !pTYPES) {
+		if ($btn.classList.contains('w-open') || wTYPES || HM.EmbedField == 0 && !pTYPES) {
 			last = mEl['ContentWindow'].lastElementChild;
 			if (last.id != 'content_'+ hash) {
 				embc = th.Embed.allReplace({'(visual=)true': '1$false', 'notracklist%3Dtrue': 'notracklist%3Dfalse', 
@@ -1458,7 +1531,7 @@ function MagicExtension() {
 		} else {
 			if (th.Embed === 'Pbin') {
 				if (!Megia[hash])
-					Megia[hash] = new MagicContent(true)
+					Megia[hash] = new MagicEmbeds(true)
 				if ($btn.previousElementSibling.id === Id) {
 					Megia[hash]['Container'].remove();
 				} else {
@@ -1475,8 +1548,8 @@ function MagicExtension() {
 					if (pTYPES) {
 						cont = createFileContent(href, hash, Id, th.Type);
 					} else {
-						cont = _z.setup(Megia[th.Type].makePlayer(href, th.Embed), {'class': th.Type +'-container', 'id': Id}, null);
-						_z.setup(Megia[th.Type]['Frame'], {'width': getVSize()[th.Type == 'scbc' ? 1 : 0], 'height': getVSize()[1]}, null);
+						cont = _z.setup(Megia[th.Type].makePlayer(href, th.Embed), {'class': th.Type +'-container', 'id': Id});
+						_z.setup(Megia[th.Type]['Frame'], {'width': AspectSize[th.Type == 'scbc' ? 'H' : 'W'][HM.AspectRatio], 'height': AspectSize.H[HM.AspectRatio]});
 					}
 					pcont.appendChild(cont);
 				}
@@ -1512,18 +1585,22 @@ function MagicExtension() {
 		_z.setup(type, {'src': fileUrl}, {'load': _attach, 'loadedmetadata': _attach, 'error': function _err(e) { oEmbedMedia(el, fileUrl, hash) }});
 	}
 	function oEmbedMedia(el, mediaUrl, hash, type, provider, endpoint, embed) {
-		var extras, events = null;
-		getDataResponse((endpoint || 'http://api.embed.ly/1/oembed?key=9cccaccb6ddc490a97bcd2ba6c282191&url=') + encodeURIComponent(mediaUrl) +'&format=json&origin=anonymous',
+		var extras;
+		getDataResponse((endpoint || 'http://api.embed.ly/1/oembed?key='+ HM.APIKey +'&url=') + encodeURIComponent(mediaUrl) +'&format=json&origin=anonymous',
 		function(status, sText, data, xhr) {
 			if (status !== 200 || !data) {
 				extras = {'target': '_blank'}
+				if (status > 399 && status < 500) {
+					extras['title'] = LC.broken_link[lng] +'「'+ status +'」';
+					HM.LinksMap[hash] = UrlCache[hash] = {Embed: status};
+				}
 			} else {
-				var harr = el.host.split('.'), dm = harr[harr.length - 1], host = harr[harr.length - 2],
-					p_name = (provider || data.provider_name || host.slice(0, 1).toUpperCase() + host.slice(1, host.length)),
-					rw = new RegExp('(?:\\s-\\s)?(?:'+ (data.provider_name || host) +'|Википедия)(\\.'+ dm +')?(?:\\s-\\s)?', 'i'),
-					name = (data.title || '').replace(rw, '');
+				var harr = el.host.split('.'), dm = harr[harr.length - 1], host = harr[harr.length - 2], ws = harr[harr.length - 3],
+					p_name = (provider || data.provider_name || (ws && ws !== 'www' ? ws.slice(0, 1).toUpperCase() + ws.slice(1, ws.length) +' ' : '') + host.slice(0, 1).toUpperCase() + host.slice(1, host.length)),
+					rw = new RegExp('(?:\\s-\\s)?(?:'+ (data.provider_name || host) +'|Википедия)(\\.'+ dm +')?(?:\\:\\s|\\s-\\s)?', 'i'),
+					name = (data.title || getPageName(mediaUrl).replace(el.host, '')).replace(rw, '');
 					extras = {'id': 'cm-link', 'rel': 'nofollow'}; HM.LinksMap[hash] = UrlCache[hash] = {};
-					HM.LinksMap[hash].Name = UrlCache[hash].Name = extras['text'] = p_name +': '+ (name || getPageName(mediaUrl));
+					HM.LinksMap[hash].Name = UrlCache[hash].Name = extras['text'] = p_name + (name ? ': '+ name : '');
 				if (data.description || data.author)
 					HM.LinksMap[hash].Title = UrlCache[hash].Title = extras['title'] = (data.description || data.author);
 				if (embed || !embed && data.html && data.type != 'link') {
@@ -1540,109 +1617,118 @@ function MagicExtension() {
 					HM.LinksMap[hash].Embed = UrlCache[hash].Embed = embed;
 					HM.LinksMap[hash].Type = UrlCache[hash].Type = type;
 				}
-				_z.sessionS.set('LinksCache', JSON.stringify(UrlCache));
 			}
+			if (UrlCache[hash])
+				_z.sessionS.set('LinksCache', JSON.stringify(UrlCache));
 			_z.setup(el, extras);
 		});
 	}
-	function hooLinks(links) {
-		_z.each(links, function(link, i) {
-			if (!link.href || link.href.slice(0, 4) !== 'http')
-				return;
-			var href = escapeUrl(link.href), hash = link.href.hashCode(), extras, events;
-			if (link.host.isThere("dobrochan")) {
-				if (href.isThere("/res/")) {
-					var targ = ParseUrl(href), refl = _z.route(link, '.reflink a'),
-						from = ParseUrl(refl.href);
-					if (targ != null && targ.thread) {
-						var reply_id = (targ.pid || targ.thread),
-							diffb = (targ.board !== from.board) || (from.board !== HM.URL.board),
-							dataArr = [from.board, from.thread, from.pid, (diffb ? targ.board : '')];
-						extras = {'class': 'reply-link', 'href': '/'+ targ.board +'/res/'+ targ.thread +'.xhtml#i'+ reply_id,
-							'id': 'rl-'+targ.board+'-'+ targ.thread +'-'+ reply_id, 'text': '>>'+ (diffb ? targ.board +'/' : '') + reply_id};
-						events = {'mouseover': Chanabira.MagicPostView};
-						_z.replace(link, _z.setup('a', extras, events));
-						if (!HM.RepliesMap[reply_id])
-							HM.RepliesMap[reply_id] = new Array(0);
-						if (!JSON.stringify(HM.RepliesMap[reply_id]).isThere(JSON.stringify(dataArr)))
-							HM.RepliesMap[reply_id].push(dataArr);
+	function handleLinks(node, map) {
+		_z.each((node || document).querySelectorAll(
+		'.message a[href^="http"]:not(#cm-link), .message a[href^="/"]:not(.reply-link), .abbrev a[href*="/deleted/"], .abbrev a[href^="/utils/"]'
+		),  function(link, i) {
+			var href = escapeUrl(link.href);
+			switch (true) {
+				case link.host.isThere("dobrochan"):
+					if (href.isThere("/res/") && map) {
+						var targ = ParseUrl(href);
+						if (targ != null && targ.thread) {
+							var reply_id = (targ.pid || targ.thread),
+								diffb = (targ.board !== map.board) || (map.board !== HM.URL.board),
+								dataArr = [map.board, map.thread, map.pid, (diffb ? targ.board : '')];
+							_z.replace(link, _z.setup('a', {'class': 'reply-link', 'href': '/'+ targ.board +'/res/'+ targ.thread +'.xhtml#i'+ reply_id,
+								'id': 'rl-'+ targ.board +'-'+ targ.thread +'-'+ reply_id, 'text': '>>'+ (diffb ? targ.board +'/' : '') + reply_id}));
+							if (!HM.RepliesMap[reply_id])
+								HM.RepliesMap[reply_id] = new Array(0);
+							if (!JSON.stringify(HM.RepliesMap[reply_id]).isThere(JSON.stringify(dataArr)))
+								HM.RepliesMap[reply_id].push(dataArr);
+						}
+					} else if (href.isThere("/deleted/") || href.isThere("/utils/")) {
+						HM.LinksMap[link.href.hashCode()] = {Embed: 'iframe', Type: 'pdf'};
+						link.className = 'cm-button'
 					}
-				}
-			} else if (HM.oEmbedAPI) {
-				if (HM.LinksMap[hash]) {
-					extras = {'id': 'cm-link', 'rel': 'nofollow', 'text': HM.LinksMap[hash].Name, 'title': HM.LinksMap[hash].Title}
-					if (HM.LinksMap[hash].Embed || HM.LinksMap[hash].Type) {
-						extras['class'] = 'cm-button';
+					break;
+				case (href === 'https://mega.nz/#'):
+					_z.setup(link, {'href': 'https://mega.nz/#'+ link.nextSibling.textContent, 'text': 'Mega: '+ link.nextSibling.textContent});
+					link.nextSibling.remove();
+					break;
+				case (HM.oEmbedAPI):
+					var hash = link.href.hashCode(), extras;
+					if (HM.LinksMap[hash]) {
+						extras = {'id': 'cm-link', 'rel': 'nofollow', 'text': HM.LinksMap[hash].Name, 'title': HM.LinksMap[hash].Title}
+						if (HM.LinksMap[hash].Embed || HM.LinksMap[hash].Type) {
+							if (!isNaN(HM.LinksMap[hash].Embed)) {
+								extras = {'target': '_blank', 'title': LC.broken_link[lng] +'「'+ HM.LinksMap[hash].Embed +'」'}
+							} else
+								extras['class'] = 'cm-button';
+						}
+						_z.setup(link, extras);
+					} else {
+						var type = 'video', endp = 'http://open.iframe.ly/api/oembed?url=', embed = '', prov = '', EXT = href.fext(), Macont = new MagicEmbeds();
+						switch (true) {
+							case Files.video.concat(Files.audio.concat(Files.image)).isThere(EXT):
+								return attachFile(link, href, hash, (Files.image.isThere(EXT) ? 'img' : Files.audio.isThere(EXT) ? 'audio' : 'video'));
+								break;
+							case (link.host === 'pleer.com'):
+								if (Macont.matchPlayer(href, 'Pleer')) {
+									var pleer = Macont.makePlayer(href, 'Pleer')
+									_z.after(link, pleer);
+									pleer.appendChild(_z.setup(link, {'text': ''}))
+									return;
+								}
+								break;
+							case link.host.isThere("youtu"):
+								prov = 'YouTube'; embed = 'YT'; endp = '';
+								break;
+							case link.host.isThere("soundcloud"):
+								prov = 'SoundCloud'; type = 'scbc'; endp = 'https://soundcloud.com/oembed?url=';
+								break;
+							case link.host.isThere("vimeo"):
+								prov = 'Vimeo'; embed = 'Vm'; endp = 'https://vimeo.com/api/oembed.json?url=';
+								break;
+							case link.host.isThere("coub"):
+								prov = 'Coub'; embed = 'Cb';
+								break;
+							case link.host.isThere("rutube"):
+								prov = 'RuTube'; embed = 'RT';
+								break;
+							case link.host.isThere("pastebin"):
+								prov = 'Pastebin'; embed = 'Pbin'; type = 'docs';
+								break;
+							case (href.isThere("mail.ru/") &&  href.isThere("/video/")):
+								prov = 'M@il.RU Видео'; embed = 'my';
+								break;
+							case link.host.isThere("video.yandex.ru"):
+								prov = 'Яндекс.Видео'; endp = '//video.yandex.ru/oembed.json?url=';
+								break;
+							case link.host.isThere("vk.com"):
+								if (href.isThere("hash"))
+									embed = 'VK';
+								if (href.isThere("video"))
+									prov = 'VK Видео';
+								if (href.isThere("ext.php"))
+									href = href.replace(Macont.RegEx('VK.com'), 'https://vk.com/video$1_$2?$3$4$5');
+								break;
+							case (href.isThere("/iframe/") || href.isThere("/embed/")):
+								embed = 'iframe'; endp = '';
+			 					if (!href.isThere("/html/"))
+			 						href = href.replace('embed/', '');
+								break;
+							default: endp = '';
+						}
+						oEmbedMedia(link, href, hash, type, prov, endp, (embed && Macont.matchPlayer(href, embed) ? embed : false));
 					}
-					return _z.setup(link, extras);
-				} else {
-					var type = 'video', endp = 'http://open.iframe.ly/api/oembed?url=', embed = prov = '', EXT = href.fext(), Macont = new MagicContent();
-					switch (true) {
-						case Files.video.concat(Files.audio.concat(Files.image)).isThere(EXT):
-							return attachFile(link, href, hash, (Files.image.isThere(EXT) ? 'img' : Files.audio.isThere(EXT) ? 'audio' : 'video'));
-							break;
-						case (link.host === 'pleer.com'):
-							if (Macont.matchPlayer(href, 'Pleer')) {
-								var pleer = Macont.makePlayer(href, 'Pleer')
-								_z.after(link, pleer);
-								pleer.appendChild(_z.setup(link, {'text': ''}))
-								return;
-							}
-							break;
-						case link.host.isThere("youtu"):
-							prov = 'YouTube'; embed = 'YT'; endp = '';
-							break;
-						case link.host.isThere("soundcloud"):
-							prov = 'SoundCloud'; type = 'scbc'; endp = 'https://soundcloud.com/oembed?url=';
-							break;
-						case link.host.isThere("vimeo"):
-							prov = 'Vimeo'; embed = 'Vm'; endp = 'https://vimeo.com/api/oembed.json?url=';
-							break;
-						case link.host.isThere("coub"):
-							prov = 'Coub'; embed = 'Cb';
-							break;
-						case link.host.isThere("rutube"):
-							prov = 'RuTube'; embed = 'RT';
-							break;
-						case link.host.isThere("pastebin"):
-							prov = 'Pastebin'; embed = 'Pbin'; type = 'docs';
-							break;
-						case (href.isThere("mail.ru/") &&  href.isThere("/video/")):
-							prov = 'M@il.RU Видео'; embed = 'my';
-							break;
-						case link.host.isThere("video.yandex.ru"):
-							prov = 'Яндекс.Видео'; endp = '//video.yandex.ru/oembed.json?url=';
-							break;
-						case link.host.isThere("vk.com"):
-							if (href.isThere("hash"))
-								embed = 'VK';
-							if (href.isThere("video"))
-								prov = 'VK Видео';
-							if (href.isThere("ext.php"))
-								href = href.replace(Macont.RegEx('VK.com'), 'https://vk.com/video$1_$2?$3$4$5');
-							break;
-						case (href.isThere("/iframe/") || href.isThere("/embed/")):
-							embed = 'iframe'; endp = '';
-		 					if (!href.isThere("/html/"))
-		 						href = href.replace('embed/', '');
-							break;
-						default: endp = '';
-					}
-					oEmbedMedia(link, href, hash, type, prov, endp, (embed && Macont.matchPlayer(href, embed) ? embed : false));
-				}
 			}
 		});
 	}
-	function hooElements(elems) {
-		_z.each(elems, function(el) {
+	function handleElements(node) {
+		_z.each((node || document).querySelectorAll(
+			'.postername:not(.t-sec), .postertrip:not(.t-sec), .reply_, .file .thumb:not([alt="illegal"])'
+		), function(el) {
 			switch (el.classList[0]) {
-				case 'fileinfo':
-					var a = el.firstElementChild, name = getPageName(a.href);
-					_z.setup(a, {'class': 'download-link', 'download': name, 'title': name});
-					break;
 				case 'postername':
-					if (lng < 1)
-						el.textContent = getDefaultName(el.textContent);
+					if (lng !== 1)
+						el.textContent = Names.get('', el.textContent);
 				case 'postertrip':
 					var date = el.parentNode.lastChild;
 					if (date.className !== 'posterdate') {
@@ -1654,55 +1740,58 @@ function MagicExtension() {
 					_z.replace(el, _z.setup('span', {'class': 'reply-button line-sect txt-btn', 'title': LC.repl[lng]}))
 					break;
 				case 'thumb':
-					var a = el.parentNode, Class = 'cm-button', Embed = 'html5', Type, hash, finf, fext;
-					if (!a.href) {
-						finf = _z.route(el, '.fileinfo');
-						a = _z.setup('a', {'href': finf.querySelector('a').href, 'target': "_blank"}, null);
-						el.parentNode.appendChild(a); a.appendChild(el);
-					}
-					hash = a.href.hashCode(); fext = a.href.fext();
+					var params = {'class': 'mview thumb', 'onclick': undefined},
+						fileinfo = _z.route(el, '.fileinfo'),
+						clickFn = el.getAttribute('onclick'),
+						em = fileinfo.querySelector('em'),
+						dl = fileinfo.querySelector('a'),
+						name = getPageName(dl.href),
+						hash = dl.href.hashCode(),
+						fext = dl.href.fext();
+						a = el.parentNode.tagName !== 'A' ? (function(){
+							var nA = _z.setup('a', {'href': dl.href, 'target': "_blank"});
+							el.parentNode.appendChild(nA); nA.appendChild(el);
+							return nA;
+						})() : el.parentNode;
 					switch (true) {
-						case (fext === 'pdf'): Type = 'pdf'; Embed = 'iframe';
+						case (fext === 'pdf'):
+							HM.LinksMap[hash] = {Embed: 'iframe', Type: 'pdf'};
 							break;
-						case Files.video.isThere(fext): Type = 'video'; Embed = Files.video.indexOf(fext) > 4 ? 'flash' : 'html5';
+						case Files.video.isThere(fext):
+							HM.LinksMap[hash] = {Embed: Files.video.indexOf(fext) > 4 ? 'flash' : 'html5', Type: 'video'};
 							if (el.getAttribute('src') === '/thumb/generic/sound.png') {
-								_z.route(a, 'em').className = 'magic-info';
+								em.className = 'magic-info';
 								makeMagicPlayer('movie', a, el)
-							} else {
-								el.className = 'mview thumb'
-							}
+							} else
+								params['contextmenu'] = 'image-context';
 							break;
 						case Files.image.isThere(fext):
-							return _z.setup(el, {'class': 'spr-image expanded rated thumb'}, {'click': MagicSpoirate});
+							var WH = (/(\d+×\d+)/).exec(em.textContent),
+								fid = el.parentNode.parentNode.id.split('_');
+							params = {'id': 'thmb_'+ hash, 'class': 'iview thumb', 'image-size': WH[1], 'contextmenu': 'image-context', 'edit-tool': '/utils/image/edit/'+fid[2]+'/'+fid[1], 'onclick': undefined};
 							break;
-						case Files.audio.isThere(fext): Class = 'ma-button';
-							var afInf = _z.setup(_z.route(a, 'em'), {'class': 'magic-info'}, null),
-								artalb = (/kHz(?:[\s\n]*)(.*(?:[\s\n]*)—(?:[\s\n]*).*)(?:[\s\n]*)\s\//).exec(afInf.textContent)[1],
+						case Files.audio.isThere(fext):
+							var artalb = (/kHz(?:[\s\n]*)(.*(?:[\s\n]*)—(?:[\s\n]*).*)(?:[\s\n]*)\s\//).exec(em.textContent)[1],
 								mav = makeMagicPlayer('artwork', a, el);
+								em.className = 'magic-info';
+								fileinfo.lastChild.remove();
 							if (HM.AlbumArts[artalb.hashCode().toString()])
 								mav.id = _cover(artalb);
-							if (finf)
-								finf.lastChild.remove();
 							break;
 						default:
-							var aclc = el.getAttribute('onclick')
-							if (aclc && aclc.isThere('open_url')) {
+							if (clickFn && clickFn.isThere('open_url')) {
+								var emb = (/open_url\('([^']+)/).exec(clickFn)[1];
 								if (Files.arch.isThere(fext))
 									el.src = '/src/png/1405/archive-icon.png';
-								Embed = (/open_url\('([^']+)/).exec(aclc)[1];
-								Type = Embed.isThere('text') ? 'docs' : 'pdf'
-								el.removeAttribute('onclick');
-								el.className = 'mview thumb'
+								HM.LinksMap[hash] = {Embed: emb, Type: emb.isThere('text') ? 'docs' : 'pdf'};
 							}
 					}
-					if (Type && Embed) {
-						HM.LinksMap[hash] = {Embed: Embed, Type: Type};
-					}
-					_z.setup(a, {'class': Class});
+					_z.setup(dl, {'class': 'download-link', 'download': name, 'title': name});
+					_z.setup(el, params);
 			}
 			function makeMagicPlayer(clss, a, el) {
-				var magicPlayer = _z.setup('div', {'class': 'magic-audio thumb '+ clss, 'html': '<div class="ma-controls"></div>'}, null);
-				_z.after(a, magicPlayer); _z.append(magicPlayer.firstElementChild, _z.setup(a, {'id': 'ma-play'}, null)); el.remove();
+				var magicPlayer = _z.setup('div', {'class': 'magic-audio thumb '+ clss, 'html': '<div class="ma-controls"></div>'});
+				_z.after(a, magicPlayer); _z.append(magicPlayer.firstElementChild, _z.setup(a, {'id': 'ma-play', 'class': (clss === 'movie' ? 'cm' : 'ma') +'-button'})); el.remove();
 				return magicPlayer;
 			}
 		});
@@ -1712,7 +1801,7 @@ function MagicExtension() {
 			var cid = _cid(post.id);
 			if (HM.RepliesMap[cid]) {
 				if (!post.repliesNode) {
-					post.repliesNode = _z.setup('div', {'class': 'replylinks', 'html': '<span class="rl-inf">'+  LC.repl[lng] + LC.few['u-c'][lng] +':&nbsp;\n</span>'}, null);
+					post.repliesNode = _z.setup('div', {'class': 'replylinks', 'html': '<span class="rl-inf">'+  LC.repl[lng] + LC.few['u-c'][lng] +':&nbsp;\n</span>'});
 					post.getElementsByClassName('abbrev')[0].appendChild(post.repliesNode);
 				}
 				for (var i = 0; i < HM.RepliesMap[cid].length; i++) {
@@ -1720,39 +1809,13 @@ function MagicExtension() {
 					if (!post.repliesNode.querySelector('.celrly[href$="#i'+ Id[2] +'"]')) {
 						relink = _z.setup('a', {'id': 'cvl-'+ Id[0] +'-'+ (!Id[1] ? Id[2] : Id[1]) +'-'+ Id[2], 'class': 'reply-link celrly',
 							'href': '/'+ Id[0] +'/res/'+ (!Id[1] ? Id[2] : Id[1]) +'.xhtml#i'+ Id[2], 'text':
-							'\n>>'+ (Id[3] ? '❪'+ Id[0].toUpperCase() +'❫' : '') + Id[2] }, {'mouseover': Chanabira.MagicPostView});
+							'\n>>'+ (Id[3] ? '❪'+ Id[0].toUpperCase() +'❫' : '') + Id[2] });
 						relink.hidden = (document.getElementById('post_'+ Id[2]) || {hidden:false}).hidden;
 						_z.before(post.repliesNode.lastElementChild, relink);
 					}
 				}
 			}
 		});
-	}
-	function hRate(el, img) {
-		if (el.classList[2]) {
-			el.classList.remove('rate')
-			img.src = img.parentNode.href
-		} else {
-			el.classList.add('rate')
-			img.src = '/images/'+ img.alt +'.png'
-		}
-	}
-	function MagicSpoirate(el) {
-		if (el.classList[2] === 'rated') {
-			var finf = _z.route(el, '.fileinfo > a + br'),
-				href = el.parentNode.href,
-				fid = el.parentNode.parentNode.id.split('_'),
-				btnRate = _z.setup('a', {'class': 'sp-r txt-btn', 'text': el.alt});
-			createImgContext(el);
-			_z.after(finf, btnRate);
-			el.classList.remove('rated');
-			el.src = href;
-		} else if (el.alt.fext() == 'svg') {
-			el.alt = el.src;
-			el.src = el.parentNode.href;
-		}
-		el.classList.toggle('unexpanded')
-		el.classList.toggle('expanded')
 	}
 	function createFileContent(fileSrc, hash, Id, type) {
 		var fileName = getPageName(fileSrc),
@@ -1908,43 +1971,43 @@ function MagicExtension() {
 	//* @ original code 	https://github.com/tranquility-yuki/yukiscript
 	//* @ copyright 		2013+, You
 	function Yuki(stored) {
-		var Yu = this, fileList = [], 
-		Yum = {brd: HM.URL.board, tid: (HM.URL.thread || 0), funct: function(){}},
-		LCY = {
-			acap: ["Attach Captcha Image", 'Прикрепить капчу'],
-			subj: ["Subject", "Тема"],
-			newt: ["New Thread in", "Новый тред в"],
-			post: ["Post", "Отправить"],
-			txar: ["Message Text", "Текст сообщения"],
-			inps: ['In Progress...', 'Работаем...'],
-			ufrm: ['Unhide form', 'Раскрыть форму'],
-			hfrm: ['Hide form', 'Скрыть форму'],
-			rmv: ["Remove", "Убирать"],
-			fnm: ["File Name", "имя файла"],
-			send: ['Sending', 'Отправка'],
-			maxfc: ['Five files limit on this board.', 'Пять файлов это максимум на Доброчане.'],
-			wmark: {
-				'~': ['Wakabamark Strike Conversion', 'Перевод символов страйка в нотацию wakabamark'],
-				'ul': ['Unordered List', 'Неупорядоченный список'],
-				's': ['Strike', 'Зачеркнутый'],
-				'i': ['Italic', 'Курсивный'],
-				'b': ['Bold', 'Жирный'],
-				'c': ['Code', 'Код'],
-				'sp': ['Spoiler', 'Спойлер'],
-				'q': ['Quote Selected', 'Цитировать выделенное']
+		var Yu = this, fileList = [], stbFn = function(){},
+			Yum = {brd: HM.URL.board, tid: (HM.URL.thread || 0), afterSubmitAction:stbFn, bound:stbFn},
+			LCY = {
+				acap: ["Attach Captcha Image", 'Прикрепить капчу'],
+				subj: ["Subject", "Тема"],
+				newt: ["New Thread in", "Новый тред в"],
+				post: ["Post", "Отправить"],
+				txar: ["Message Text", "Текст сообщения"],
+				ufrm: ['Unhide form', 'Раскрыть форму'],
+				hfrm: ['Hide form', 'Скрыть форму'],
+				rmv: ["Remove", "Убирать"],
+				fnm: ["File Name", "имя файла"],
+				send: ['Sending', 'Отправка'],
+				ten: ['Ten', 'Десять'],
+				fiv: ['Five', 'Пять'],
+				via: ['via', 'по'],
+				f_limit: [' files limit on this board.', ' файлов это максимум на этой доске.'],
+				paste_lnk: ['Paste links here', 'Вставьте ссылки сюда'],
+				wmark: {
+					'~': ['Wakabamark Strike Conversion', 'Перевод символов страйка в нотацию wakabamark'],
+					'ul': ['Unordered List', 'Неупорядоченный список'],
+					's': ['Strike', 'Зачеркнутый'],
+					'i': ['Italic', 'Курсивный'],
+					'b': ['Bold', 'Жирный'],
+					'c': ['Code', 'Код'],
+					'sp': ['Spoiler', 'Спойлер'],
+					'q': ['Quote Selected', 'Цитировать выделенное']
+				},
+				cerr: {
+					'en': ['captcha', 'human.'],
+					'ru': ['капча', 'человек.']
+				}
 			},
-			cerr: {
-				'en': ['captcha', 'human.'],
-				'ru': ['капча', 'человек.']
-			}
-		},
-		ratingselect_tamplate = '<select name="file_1_rating" class="rating_SFW" id="file_rating_sel"><option class="rating_SFW">SFW</option><option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select>',
-		filepreview_tamplate = '[\n<a class="yuki_clickable">убрать</a>\n]<br><img class="preview_img" src="r{img}"><br><span class="file_name">r{fname}</span><br>'+
-			'<span class="file_name">r{size}&nbsp;</span>'+ ratingselect_tamplate,
 		replyform_tamplate = '<input id="yuki-targetThread" name="thread_id" value="" type="hidden"><input name="task" value="post" type="hidden"><input name="goto" value="thread" type="hidden">'+
-			'<div id="yuki-errorMsg"></div>'+
+			'<div id="yuki-errorMsg"></div><div id="yuki-targetInfo" style="margin:1px 5px;" class="font-s">'+ LC.repl[lng] +' '+ LC.to[lng] +'\n<span class="replytitle"></span>\n№.<span></span></div>'+
 			'<table><tbody id="yuki-dropBox" class="line-sect"><tr class="etch-text"></tr><tr class="droparrow inactive"></tr></tbody><tbody class="line-sect">'+
-			'<tr id="trname"><td><input placeholder="'+ getDefaultName() +'" name="name" size="30" value="" type="text">'+
+			'<tr id="trname"><td><input id="yuki-poster-name" placeholder="" name="name" size="30" value="" type="text">'+
 				'<label class="sagearrow line-sect txt-btn inactive" style="right:24px;"><input id="yuki-sage" name="sage" type="checkbox" hidden></label>'+
 				'<label id="yuki-newThread-create" class="yuki_clickable inactive">'+ LCY.newt[lng] +'<span class="t-sec">\n/'+ Yum.brd +
 				'/</span></label><span class="txt-btn yuki_clickable" id="yuki-close-form" title="'+ LC.remv[lng] +'">✕</span></td></tr>'+
@@ -1967,11 +2030,12 @@ function MagicExtension() {
 				'<span id="yuki-attach-captcha-button" class="txt-btn yuki_clickable" title="'+ LCY.acap[lng] +'">[+]</span></span><br>'+
 				'<input id="yuki-captcha" autocomplete="off" name="captcha" type="text" '+ (HM.User.tokens[0] && HM.User.tokens[0].token === 'no_user_captcha' ? 'hidden' : '') +
 			'></td></tr><tr id="trrempass"><td><input id="yuki-pass" name="password" size="35" value="'+ HM.User.password +'" type="password" hidden></td></tr>'+
-			'<tr id="trfile"><td id="files_parent"><div id="file_1_div"><label><span class="button">'+ LC.add[lng] +' '+ (lng ? LC.file[lng].toLowerCase() : LC.file[lng]) +
-			LC.few['u-c'][lng] +'</span><input id="dumb_file_field" type="file" hidden multiple></label>\n<span class="yukiFileSets"><label><input id="yuki-RemoveExif" type="checkbox" '+ (HM.RemoveExif ? 'checked ' : '') +'hidden><span class="checkarea"></span>\n'+
+			'<tr id="trfile"><td id="files_parent"><div id="file_1_div" class="line-sect"><span class="yukiFileAdds"><label class="button"><input id="dumb_file_field" type="file" hidden multiple>'+
+			LC.add[lng] +' '+ (lng ? LC.file[lng].toLowerCase() : LC.file[lng]) + LC.few['u-c'][lng] +'</label><span id="yuki-add-files-by-url" class="button">'+
+			LCY.via[lng] +' URL</span></label>\n<span class="yukiFileSets"><label><input id="yuki-RemoveExif" type="checkbox" '+ (HM.RemoveExif ? 'checked ' : '') +'hidden><span class="checkarea"></span>\n'+
 			LCY.rmv[lng] +' Exif</label>\n<label><input id="yuki-RemoveFileName" type="checkbox" '+ (HM.RemoveFileName ? 'checked ' : '') +'hidden><span class="checkarea"></span>\n'+ LCY.rmv[lng] +' '+ LCY.fnm[lng] +
-			'</label></span></div></td></tr></tbody></table><div id="yuki-files-placeholder"></div>',
-		WarningMsg = _z.setup('strong', {'id': 'warning-massage', 'class': 'blink'}, null);
+			'</label></span></div><div id="conn-push" class="dpop"></div></td></tr></tbody></table><div id="yuki-files-placeholder"></div>',
+		WarningMsg = _z.setup('strong', {'id': 'warning-massage', 'class': 'blink'});
 		WarningMsg.dozZe = function(e) {
 			if (this.iterations >= 4) {
 				this.remove();
@@ -1992,6 +2056,11 @@ function MagicExtension() {
 					case 'yuki-replyText':
 						e.target.classList.remove('ta-inact');
 						break;
+					case 'yuki-add-files-by-url':
+						var input = prompt('http://exemple.com/image.jpg http://exemple.org/music.mp3 https://exemple.ru/archive.rar\n\n'+ LCY.paste_lnk[lng] +':');
+						_z.each(input.split(' '), function(uri) {
+							getUrlData('Blob', uri, yAdd);
+						});
 					case 'yuki-captcha-image':
 						e.target.src = '/captcha/'+ Yum.brd +'/'+ _t() +'.png';
 						break;
@@ -2002,7 +2071,7 @@ function MagicExtension() {
 						StrikeConvert(Yu['ReplyText']);
 						break;
 					case 'yuki-attach-captcha-button':
-						yukiAttachCapcha(e);
+						yukiAttachCapcha(Yu['CaptchaImage']);
 						break;
 					case 'yuki-newThread-create':
 						if (HM.URL.thread) {
@@ -2011,28 +2080,80 @@ function MagicExtension() {
 							e.target.classList.toggle('inactive')
 						}
 				}
-		}, 'change': function(e) {
-			switch (e.target.id) {
-				case 'dumb_file_field':
-					yukiAddFile(e);
-					break;
-				case 'file_rating_sel':
-					e.target.className = e.target.querySelector('option:checked').className;
-					break;
-				case 'yuki-RemoveExif':
-				case 'yuki-RemoveFileName':
-					setupOptions(e.target, e.target.id.split('-')[1], 'local');
-					break;
-				case 'yuki-sage':
-					e.target.parentNode.classList.toggle('inactive');
-					break;
+		}, 'mousedown': function(e) {
+			var FP = ['popup', 'report'].isThere(this.classList[0])
+			switch (true) {
+				case (e.target.id === 'conn-push'):
+					var startCX = e.clientX;
+					var startCY = e.clientY;
+					if (!FP) {
+						this.className = 'popup line-sect';
+						this.style['left'] = (this.offsetLeft - 5) +'px'
+						this.style['top']  = (e.clientY - this.clientHeight + 20) +'px'
+					} else if (!e.target.clks) {
+						e.target.clks = 0;
+					}
+					e.target.onmouseup = function(e) {
+						var Xf = e.clientX - startCX;
+						var Yf = e.clientY - startCY;
+						if (!FP && ((Xf < 0 ? Xf * -1 : Xf) >= 100 || (Yf < 0 ? Yf * -1 : Yf) >= 50)) {
+							this.clks = 0;
+							changeForms(Yu['ReplyForm'], 'report');
+							setupOptions(this, 'FormStyle', 'local', 0);
+						} else {
+							switch(true) {
+								case (this.clks >= 1 && Xf == 0 && Yf == 0):
+									Yum.bound(Yu['ReplyForm']);
+								case (!FP):
+									_z.setup(Yu['ReplyForm'], {'class': 'reply line-sect', 'style': ''});
+									setupOptions(this, 'FormStyle', 'local', 1);
+									this.clks = 0;
+									break;
+								case (Xf == 0 && Yf == 0):
+									this.clks++;
+									break;
+								default:
+									this.clks = 0;
+							}
+						}
+					}
+				case (FP):
+					stepZup.bind(this)();
+					if (!['INPUT', 'SELECT', 'TEXTAREA', 'IMG'].isThere(e.target.tagName)) {
+						var coords = getCoords(this);
+						HM.DragableObj = {
+							el: this,
+							shift: [e.pageX - coords.left, e.pageY - coords.top],
+							position: 'fixed'
+						}
+						_z.fall(e);
+					}
 			}
-		}});
+		}, 'change': function(e) {
+				switch (e.target.id) {
+					case 'dumb_file_field':
+						yukiAddFile(e.target);
+						break;
+					case 'file_rating_sel':
+						e.target.className = e.target.querySelector('option:checked').className;
+						break;
+					case 'yuki-RemoveExif':
+					case 'yuki-RemoveFileName':
+						setupOptions(e.target, e.target.id.split('-')[1], 'local');
+						break;
+					case 'yuki-sage':
+						e.target.parentNode.classList.toggle('inactive');
+						break;
+				}
+			}
+		});
 		this['TargetThread'] = el$('#yuki-targetThread');
+		this['TargetInfo'] = el$('#yuki-targetInfo .replytitle');
 		this['ErrorMassage'] = el$('#yuki-errorMsg');
 		this['NewThreadCreate'] = el$('#yuki-newThread-create');
 		this['CaptchaImage'] = el$('#yuki-captcha-image');
 		this['Submit'] = el$('#yuki-submit-button');
+		this['PosterName'] = el$('#yuki-poster-name');
 		this['FilesPlaceholder'] = el$('#yuki-files-placeholder');
 		this['ReplyText'] = _z.setup(el$('#yuki-replyText'), {
 			'value': stored ? JSON.parse(_z.sessionS.get('SafeText', JSON.stringify(el$('#yuki-replyText').value))) : ''
@@ -2069,14 +2190,18 @@ function MagicExtension() {
 				this.firstChild.textContent = '';
 				this.classList.remove('thumb');
 			}, 'drop': function(e) {
-				yukiAddFile(e);
+				if (e.dataTransfer.mozSourceNode && e.dataTransfer.mozSourceNode.id === 'yuki-captcha-image') {
+					yukiAttachCapcha(e.dataTransfer.mozSourceNode);
+				} else {
+					yukiAddFile(e.dataTransfer);
+				}
 				this.firstChild.textContent = '';
 				this.classList.remove('thumb');
 				return _z.fall(e);
 			}
 		});
 		this['GlobalFormArea'] = _z.setup('div', {'id': 'global-form-area', 'class': 'postarea hidout', 'html': '<table><tbody><tr><td id="hide-global-form" class="hideinfo">[\n<a id="hgf-btn">'+
-			LCY.hfrm[lng] +'</a>\n]</a></td></tr><tr><td id="global-form-sect"></td></tr><tr><td id="board-rules-sect"></td></tr></tbody></table>'}, null);
+			LCY.hfrm[lng] +'</a>\n]</a></td></tr><tr><td id="global-form-sect"></td></tr><tr><td id="board-rules-sect"></td></tr></tbody></table>'});
 		this['OpenTopForm'] = _z.setup('div', {'id': 'open-top-form', 'class': 'hideinfo', 'html': '[\n<a id="otf-btn">'+ LCY.ufrm[lng] +'</a>\n]'}, {'click': makeGlobalForm});
 		this['OpenBottomForm'] = _z.setup('div', {'id': 'open-bottom-form', 'class': 'hideinfo', 'html': '[\n<a id="obf-btn">'+ LCY.ufrm[lng] +'</a>\n]'}, {'click': makeGlobalForm});
 		this['HideGlobalForm'] = _z.setup(gfa$('#hide-global-form'), {}, {'click': makeGlobalForm});
@@ -2107,177 +2232,227 @@ function MagicExtension() {
 		}, false);
 		function el$(child) { return Yu['ReplyForm'].querySelector(child) }
 		function gfa$(child) { return Yu['GlobalFormArea'].querySelector(child) }
-		function yukiAttachCapcha(e) {
+		function yukiAttachCapcha(captchaImg) {
 			if (checkfilesLimit())
 				return;
-			var el = e.target, exist, iw,
-				canvas = document.createElement("canvas"),
-				ctx = canvas.getContext("2d");
-			canvas.width = iw = Yu['CaptchaImage'].width;
-			canvas.height = Yu['CaptchaImage'].height;
-			ctx.drawImage(Yu['CaptchaImage'], 0, 0);
+			var canvas = _z.setup('canvas', {'width': captchaImg.width, 'height': captchaImg.height}),
+				ctx = canvas.getContext("2d"),
+				iw = captchaImg.width;
+				ctx.drawImage(captchaImg, 0, 0);
 			while (iw) {
 				var pixel = ctx.getImageData(iw - 1, 4, 1, 1),
 					data = pixel.data;
 					if (data[0] + data[1] + data[2] !== 765) {
 						canvas.width = iw + 2;
 						canvas.height = 15;
-						ctx.drawImage(Yu['CaptchaImage'], 0, 0, iw + 2, 15, 0, 0, iw + 2, 15);
+						ctx.drawImage(captchaImg, 0, 0, iw + 2, 15, 0, 0, iw + 2, 15);
 						break;
 					}
 				iw--;
 			}
-			var dataURL = canvas.toDataURL("image/png");
-			_z.each(fileList, function(obj) {
-				if (obj.dataURL === dataURL)
-					exist = true;
-			})
-			if (exist)
-				return;
-			f = {
-				"name": 'talking_captcha.png',
-				"size": dataURL.length * 6 / 8,
-				"type": 'image/png'
-			};
-			fileList.push({
-				file: f,
-				renamed: false,
-				f_name: 'talking_captcha.png',
-				jpegStripped: true,
-				el: _z.setup('div', {'class': "yukiFile", 'html': filepreview_tamplate.allReplace({
-					'r{img}': dataURL, 'r{fname}': f.name, 'r{size}': bytesMagnitude(f.size)
-				})}, null),
+			for (var i = 0, dataURL = canvas.toDataURL('image/png'); i < fileList.length; i++) {
+				if (fileList[i].dataURL === dataURL)
+					return;
+			}
+			new YukiFile('image', {
+				blob: dataURLtoBlob(dataURL, 'image/png'),
+				original_name: 'talking_captcha.png',
 				dataURL: dataURL
-			});
-			attachthisFile();
+			})
 		}
 		function checkfilesLimit() {
 			var limit, mu = (Yum.brd === 'mu');
 			if (fileList.length >= (mu ? 10 : 5)) {
-				_z.prepend(Yu['FilesPlaceholder'], _z.setup(WarningMsg, {'text': LCY.maxfc[lng], 'style':'display:block;text-align:center;'}, null));
+				_z.prepend(Yu['FilesPlaceholder'],
+					_z.setup(WarningMsg, {'text': LCY[(mu ? 'ten' : 'fiv')][lng] + LCY.f_limit[lng], 'style':'display:block;text-align:center;'}));
 				limit = true;
 			}
 			return limit;
 		}
-		function attachthisFile() {
-			fileList[fileList.length - 1].el.querySelector('.yuki_clickable').onclick = (function(data) {
-				return function(e) {
-					var idx = fileList.indexOf(data);
-					data.el.remove();
-					delete fileList[idx];
-					fileList.splice(idx, 1)
+		
+		function YukiFile(Type, fileObj) {
+			try {
+				for (var key in fileObj) {
+					this[key] = fileObj[key];
 				}
-			}(fileList[fileList.length - 1]))
-			Yu['FilesPlaceholder'].appendChild(fileList[fileList.length - 1].el);
+				if (!fileObj['upload_name'])
+					this['upload_name'] = fileObj['original_name'];
+				
+				var YF = this, Id = makeRandId(6), Class = (Type == 'audio' ? ' artwork' : Type == 'video' ? ' movie' : ''),
+					f_size = bytesMagnitude(this.blob.size), f_ext = this.upload_name.fext();
+				this['frontend'] = _z.setup('div', {'id': 'yuki-file-'+ Id, 'class': 'yukiFile'+ Class, 'html': (Class ? '<div class="magic-info"><div class="yf_remove">[\n<a id="yf-remove" class="yuki_clickable">'+
+					LCY['rmv'][lng].toLowerCase() +'</a>\n]</div>\n'+ f_ext.toUpperCase() +', <span id="yf-size" class="yf_info">'+ f_size +'</span>\n<div id="yf-name" class="yf_info">'+ this.upload_name +
+					'</div></div><div class="magic-audio"><div class="ma-controls"><a class="w-open" id="ma-play"></a></div></div>' :
+					'<div class="yf_remove">[\n<a id="yf-remove" class="yuki_clickable">'+ LCY['rmv'][lng].toLowerCase() +'</a>\n]</div><img id="yf-preview" class="yf_preview" src="'+
+					(this.dataURL || '#transparent') +'"><div id="yf-name" class="yf_info">'+ this.upload_name +'</div><span id="yf-size" class="yf_info">'+ f_size +'</span>') +'<select class="rating_SFW" id="file_rating_sel"><option class="rating_SFW">SFW</option><option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select>'},
+					{'change': function(e) {
+						if (e.target.type === 'select-one') {
+							YF.rating = e.target.value;
+						}
+					},'click': function(e) {
+						switch (e.target.id) {
+							case 'ma-pause':
+							case 'ma-play':
+								switch (Type) {
+									case 'video': loadMediaContainer(e); break;
+									case 'audio': initMagicAudio(e, YF.blob, f_ext);
+								}
+								break;
+							case 'yf-name':
+								if (YF.upload_name !== YF.original_name) {
+									YF['FileName'].textContent = YF.upload_name = YF.original_name;
+								} else {
+									YF['FileName'].textContent = YF.upload_name = (makeRandId(32) +'.'+ YF.upload_name.fext());
+								}
+								break;
+							case 'yf-remove':
+								var idx = fileList.indexOf(YF);
+								YF.frontend.remove();
+								delete fileList[idx];
+								fileList.splice(idx, 1);
+						}
+					}
+				});
+				this['Preview'] = _z.setup((YF['frontend'].querySelector('#yf-preview') || 'img'), {}, {'load':
+					function(e) {
+						if (Type === 'image')
+							YF['FileSize'].textContent = bytesMagnitude(YF.blob.size) +', '+ this.naturalWidth +'×'+ this.naturalHeight;
+					}
+				});
+				this['FileName'] = YF['frontend'].querySelector('#yf-name');
+				this['FileSize'] = YF['frontend'].querySelector('#yf-size');
+				this['rating'] = 'SFW';
+				fileList.push(this);
+				Yu['FilesPlaceholder'].appendChild(this['frontend']);
+			} catch(e) {
+				_z.fall(e)
+			}
+		}
+		function checkfileName(file_name) {
+			var ext = file_name.fext()
+			return (file_name.match(/videoplayback\?/) || file_name.match(/[?=&]/g) && ext.match(/[?=&]/g));
 		}
 		
 		// Loop through the FileList and render image files as thumbnails.
 		function makeYukiFile(f) {
-			var exist, frontend, reader, renamed = false, Class = '',
-				f_name = f.name, f_ext = f_name.fext(), f_size = bytesMagnitude(f.size);
-			for (var i = 0; i < fileList.length; i++) {
-				if (fileList[i].file.size === f.size)
-					exist = true;
-			}
-			if (exist || checkfilesLimit())
+			if (checkfilesLimit())
 				return;
-			if (HM.RemoveFileName) {
-				f_name = (makeRandId(32) + (f.name.match(/\.[^\.]+$/) || [''])[0]).toLowerCase();
-				renamed = true;
+			for (var i = 0; i < fileList.length; i++) {
+				if (fileList[i].blob.size === f.size && fileList[i].blob.type === f.type)
+					return;
 			}
-			switch (true) {
-				case Files.audio.isThere(f_ext): Class = ' artwork';
-					break;
-				case Files.video.isThere(f_ext): Class = ' movie';
-			}
-			frontend = _z.setup('div', {'class': 'yukiFile' + Class, 'html': Class ? '<div class="magic-info"><div>[\n<a class="yuki_clickable">убрать</a>\n]</div>\n'+
-				f_ext.toUpperCase() +', '+ f_size + '<br>\n'+ f_name +'</div><div class="magic-audio"><div class="ma-controls"><a class="w-open" id="ma-play"></a></div><div style="position:relative;top:135px;">'+ ratingselect_tamplate +'</div></div>' :
-				filepreview_tamplate.allReplace({'r{img}': (Files.arch.isThere(f_ext) ? '/src/png/1405/archive-icon.png' : '#transparent'),
-					'r{fname}': f_name, 'r{size}': f_size})
-				}, null)
-			fileList.push({
-				file: f,
-				f_name: f_name,
-				renamed: renamed,
-				el: frontend
-			});
-			attachthisFile();
-	
+			var ext = f.name.fext(), f_type = (
+				    f.type == "application/x-shockwave-flash"               ? ['video', 'swf'] :
+				    f.type == "audio/mpeg"                                  ? ['audio', 'mp3'] :
+				    f.type == "video/ogg"                  && ext == 'ogg'  ? ['audio', 'ogg'] :
+				    f.type == 'binary/octet-stream'        ? (ext == 'flac' ? ['audio', 'flac'] : ['', 'bin']) :
+				   !f.type                                 ? (ext == 'flac' ? ['audio', 'flac'] : ['', ''])    :
+				    f.type.split('/')),
+				
+				f_ext = ext.match(/[?=&]/g) ? f.type[1].replace('+xml', '').replace('x-', '') : ext,
+				
+				f_name = checkfileName(f.name) ? makeRandId(32) +
+				  (!f_ext                      ? ''    : '.'+ (
+				    f_type[0] == 'text'        ? 'txt' :
+				    f_type[1].replace('+xml', '').replace('x-', ''))
+				  ) : f.name,
+				
+				theFile = new YukiFile(f_type[0], {
+					blob: f,
+					upload_name: HM.RemoveFileName ? makeRandId(32) + (f_ext ? '.'+ f_ext : '') : f_name,
+					original_name: f_name
+				});
+				
 			// Closure to capture the file information.
-			if (Class) {
-				var URL = window.URL || window.webkitURL,
-					blob = URL.createObjectURL(f);
-				if (Files.audio.isThere(f_ext)) {
-					var moz = typeof mozRTCSessionDescription !== "undefined";
-					if (['ogg', 'opus'].isThere(f_ext) && moz) {
-						var HTMLAE = new Audio(blob);
-						HTMLAE.onloadedmetadata = function() {
-							var mozMdata = this.mozGetMetadata();
-							if (Object.keys(mozMdata).length > 0) {
-								MDPBlockParser(frontend, mozMdata)
-							}
+			switch (f_type[0]) {
+				case 'image':
+					// Read in the image file as a data URL.
+					getFileReaderData('DataURL', f, function(base64) {
+						// Render thumbnail.
+						if (HM.RemoveExif && theFile.blob.type === 'image/jpeg') {
+							theFile['jpegStripped'] = true;
 						}
-						HTMLAE.load()
-					} else {
-						if (['flac', 'alac', 'm4a'].isThere(f_ext)) {
+						theFile['Preview'].src = theFile.dataURL = base64;
+					});
+					break;
+				case 'text':
+					// Read in the text file as a UTF-8 encoding text.
+					getFileReaderData('Text', f, function(text) {
+						var canvas = _z.setup('canvas', {'class': 'yf_preview _text', 'width': 150, 'height': 150}),
+							context = canvas.getContext("2d");
+							context.font = "10px serif";
+						for (var i = 0, x = 3, y = 11, cars = text.split("\n"); i < cars.length; i++) {
+							context.fillText(cars[i], x, y);
+							y += 11;
+						}
+						_z.replace(theFile['Preview'], canvas);
+						theFile['Preview'] = canvas;
+					});
+					break;
+				case 'audio':
+				case 'video':
+					var URL = window.URL || window.webkitURL,
+						blobURL = URL.createObjectURL(f);
+						_z.setup(theFile['frontend'].querySelector('#ma-play'), {'href': blobURL});
+				default:
+					switch (true) {
+						case (['ogg', 'opus'].isThere(f_ext) && typeof mozRTCSessionDescription !== "undefined"):
+							var HTMLAE = new Audio(blobURL);
+							HTMLAE.onloadedmetadata = function() {
+								var mozMdata = this.mozGetMetadata();
+								if (Object.keys(mozMdata).length > 0) {
+									MDPBlockParser(theFile['frontend'], mozMdata)
+								}
+							}
+							HTMLAE.load()
+							break;
+						case (['flac', 'alac', 'm4a'].isThere(f_ext)):
 							var AVAsset = new AV.Asset.fromFile(f);
 							AVAsset.get('metadata', function(md) {
-								AVMetadata(frontend, md)
+								AVMetadata(theFile['frontend'], md)
 							});
-						} else {
+							break;
+						case (Files.audio.isThere(f_ext)):
 							MAParser('file', f, function(metadata) {
 								if ("picture" in metadata) {
 									getFileReaderData('dataurl', metadata.picture, function(dataImage){
-										frontend.id = _cover(metadata.artist, metadata.album, dataImage)
+										theFile['frontend'].id = _cover(metadata.artist, metadata.album, dataImage)
 									})
 								}
 							});
-						}
+							break;
+						case (['pdf'].isThere(f_ext)):
+							theFile['Preview'].src = '/thumb/pdf/1406/140217014000620s.jpg';
+							break;
+						case (Files.video.isThere(f_ext)):
+							HM.LinksMap[blobURL.hashCode()] = {Embed: (Files.video.indexOf(f_ext) > 4 ? 'flash' : 'html5'), Type: 'video'}
+							break;
+						case (Files.arch.isThere(f_ext)):
+							theFile['Preview'].src = '/src/png/1405/archive-icon.png';
+							break;
 					}
-					Fn = function(e) {
-						return initMagicAudio(e, f, f_ext)
-					}
-				} else if (Files.video.isThere(f_ext)) {
-					var hash = blob.hashCode();
-						Fn = loadMediaContainer;
-						HM.LinksMap[hash] = {Embed: (Files.video.indexOf(f_ext) > 4 ? 'flash' : 'html5'), Type: 'video'}
-				}
-				_z.setup(frontend.querySelector('#ma-play'), {'href': blob}, {
-					'click': Fn
-				});
 			}
-			reader = new FileReader();
-			reader.onload = (function(theFile) {
-				return function(e) {
-					// Render thumbnail.
-					if (HM.RemoveExif && theFile.file.type.toLowerCase() === 'image/jpeg') {
-						theFile.dataURL = jpegStripExtra(e.target.result);
-						theFile['jpegStripped'] = true;
-					} else {
-						theFile.dataURL = e.target.result;
-						theFile['jpegStripped'] = false;
-					}
-					if (theFile.file.type.match('image.*')) {
-						theFile.el.querySelector('.preview_img').setAttribute('src', theFile.dataURL);
-					}
-				};
-			})(fileList[fileList.length - 1]);
-			// Read in the image file as a data URL.
-			reader.readAsDataURL(f);
 		}
-		function yukiAddFile(e) { // FileList object
-			var data = (e.dataTransfer || e.target), files = data.files,
+		
+		function yukiAddFile(data) { // FileList object
+			var files = data.files,
 				dataURL = data.getData ? data.getData(data.effectAllowed === 'copyLink' ? 'Text' : 'URL') : null;
 			if (checkfilesLimit())
 				return;
 			if (files.length === 0 && dataURL) {
-				getUrlData('Blob', dataURL, function() {
-					var blob = this.response;
-						blob.name = getPageName(dataURL);
-						makeYukiFile(blob)
-				})
+				getUrlData('Blob', dataURL, yAdd);
 			} else 
-				_z.each(files, makeYukiFile)
+				_z.each(files, makeYukiFile);
+		}
+		function yAdd(blob, f_url) {
+			try {
+				if (blob.type !== 'text/html') {
+					blob.name = getPageName(f_url);
+					makeYukiFile(blob);
+				}
+			} catch(e) {
+				_z.dbg(e);
+			}
 		}
 		function submitProcess(st) {
 			_z.setup(Yu['Submit'], {'disabled': (st ? "disabled" : undefined)}, null);
@@ -2320,7 +2495,8 @@ function MagicExtension() {
 								Yu['ErrorMassage'].textContent = '';
 								Yu['FilesPlaceholder'].innerHTML = '';
 								Yu['Captcha'].hidden = true;
-								submitProcess(false); Yum.funct(this);
+								submitProcess(false);
+								Yum.afterSubmitAction();
 								if (Yu['ReplyText'].safe_text)
 									_z.sessionS.set('SafeText', JSON.stringify(Yu['ReplyText'].value));
 								if (HM.ThreadListener[Yum.tid]) {
@@ -2337,16 +2513,13 @@ function MagicExtension() {
 						}
 					}
 					for (var i = 0; i < fileList.length; i++) {
-						if (HM.RemoveExif && fileList[i].file.type.toLowerCase() == 'image/jpeg' && !fileList[i].jpegStripped) {
-							fileList[i].dataURL = jpegStripExtra(fileList[i].dataURL);
+						if (HM.RemoveExif && fileList[i].blob.type == 'image/jpeg' && fileList[i]['jpegStripped'] && fileList[i].dataURL) {
+							fileList[i].blob = dataURLtoBlob(jpegStripExtra(fileList[i].dataURL), fileList[i].blob.type)
 						}
-						if (HM.RemoveFileName && !fileList[i].renamed) {
-							fileList[i].f_name = (makeRandId(32) + (fileList[i].f_name.match(/\.[^\.]+$/) || [''])[0]).toLowerCase();
-						}
-						fd.append("file_" + (i + 1), dataURLtoBlob(fileList[i].dataURL, fileList[i].file.type), fileList[i].f_name);
-						fd.append("file_" + (i + 1) + "_rating", fileList[i].el.querySelector("select[name='file_1_rating']").value);
+						fd.append('file_'+ (i + 1), fileList[i].blob, fileList[i].upload_name);
+						fd.append('file_'+ (i + 1) +'_rating', fileList[i].rating);
 					};
-					fd.append("post_files_count", fileList.length)
+					fd.append('post_files_count', fileList.length)
 					submitProcess(true);
 					break;
 				case 'delete_form': Fn = function() {
@@ -2365,7 +2538,7 @@ function MagicExtension() {
 							if (del_checks.length === 1) {
 								document.getElementById('post_'+ del_checks[0].name).className = 'postdeleted';
 								del_checks[0].remove();
-							} else if (locationThread) {
+							} else if (HM.URL.thread) {
 								setTimeout(function() {
 									HM.ThreadListener[HM.URL.thread].updateThread(false, true);
 								}, 2000)
@@ -2384,11 +2557,16 @@ function MagicExtension() {
 		function makeReplyForm(map, params) {
 			Yu['TargetThread'].value = Yum.tid = map[1]; Yum.brd = map[0];
 			Yu['CaptchaImage'].src = '/captcha/'+ Yum.brd +'/'+ _t() +'.png';
+			Yu['PosterName'].placeholder = Names.get(Yum.brd);
 			switch (params.type) {
+				case 'popup':
 				case 'reply':
+					Yum.bound = params.bound;
 					_z.each([Yu['OpenTopForm'], Yu['OpenBottomForm']], _show);
 					_hide(Yu['HideGlobalForm']);
 				case 'report':
+					Yu['TargetInfo'].textContent = (document.querySelector('#post_'+Yum.tid+' .replytitle') || params).textContent;
+					Yu['TargetInfo'].nextElementSibling.textContent = Yum.tid;
 					if (map[2] && !Yu['ReplyText'].value.isThere('>>'+ map[2])) {
 						wmarkText(Yu['ReplyText'], '>>'+ map[2], '\r\n')
 					}
@@ -2397,13 +2575,9 @@ function MagicExtension() {
 					Yu['ReplyText'].value = params.text;
 					el$('[name="name"]').value = params.name;
 					el$('[name="subject"]').value = params.subj;
-					Yum.funct = params.funct;
+					Yum.afterSubmitAction = params.afterSubmitAction;
 					for (var i = 0, len = params.files.length - fileList.length; i < len; i++) {
-						getUrlData('Blob', params.files[i].href, function() {
-							var blob = this.response;
-								blob.name = getPageName(this.responseURL);
-								makeYukiFile(blob);
-						})
+						getUrlData('Blob', params.files[i].href, yAdd);
 					}
 			}
 			return _z.setup(Yu['ReplyForm'], {'class': params.type +' line-sect', 'action': '/'+ Yum.brd +'/post/new.xhtml'});
@@ -2514,7 +2688,7 @@ function MagicExtension() {
 			output[posT] = orig[posO];
 			output[posT + 1] = orig[posO + 1];
 			output = new Uint8Array(outData, 0, posT + 2);
-			return "data:image/Jpeg;base64," + arrayBufferDataUri(output);
+			return "data:image/Jpeg;base64,"+ arrayBufferDataUri(output);
 		}
 		function _t(last) { 
 			return (new Date).getTime() - (last ? parseInt(last) : 0);
@@ -2659,8 +2833,8 @@ function MagicExtension() {
 				});
 				break;
 			case 'url':
-				getUrlData('Blob', Source, function() {
-					parse_audio_metadata(this.response, callback, errback);
+				getUrlData('Blob', Source, function(blob) {
+					parse_audio_metadata(blob, callback, errback);
 				});
 		}
 	}
@@ -2701,10 +2875,10 @@ function MagicExtension() {
 	/************************************************************************/
 	function MagicElements(h) {
 		var MEt = this, tLC = {
-			m_macro: ['Make Image Macro', 'Создать макро'],
+			m_macro: ['Create Macro', 'Создать макро'],
 			fnd_src_wth: ["find source with", "искать оригинал в"]
 		}
-		this['ContextMenu'] = _z.setup('div', {'class': 'magic-image-context', 'class': 'dropdown-toggle', 'style': 'position:absolute;top:0;left:0;', 'html': '<ul class="dropdown-menu"><li class="dropdown-item i-fav el-li" id="icm-create-macro">'+ tLC.m_macro[lng] +'</li><div class="dropdown-br cyan-light">'+ tLC.fnd_src_wth[lng] +'</div><li id="icm-fsw-google" class="dropdown-item i-fav el-li">Google</li><li class="dropdown-item i-fav el-li" id="icm-fsw-iqdb">Iqdb</li><li class="dropdown-item i-fav el-li" id="icm-fsw-saucenao">SauceNAO</li><li class="dropdown-item i-fav el-li" id="icm-fsw-derpibooru">Derpibooru</li></ul><form enctype="multipart/form-data" target="_blank" action="https://derpibooru.org/search/reverse" method="post" hidden><input id="rs-url" name="url" value="" type="text"><input id="fuzziness" name="fuzziness" value="0.25" type="text"></form>'}, {
+		this['ContextMenu'] = _z.setup('div', {'class': 'magic-image-context', 'class': 'dropdown-toggle', 'style': 'position:absolute;top:0;left:0;', 'html': '<ul class="dropdown-menu"><li class="dropdown-item i-fav el-li" id="icm-create-macro">'+ tLC.m_macro[lng] +'</li><div class="dropdown-br cyan-light">'+ tLC.fnd_src_wth[lng] +'</div><li id="icm-fsw-google" class="dropdown-item i-fav el-li">Google</li><li class="dropdown-item i-fav el-li" id="icm-fsw-iqdb">Iqdb</li><li class="dropdown-item i-fav el-li" id="icm-fsw-saucenao">SauceNAO</li><li class="dropdown-item i-fav el-li" id="icm-fsw-derpibooru">Derpibooru</li></ul><form enctype="multipart/form-data" target="_blank" action="https://derpibooru.org/search/reverse" method="post" hidden><input id="rs-url" name="url" value="" type="text"><input id="fuzziness" name="fuzziness" value="0.25" type="text"></form>'}, {'mousedown': nCR,
 			'click': function(e) {
 				switch (e.target.id) {
 					case 'icm-create-macro': window.open(this.editTool, '_blank'); break;
@@ -2719,6 +2893,7 @@ function MagicExtension() {
 			}
 		});
 		this['ContentWindow'] = _z.setup('div', {'class': 'content-window hidout', 'html': '<div id="shadow-box"></div><label id="close-content-window"></label>'}, {
+				'mousedown': nCR,
 				'click': function(e) {
 					switch (e.target.id) {
 						case 'shadow-box': _hide(MEt['ContentWindow']);
@@ -2732,23 +2907,27 @@ function MagicExtension() {
 				}
 			});
 		this['DeleteOverlay'] = _z.setup('div', {'id': 'delete-overlay'});
-		this['StatusPanel'] = _z.setup('div', {'id': 'status-panel'});
-		this['ContentMarker'] = _z.setup('label', {'id': 'show-content-window', 'class': 'hidout'}, {
-				'click': function(e) {
+		this['StatusPanel'] = _z.setup('div', {'id': 'status-panel', 'style': 'z-index:'+ HM.zIndex}, {'mousedown': stepZup});
+		this['ContentMarker'] = _z.setup('label', {'id': 'show-content-window', 'class': 'hidout'}, {'mousedown': nCR, 'click': function(e) {
 					_show(MEt['ContentWindow']);
 					_hide(this)
 				}
 			});
+		function nCR(e) {
+			stopCloseReact = true;
+		}
 	}
 	
 	function MagicSettings(h) {
 		var MSs = this, ActiveButton, lastScrollElem,
 			SLC = {
 				mcp: ["Post", "В посте"],
+				pvc: ["Center", "По центру"],
 				mcw: ["Fixed Window", "В окне"],
 				vsyz: ["Video Size", "Размер видеоплеера"],
 				maxr: ["Max Allowing Rating", "Макс. разрешенный рейтинг"],
 				cframe: ["Content Frame", "Положение видеоплеера"],
+				picview: ["Picture View", "Просмотр картинок"],
 				clipopup: ["Clipping Popup Posts", "Закреплять превью постов"],
 				hidby: {
 					'hr': ['Hide Posts and Threads', 'Скрытие постов и тредов'],
@@ -2771,123 +2950,130 @@ function MagicExtension() {
 			StyleSet[HM.Keywords.conceal ? true : false]('hinfostub');
 		function el$(child) { return MSs['GeneralSets'].querySelector(child) }
 		this['GeneralSets'] = _z.setup('table', {'html': '<tbody><tr><td class="f-sect"><label><input '+
-			(HM.MC == 0 ? 'checked ' : '') +'id="media-placement" value="0" name="cont_p" type="radio">\n'+ SLC.mcw[lng] +'\n<input '+
-			(HM.MC == 1 ? 'checked ' : '') +'id="media-placement" value="1" name="cont_p" type="radio">\n'+ SLC.mcp[lng] +'\n</label></td><td class="s-sect">'+
-			SLC.cframe[lng] +'</td></tr><tr id="vs-set" class="'+ (HM.MC == 0 ? 'hidout' : '') +'"><td class="f-sect"><input id="video-frame-size" min="1" value="'+
-			getVSize('value') +'" step="1" max="4" type="range" name="v_size"></td><td class="s-sect">'+ SLC.vsyz[lng] +'\n<span id="vsize-textbox" class="parensis">'+
-			getVSize('text') +'</span></td></tr><tr><td class="f-sect"><select id="max-allowed-rating" class="rating_'+ HM.maXrating.replace('-', '') +'"><option class="rating_SFW">SFW</option>'+
-			'<option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select></td>'+
-			'<td class="s-sect">'+ SLC.maxr[lng] +'</td></tr><tr><td class="f-sect"><label><input id="oembedapi" type="checkbox" hidden'+
-			(HM.oEmbedAPI ? ' checked' : '') +'><span class="checkarea"></span></label></td><td class="s-sect"><a id="exemple-link" title="'+
-			(HM.oEmbedAPI ? SLC.emb['title'][lng] +'">Hint: '+ SLC.emb['txt'][lng] : '"><u>http://www.magicpanel.div/'+ SLC.emb['url'][lng] +'</u>') +
-			'</a></td></tr><tr><td class="f-sect"><label><input id="set-show-spoilers" type="checkbox" hidden'+
-			(HM.DiscloseTextSpoilers ? ' checked' : '') +'><span class="checkarea"></span></label></td><td class="s-sect">'+
+			(HM.EmbedField == 0 ? 'checked ' : '') +'id="gsx-EmbedField" value="0" name="emb_f" type="radio">\n'+ SLC.mcw[lng] +'\n<input '+
+			(HM.EmbedField == 1 ? 'checked ' : '') +'id="gsx-EmbedField" value="1" name="emb_f" type="radio">\n'+ SLC.mcp[lng] +'\n</label></td><td class="s-sect">'+
+			SLC.cframe[lng] +'</td></tr><tr id="vs-set" class="'+ (HM.EmbedField == 0 ? 'hidout' : '') +'"><td class="f-sect"><input id="gsx-AspectRatio" min="0" value="'+
+			HM.AspectRatio +'" step="1" max="3" type="range" name="as_ratio"></td><td class="s-sect">'+ SLC.vsyz[lng] +'\n<span id="vsize-textbox" class="parensis">'+
+			AspectSize.W[HM.AspectRatio] +'×'+ AspectSize.H[HM.AspectRatio] +'</span></td></tr><tr><td class="f-sect"><label><input '+
+			(HM.PictureView == 0 ? 'checked ' : '') +'id="gsx-PictureView" value="0" name="p_view" type="radio">\n'+ SLC.pvc[lng] +'\n<input '+
+			(HM.PictureView == 1 ? 'checked ' : '') +'id="gsx-PictureView" value="1" name="p_view" type="radio">\n'+ SLC.mcp[lng] +'\n</label></td><td class="s-sect">'+
+			SLC.picview[lng] +'</td></tr><tr><td class="f-sect"><select id="gsx-maXrating" class="rating_'+
+			HM.maXrating.replace('-', '') +'"><option class="rating_SFW">SFW</option><option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select></td><td class="s-sect">'+
+			SLC.maxr[lng] +'</td></tr><tr><td class="f-sect"><label><input id="gsx-oEmbedAPI" type="checkbox" hidden'+
+			(HM.oEmbedAPI ? ' checked' : '') +'><span class="checkarea super"></span></label></td><td class="s-sect"><a id="exemple-link" title="'+
+			(HM.oEmbedAPI ? SLC.emb['title'][lng] +'">Hint: '+ SLC.emb['txt'][lng] : '"><u>http://www.magicpanel.div/'+
+			SLC.emb['url'][lng] +'</u>') +'</a></td></tr><tr><td class="f-sect"><label><input id="gsx-DiscloseTextSpoilers" type="checkbox" hidden'+
+			(HM.DiscloseTextSpoilers ? ' checked' : '') +'><span class="checkarea super"></span></label></td><td class="s-sect">'+
 			LC.txtspoils[lng] +'</td></tr><tr><td class="f-sect"><label class="paperclip line-sect txt-btn'+
-			(HM.AttachPopups ? '"><input checked' : ' inactive"><input') +' id="attach-popups" type="checkbox" hidden></label></td><td class="s-sect">'+
-			SLC.clipopup[lng] +'</td></tr></tbody>'}, null);
+			(HM.AttachPopups ? '"><input checked' : ' inactive"><input') +' id="gsx-AttachPopups" type="checkbox" hidden></label></td><td class="s-sect">'+
+			SLC.clipopup[lng] +'</td></tr></tbody>'});
 		this['HideBySets'] = _z.setup('table', {'html': '<tbody><tr><th><label class="view-eye yuki_clickable i-block'+
-			(HM.Keywords.conceal ? ' inactive' : '') +'"><input id="stamps-concealing" type="checkbox" hidden'+
+			(HM.Keywords.conceal ? ' inactive' : '') +'"><input id="rhx-stampsConcealing" type="checkbox" hidden'+
 			(HM.Keywords.conceal ? ' checked' : '') +'></label></th><th class="s-sect">'+ SLC.hidby['hr'][lng] +
-			'</th></tr><tr><td class="o-sect"><label><input id="chx-Nametrip" type="checkbox" hidden'+
+			'</th></tr><tr><td class="o-sect"><label><input id="rhx-Nametrip" type="checkbox" hidden'+
 			(HM.Keywords['Nametrip'].apply ? ' checked' : '') +'><span class="checkarea"></span></label></td><td><div class="mhs-title font-s cyan-light">'+ SLC.hidby['nt'][lng] +
-			'</div><textarea id="txt-Nametrip" class="keywords-input font-s" placeholder="Saeki-fag, Saeki*, *fag, !Hyd5gFre, Saeki-fag::Anonymous"></textarea></td></tr><tr><td class="o-sect"><label><input id="chx-Title" type="checkbox" hidden'+
+			'</div><textarea id="txt-Nametrip" class="keywords-input font-s" placeholder="Saeki-fag, Saeki*, *fag, !Hyd5gFre, Saeki-fag::Anonymous"></textarea></td></tr><tr><td class="o-sect"><label><input id="rhx-Title" type="checkbox" hidden'+
 			(HM.Keywords['Title'].apply ? ' checked' : '') +'><span class="checkarea"></span></label></td><td><div class="mhs-title font-s cyan-light">'+ SLC.hidby['tl'][lng] +
-			'</div><textarea id="txt-Title" class="keywords-input font-s" placeholder="Путеводитель*, *ожиданий от*, Унылый тред, Rozen Maiden::$1@[color:Orchid; font-family:Georgia]"></textarea></td></tr><tr><td class="o-sect"><label><input id="chx-Words" type="checkbox" hidden'+
+			'</div><textarea id="txt-Title" class="keywords-input font-s" placeholder="Путеводитель*, *ожиданий от*, Унылый тред, Rozen Maiden::$1@[color:Orchid; font-family:Georgia]"></textarea></td></tr><tr><td class="o-sect"><label><input id="rhx-Words" type="checkbox" hidden'+
 			(HM.Keywords['Words'].apply ? ' checked' : '') +'><span class="checkarea"></span></label></td><td><div class="mhs-title font-s cyan-light">'+ SLC.hidby['rw'][lng] +
 			'</div><textarea id="txt-Words" class="keywords-input font-s" placeholder="*Сап добрач*, белое::черное, зеленый::$1@[color:green], &quot;::“$1”"></textarea></td></tr></tbody>'});
 		this['Panel'] = _z.setup('div', {'id': 'magic-panel'}, {'change': function(e) {
-			var $Item = e.target;
-			switch($Item.id) {
-				case 'attach-popups':
-					$Item.parentNode.classList.toggle('inactive');
-					setupOptions($Item, 'AttachPopups', 'local');
-					break;
-				case 'set-show-spoilers':
-					StyleSet[$Item.checked]('spoiler');
-					setupOptions($Item, 'DiscloseTextSpoilers', 'local');
-					break;
-				case 'max-allowed-rating':
-					$Item.className = $Item.querySelector('option:checked').className;
-					setupOptions($Item, 'maXrating', 'local');
-					break;
-				case 'oembedapi':
-					setupOptions($Item, 'oEmbedAPI', 'local');
-					if ($Item.checked) {
-						hooLinks(GetElements().links);
-						_z.setup(el$('#exemple-link'), {'title': SLC.emb['title'][lng], 'text': 'Hint: '+ SLC.emb['txt'][lng]}, null);
-					} else {
-						_z.setup(el$('#exemple-link'), {'title': undefined, 'html': '<u>http://www.magicpanel.div/'+ SLC.emb['url'][lng] +'</u>'}, null);
-						_z.each('#cm-link', function(link) {
-							_z.setup(link, {'id': undefined, 'class': undefined, 'title': undefined, 'text': link.href}, null);
-						});
-					}
-					break;
-				case 'video-frame-size':
-					var p = $Item.value;
-						_z.localS.set('VideoSize', p);
-					function size(w, h) {
-						document.getElementById('vsize-textbox').textContent = w+'×'+h;
-						Megia['video']['Frame'].width = w;
-						Megia['video']['Frame'].height = h;
-						Megia['scbc']['Frame'].width = h;
-						Megia['scbc']['Frame'].height = h;
-					}
-					p == 1 ? size(360, 270) : p == 2 ? size(480, 360) :
-					p == 3 ? size(720, 480) : p == 4 ? size(854, 576) : size(0, 0);
-					lastScrollElem = null;
-					break;
-				case 'media-placement':
-					var val = $Item.value,
-						cont = HM.VActive[1],
-						vsset = document.getElementById('vs-set'); 
-						HM.MC = val;
-					switch (val) {
-						case '0': _hide(vsset);
-							if (cont) {
-								mEl['ContentWindow'].appendChild(_z.setup(cont, {'class': 'content-frame video', 'id': 'content_'+cont.id.split('_')[1]}, null));
-								_z.setup(Megia['video']['Frame'], {'width': '100%', 'height': '100%'}, null);
-								_show(mEl['ContentMarker']);
-							}; break;
-						case '1': _show(vsset);
-							if (cont) {
-								_z.prepend(HM.VActive[0], _z.setup(cont, {'class': 'video-container', 'id': 'video_'+cont.id.split('_')[1]}, null));
-								_z.setup(Megia['video']['Frame'], {'class': '', 'width': getVSize()[0], 'height': getVSize()[1]}, null);
-								_hide(mEl['ContentMarker']);
-								_hide(mEl['ContentWindow']);
+			var $Item = e.target, $Id = $Item.id.split('-'), $V = $Item.value;
+			switch($Id[0]) {
+				case 'rhx':
+					switch($Id[1]) {
+						case 'stampsConcealing':
+							HM.Keywords.conceal = $Item.checked;
+							if ($Item.checked) {
+								_z.each(document.getElementsByClassName('hinfo'), function(hs) {
+									var Id = _cid(hs.id);
+									(document.getElementById('post_'+ Id) || {}).hidden = true;
+									_z.each('.celrly[href$="#i'+Id+'"]', function(t_refl) {
+										t_refl.hidden = true;
+									});
+								});
+							} else {
+								_z.each('.post[hidden], .celrly[hidden]', function(el) { el.hidden = false; });
+							}
+							StyleSet[$Item.checked]('hinfostub');
+							$Item.parentNode.classList.toggle('inactive');
+							break;
+						default:
+							HM.Keywords[$Id[1]].apply = $Item.checked;
+							if ($Item.checked) {
+								wer(HM.Keywords[$Id[1]].keys, type);
+							} else {
+								cearWe($Id[1]);
 							}
 					}
-					_z.localS.set('EmbedIn', val)
-					break;
-				case 'stamps-concealing':
-					HM.Keywords.conceal = $Item.checked;
-					if ($Item.checked) {
-						_z.each(document.getElementsByClassName('hinfo'), function(hs) {
-							var Id = _cid(hs.id);
-							(document.getElementById('post_'+ Id) || {}).hidden = true;
-							_z.each('.celrly[href$="#i'+Id+'"]', function(t_refl) {
-								t_refl.hidden = true;
-							});
-						});
-					} else {
-						_z.each('.post[hidden], .celrly[hidden]', function(el) { el.hidden = false; });
-					}
-					StyleSet[$Item.checked]('hinfostub');
-					$Item.parentNode.classList.toggle('inactive');
 					_z.localS.set('Keywords', JSON.stringify(HM.Keywords));
 					break;
-				case 'chx-Nametrip':
-				case 'chx-Title':
-				case 'chx-Words':
-					var type = $Item.id.split('-')[1];
-						HM.Keywords[type].apply = $Item.checked;
-					if ($Item.checked) {
-						wer(HM.Keywords[type].keys, type);
-					} else {
-						cearWe(type);
+				case 'gsx':
+					switch ($Id[1]) {
+						case 'AttachPopups':
+							$Item.parentNode.classList.toggle('inactive');
+							break;
+						case 'DiscloseTextSpoilers':
+							StyleSet[$Item.checked]('spoiler');
+							break;
+						case 'maXrating':
+							$Item.className = $Item.querySelector('option:checked').className;
+							break;
+						case 'oEmbedAPI':
+							if ($Item.checked) {
+								HM.oEmbedAPI = true; handleLinks();
+								_z.setup(document.getElementById('exemple-link'), {'title': SLC.emb['title'][lng], 'text': 'Hint: '+ SLC.emb['txt'][lng]});
+							} else {
+								_z.setup(document.getElementById('exemple-link'), {'title': undefined, 'html': '<u>http://www.magicpanel.div/'+ SLC.emb['url'][lng] +'</u>'});
+								_z.each('#cm-link', function(link) {
+									_z.setup(link, {'id': undefined, 'class': undefined, 'title': undefined, 'text': link.href});
+								});
+							}
+							break;
+						case 'AspectRatio':
+							_z.setup(document.getElementById('vsize-textbox'), {'text': AspectSize.W[$V] +'×'+ AspectSize.H[$V]});
+							Megia['video']['Frame'].height = Megia['scbc']['Frame'].width = Megia['scbc']['Frame'].height = AspectSize.H[$V];
+							Megia['video']['Frame'].width = AspectSize.W[$V];
+							lastScrollElem = null;
+							break;
+						case 'EmbedField':
+							var cont = HM.VActive[1],
+								vsset = document.getElementById('vs-set');
+							switch ($V) {
+								case '0': _hide(vsset);
+									if (cont) {
+										mEl['ContentWindow'].appendChild(_z.setup(cont, {'class': 'content-frame video', 'id': 'content_'+ cont.id.split('_')[1]}));
+										_z.setup(Megia['video']['Frame'], {'width': '100%', 'height': '100%'});
+										_show(mEl['ContentMarker']);
+									}; break;
+								case '1': _show(vsset);
+									if (cont) {
+										_z.prepend(HM.VActive[0], _z.setup(cont, {'class': 'video-container', 'id': 'video_'+ cont.id.split('_')[1]}));
+										_z.setup(Megia['video']['Frame'], {'class': '', 'width': AspectSize.W[HM.AspectRatio], 'height': AspectSize.H[HM.AspectRatio]});
+										_hide(mEl['ContentMarker']);
+										_hide(mEl['ContentWindow']);
+									}
+							}
 					}
-					_z.localS.set('Keywords', JSON.stringify(HM.Keywords));
+					setupOptions($Item, $Id[1], 'local');
 			}
+		}, 'click': function(e) {
+			if (e.target.id === 'gsx-AspectRatio') {
+				switch (lastScrollElem) {
+					case 'video': _scrollTo('scbc'); break;
+					case 'scbc': _scrollTo('video'); break;
+					default:
+						if (Megia['video']['Container'].parentNode)
+							_scrollTo('video');
+						else if (Megia['scbc']['Container'].parentNode)
+							_scrollTo('scbc');
+				}
+			}
+		}, 'mousedown': function(e) {
+			stepZup.bind(this)()
+			MSs['ButtonsPanel'].style['z-index'] = HM.zIndex;
 		}});
+		el$('#gsx-maXrating').value = HM.maXrating;
 		for (var n = 0, Types = ['Nametrip', 'Title', 'Words']; n < Types.length; n++) {
 			_z.setup(this['HideBySets'].querySelector('#txt-'+ Types[n]), {'value': HM.Keywords[Types[n]].keys}, {
 				'blur': function(e) {
@@ -2903,35 +3089,17 @@ function MagicExtension() {
 					this.parentNode.className = 'turn-off';
 					this.style['height'] = '';
 				}, 'focus': function(e) {
-					this.style['height'] = '220px';
+					this.style['height'] = '267px';
 					this.parentNode.className = 'turn-on';
 				}
 			});
 			if (HM.Keywords[Types[n]].apply)
 				wer(HM.Keywords[Types[n]].keys, Types[n])
 		}
-		el$('#max-allowed-rating').value = HM.maXrating;
-		this['VideoSize'] = _z.setup(el$('#video-frame-size'), {}, {
-				'click': function(e) {
-					switch (lastScrollElem) {
-						case 'video': _scrollTo('scbc'); break;
-						case 'scbc': _scrollTo('video'); break;
-						default:
-							if (Megia['video']['Container'].parentNode)
-								_scrollTo('video');
-							else if (Megia['scbc']['Container'].parentNode)
-								_scrollTo('scbc');
-					}
-					function _scrollTo(key) {
-						lastScrollElem = key;
-						Megia[key]['Container'].scrollIntoView({block: "start", behavior: "smooth"});
-					}
-				}
-			});
 		this['ButtonsPanel'] = _z.setup('a', {
 				'id': 'magic-buttons-panel',
 				'html': '<span id="hide-set" class="mpanel-btn txt-btn"></span><span id="general-set" class="mpanel-btn txt-btn"></span>'
-			}, {
+			}, {'mousedown': stepZup, 
 				'click': function(e) {
 					var TABLE, INNER = MSs['Panel'].firstElementChild;
 					switch (e.target.id) {
@@ -2951,11 +3119,16 @@ function MagicExtension() {
 						if (this.previousElementSibling.id !== 'magic-panel') {
 							_z.before(this, MSs['Panel']);
 						}
+						MSs['Panel'].style['z-index'] = HM.zIndex;
 					}
 					ActiveButton = e.target;
 					e.target.classList.toggle('active');
 				}
 			});
+		function _scrollTo(key) {
+			lastScrollElem = key;
+			Megia[key]['Container'].scrollIntoView({block: "start", behavior: "smooth"});
+		}
 		function cearWe(type) {
 			_z.each('.autohidden.by-'+ type, function(hel) {
 				var Id = _cid(hel.id);
@@ -3030,7 +3203,7 @@ function MagicExtension() {
 							t_refl.hidden = true;
 						});
 						node.click();
-						Tinycon.setBubble(unread_count);
+						Tinycon.setBubble(HM.UnreadCount);
 					}
 					node.className = node.className +' autohidden by-'+ arg;
 					node.insertAdjacentHTML('beforebegin', '<'+ tag +' id="hidden-'+ Id +'" class="'+ node.classList[0] +' stub hinfo"><label class="'+ Class[arg][c] +' t-sec font-s">'+
@@ -3056,32 +3229,29 @@ function MagicExtension() {
 							_z.setup("script", {"src": "/src/js/1501/alac_0.1.0.js"}, null),
 							_z.setup("script", {"src": "/src/js/1501/flac_0.2.1.js"}, null)
 						]);
-						locationThread = document.getElementById('thread_'+ HM.URL.thread);
-						var hideinfodiv = document.getElementById('hideinfodiv'),
+						var locationThread = document.getElementById('thread_'+ HM.URL.thread),
+							hideinfodiv = document.getElementById('hideinfodiv'),
 							delForm = document.getElementById('delete_form'),
 							rules = document.getElementsByClassName('rules')[0],
-							posts = document.getElementsByClassName('post'),
-							Elems = GetElements();
-						
-						hooLinks(Elems.links);
-						hooElements(Elems.elements);
-						genReplyMap(posts);
+							posts = document.getElementsByClassName('post');
 						
 						_z.each(posts, function(post) {
-							var url = ParseUrl(post.querySelector('.reflink > a').href),
+							var reflink = _z.setup(post.querySelector('.reflink > a[href*="/res/"]'), {'class': 'inj-refl', 'onclick': undefined}),
+								url = ParseUrl(reflink.href),
 								patchId = url.board +'_'+ url.thread +'_'+ url.pid,
 								delbox = post.getElementsByClassName('delete_checkbox')[0],
 								delico = delbox.parentNode,
 								pMenu = _z.setup('ul', {'class': 'dropdown line-sect', 'html': '<li class="dropdown-toggle"><label class="postermenu dropdown-label el-li"></label><ul class="dropdown-menu"><li class="edit-post dropdown-item el-li">Редактировать</li><li class="mod-report dropdown-item el-li">Пожаловаться</li><li class="hide-post dropdown-item el-li">Скрыть</li><li class="delete-post dropdown-item el-li">Удалить<span class="chek-to-del dropdown-input line-sect"></span></li></ul></li>'});
-								HM.PostConstructor[patchId] = {
-									el: post,
-									delete_input: _z.setup(delbox, {'checked': false})
-								}
+							HM.LoadedPosts[patchId]              = _z.setup(post,   {'patch-id': patchId}, {'click': PDownListener, 'mouseover': Chanabira.MagicPostView});
+							HM.LoadedPosts[patchId].delete_input = _z.setup(delbox, {'checked': false   });
+							HM.LoadedPosts[patchId].formBinding  = function(el) { _z.after(this, el) }
 							mEl['DeleteOverlay'].appendChild(delbox);
-							_z.replace(delico, pMenu)
-							_z.setup(post, {'patch-id': patchId}, {'click': PDownListener});
+							_z.replace(delico, pMenu);
 							_z.setup(post.querySelector('.abbrev a[onclick^="GetFullText"]'), {'class': 'Get-Full-Text', 'onclick': undefined});
-						})
+							handleLinks(post, url);
+							handleElements(post);
+						}); 
+						genReplyMap(posts);
 						if (hideinfodiv) {
 							_z.after(hideinfodiv, Nagato['OpenTopForm']);
 							Nagato['BoardRulesSect'].appendChild(rules)
@@ -3106,7 +3276,6 @@ function MagicExtension() {
 								}
 							});
 						}
-						_z.each(Elems.images, createImgContext);
 						if (delForm) {
 							_z.setup(delForm, {}, {'submit': Nagato.submitForm}).appendChild(mEl['DeleteOverlay']);
 						}
@@ -3114,104 +3283,101 @@ function MagicExtension() {
 							mEl['ContentWindow'], mEl['ContentMarker'], mEl['ContextMenu'], mEl['StatusPanel'],
 							new MagicSettings()['ButtonsPanel']
 						]);
-					} catch(e) { _z.dbg(e) }
+					} catch(e) {
+						_z.dbg(e)
+					}
 				}
 		}
 	}
 	
 	function PDownListener(e) {
-		var Phis = this, patchId = this.getAttribute('patch-id'), Map = patchId.split('_'), RPForm, _Params;
-		if (this.classList.contains('new'))
-			markAsRead(this);
-		switch (e.target.classList[0]) {
-			case 'reply-link': Chanabira.MagicHighlight(e); break;
-			case 'ma-button': initMagicAudio(e); break;
-			case 'cm-button': loadMediaContainer(e); break;
-			case 'postermenu': e.target.parentNode.classList.toggle('active'); break;
-			case 'delete-post': delPost(this); break;
-			case 'chek-to-del':
-				e.target.classList.toggle('selected');
-				HM.PostConstructor[patchId].delete_input.checked = e.target.classList.contains('selected');
-				break;
-			case 'mview':
-				loadMediaContainer({target:e.target.parentNode});
-				_z.fall(e);
-				break;
-			case 'reply-button':
-				RPForm = Nagato.getForm(Map, {type: 'reply'})
-				if (this.classList.contains('post')) {
-					_z.after(this, RPForm);
-				} else if (this.classList.contains('popup')) {
-					this.firstElementChild.firstElementChild.firstElementChild.appendChild(RPForm);
-				}
-				if (e.layerY > window.innerHeight || e.layerY < 1)
-					this.scrollIntoView();
-				break;
-			case 'mod-report':
-				if (!HM.ReportForm) {
-					HM.ReportForm = new Yuki(false);
-					_z.setup(HM.ReportForm['ReplyForm'], {'style': 'position:fixed;left:35%;top:35%;z-index:'+HM.zIndex}, {'mousedown': function(e){
-						if (!['INPUT', 'TEXTAREA'].isThere(e.target.tagName)) {
-							var coords = getCoords(this);
-							HM.zIndex++;
-							HM.DragableObj = {
-								el: this,
-								shiftX: e.pageX - coords.left,
-								shiftY: e.pageY - coords.top
-							}
-							this.style['z-index'] = HM.zIndex;
-							_z.fall(e);
-						}
-					}})
-					findModThread(0)
-				}
-				RPForm = HM.ReportForm.getForm(['d', HM.ReportForm['TargetThread'].value, (Map[0] === 'd' ? '' : Map[0] +'/') + Map[2]], {type: 'report'})
-				document.body.appendChild(RPForm)
-				break;
-			case 'edit-post':
-				var name = (this.querySelector('.postertrip:not(.t-sec)')
-						|| this.querySelector('.postername:not(.t-sec)')),
-					title = this.querySelector('.replytitle:not(.t-sec)'),
-					dlinks = this.getElementsByClassName('download-link'),
-					message = this.querySelector('.message'),
-					params = {type: 'edit', name: name.textContent, subj: (title ? title.textContent : ''), text: textSource(message), funct: delPost, files: dlinks};
-				if (!HM.PostConstructor[patchId].edit_form)
-					HM.PostConstructor[patchId].edit_form = new Yuki(false);
-				RPForm = HM.PostConstructor[patchId].edit_form.getForm(Map, params)
-				_z.after(this.querySelector('.cpanel + br'), RPForm);
-				break;
-			case 'hide-post':
-				if (Map[1] == Map[2]) {
-					var thread = document.getElementById('thread_'+ Map[1])
-					getDataResponse('/api/thread/'+ Map[0] +'/'+ Map[1] +'/hide.json', function(status, sText, flag, xhr) {
-						_z.each([thread, thread.nextElementSibling, thread.nextElementSibling.nextElementSibling],
-							function(el) { el.hidden = flag; });
+		try {
+			var Phis = this, patchId = this.getAttribute('patch-id'), Map = patchId.split('_'), RPForm, _Params;
+			if (this.classList.contains('new'))
+				markAsRead(this);
+			switch (e.target.classList[0]) {
+				case 'reply-link': Chanabira.MagicHighlight(e); break;
+				case 'ma-button': initMagicAudio(e); break;
+				case 'cm-button': loadMediaContainer(e); break;
+				case 'delete-post': delPost(this); break;
+				case 'postermenu':
+					e.target.parentNode.classList.toggle('active');
+					e.target.nextElementSibling.style['z-index'] = document.querySelectorAll('.active > .postermenu').length ;
+					break;
+				case 'chek-to-del':
+					e.target.classList.toggle('selected');
+					HM.LoadedPosts[patchId].delete_input.checked = e.target.classList.contains('selected');
+					break;
+				case 'mview':
+					loadMediaContainer({target:e.target.parentNode})
+					_z.fall(e);
+					break;
+				case 'iview':
+					Megia.image.makePicture(e.target)
+					_z.fall(e);
+					break;
+				case 'reply-button':
+					RPForm = Nagato.getForm(Map, {type: ['popup', 'reply'][HM.FormStyle], textContent: LC.hidden[1][lng], bound: this.formBinding.bind(this)})
+					if (HM.FormStyle == '0') {
+						changeForms(RPForm, 'report');
+					} else {
+						this.formBinding(RPForm);
+					}
+					_scrollIfOverPage(this)
+					break;
+				case 'mod-report':
+					if (!HM.ReportForm) {
+						HM.ReportForm = new Yuki(false);
+						findModThread(0)
+					}
+					RPForm = HM.ReportForm.getForm(['d', HM.ReportForm['TargetThread'].value, (Map[0] === 'd' ? '' : Map[0] +'/') + Map[2]], {type: 'report', textContent: ['Mod Thread', 'Модераторам тред'][lng]})
+					changeForms(RPForm, 'popup');
+					break;
+				case 'edit-post':
+					var name = (this.querySelector('.postertrip:not(.t-sec)')
+							|| this.querySelector('.postername:not(.t-sec)')),
+						title = this.querySelector('.replytitle:not(.t-sec)'),
+						dlinks = this.getElementsByClassName('download-link'),
+						message = this.querySelector('.message'),
+						params = {type: 'edit', name: name.textContent, subj: (title ? title.textContent : ''), text: textSource(message), afterSubmitAction: delPost, files: dlinks};
+					if (!HM.LoadedPosts[patchId].edit_form)
+						HM.LoadedPosts[patchId].edit_form = new Yuki(false);
+					RPForm = HM.LoadedPosts[patchId].edit_form.getForm(Map, params)
+					_z.after(this.querySelector('.cpanel + br'), RPForm);
+					break;
+				case 'hide-post':
+					if (Map[1] == Map[2]) {
+						var thread = document.getElementById('thread_'+ Map[1])
+						getDataResponse('/api/thread/'+ Map[0] +'/'+ Map[1] +'/hide.json', function(status, sText, flag, xhr) {
+							_z.each([thread, thread.nextElementSibling, thread.nextElementSibling.nextElementSibling],
+								function(el) { el.hidden = flag; });
+						});
+					} else {
+						this.hidden = true;
+						_z.each('.celrly[href$="#i'+ Map[2] +'"]', function(t_refl) { t_refl.hidden = true; });
+					}
+					 break;
+				case 'Get-Full-Text':
+					_Params = {'class': 'Get-Short-Text', 'text': ['Short Text', 'Укороченная версия'][lng]};
+				case 'Get-Short-Text':
+					_z.each(this.getElementsByClassName('postbody'), function(pbody) {
+						pbody.classList.toggle('alternate');
 					});
-				} else {
-					this.hidden = true;
-					_z.each('.celrly[href$="#i'+ Map[2] +'"]', function(t_refl) { t_refl.hidden = true; });
-				}
-				 break;
-			case 'Get-Full-Text':
-				_Params = {'class': 'Get-Short-Text', 'text': ['Short Text', 'Укороченная версия'][lng]};
-			case 'Get-Short-Text':
-				_z.each(this.getElementsByClassName('postbody'), function(pbody) {
-					pbody.classList.toggle('alternate');
-				});
-				_z.setup(e.target, (_Params || {'class': 'Get-Full-Text', 'text': ['Full Text', 'Полная версия'][lng]}));
-				_z.fall(e);
-				break;
-			case 'excat-button':
-				var eXcaT = e.target.id.split('-')[1]
-				HM.ThreadListener[Map[1]][eXcaT +'Thread'](e);
-				e.target.id = 'thread-'+ (eXcaT === 'expand' ? 'truncat' : 'expand');
-				_z.fall(e);
-			case 'sp-r':
-				hRate(e.target, e.target.parentNode.parentNode.querySelector('img.spr-image'))
-				break;
-			case 'spr-image':
-				MagicSpoirate(e.target);
-				_z.fall(e);
+					_z.setup(e.target, (_Params || {'class': 'Get-Full-Text', 'text': ['Full Text', 'Полная версия'][lng]}));
+					_z.fall(e);
+					break;
+				case 'excat-button':
+					var eXcaT = e.target.id.split('-')[1]
+					HM.ThreadListener[Map[1]][eXcaT +'Thread'](e);
+					e.target.id = 'thread-'+ (eXcaT === 'expand' ? 'truncat' : 'expand');
+					_z.fall(e);
+					break;
+				case 'inj-refl':
+					wmarkText(Nagato['ReplyText'], '>>'+ (Map[0] !== HM.URL.board ? Map[0] +'/' : '') + Map[2], '\x20');
+					_z.fall(e);
+			}
+		} catch(e) {
+			console.error(e)
 		}
 		function textSource(mNode) {
 			var	soucHTML = mNode.innerHTML, soucText, links = mNode.querySelectorAll('a:not(.reply-link)'),
@@ -3231,6 +3397,7 @@ function MagicExtension() {
 					for (var i = 0; i < threads.length; i++) {
 						if (threads[i].title.isThere('Модераторам тред')) {
 							HM.ReportForm['TargetThread'].value = threads[i].display_id;
+							HM.ReportForm['TargetInfo'].nextElementSibling.textContent = threads[i].display_id;
 							return;
 						}
 					}
@@ -3240,10 +3407,128 @@ function MagicExtension() {
 			});
 		}
 		function delPost(current) {
-			var delbox = HM.PostConstructor[patchId].delete_input;
+			var delbox = HM.LoadedPosts[patchId].delete_input;
 			var form = _z.setup('form', {'id': 'delete_form', 'action': '/'+ Map[0] +'/delete', 'method': 'post', 'html':
 				'<input name="task" value="delete"><input name="password" value="'+ HM.User.password +'"><input name="'+ delbox.name +'" value="'+ delbox.value +'">'})
 			Nagato.submitForm({target: form})
+		}
+	}
+
+	function changeForms(form, type) {
+		var prevForm = document.querySelector('#'+ form.id +'.'+ type),
+			sLeft = form.style['left'],
+			sTop = form.style['top'];
+		if (!prevForm) {
+			document.body.appendChild(form);
+		} else {
+			_z.replace(prevForm, form)
+			sLeft = prevForm.style['left'];
+			sTop = prevForm.style['top'];
+		}
+		HM.zIndex++;
+		form.style['top'] = (sTop || '35%');
+		form.style['left'] = (sLeft || '35%');
+		form.style['z-index'] = HM.zIndex;
+	}
+	function animate(draw, duration) {
+		var start = performance.now();
+			requestAnimationFrame(function animate(time) {
+				// определить, сколько прошло времени с начала анимации
+				var timePassed = time - start;
+				// возможно небольшое превышение времени, в этом случае зафиксировать конец
+				if (timePassed > duration) timePassed = duration;
+				// нарисовать состояние анимации в момент timePassed
+				draw(timePassed);
+				// если время анимации не закончилось - запланировать ещё кадр
+				if (timePassed < duration) {
+					requestAnimationFrame(animate);
+				}
+			});
+	}
+	
+	/************************ MagicPicture *********************************/
+	function MagicPicture(h) {
+		var MP = this, sW, sH, Idx;
+		this['Gallery'] = document.getElementsByClassName('iview');
+		this['Picture'] = _z.setup('picture', {'class': 'magic-picture', 'contextmenu': 'image-context'}, {
+				'wheel': function(e) {
+					if (this.classList[1] === 'gallery-qview') {
+						var D = e.deltaY || e.deltaX,
+							T = _cid(this.style['top']),
+							L = _cid(this.style['left']),
+							W = _cid(this.style['width']),
+							H = _cid(this.style['height']),
+							nS = adaptSize(this.fullSize, D < 0 ? (W > H ? W : H) * 1.25 : (W > H ? W : H) / 1.25);
+							this.style['width'] = nS.width +'px';
+							this.style['height'] = nS.height +'px';
+							this.style['left'] = parseInt(e.clientX - (D < 0 ? (e.clientX - L) * 1.25 : (e.clientX - L) / 1.25), 10) +'px';
+							this.style['top'] = parseInt(e.clientY - (D < 0 ? (e.clientY - T) * 1.25 : (e.clientY - T) / 1.25), 10) +'px';
+						return _z.fall(e);
+					}
+				},
+				'mousedown': function(e) {
+					switch (this.classList[1]) {
+						case 'gallery-qview':
+							var coords = getCoords(this);
+								stepZup.bind(this)()
+							HM.DragableObj = {
+								el: this,
+								shift: [e.pageX - coords.left, e.pageY - coords.top]
+							}
+							break;
+						case 'onpost-qview':
+							sW = _cid(this.style['width']);
+							sH = _cid(this.style['height']);
+							if ((this.scrollHeight - e.offsetY) < (this.scrollHeight / 10) && (this.scrollWidth - e.offsetX) < (this.scrollWidth / 10) ) {
+								HM.DragableObj = {
+									el: this,
+									shift: this.fullSize,
+									position: 'custom'
+								}
+							}
+					}
+					return _z.fall(e);
+				},
+				'click': function(e) {
+					switch (this.classList[1]) {
+						case 'onpost-qview':
+							if (_cid(this.style['width']) === sW && _cid(this.style['height']) === sH) {
+								this.remove();
+							}
+					}
+					return _z.fall(e)
+				}
+			});
+		this.makePicture = function(thumb) {
+			var Id = thumb.id.split('_')[1], PP = ['gallery', 'onpost'][HM.PictureView],
+				oSize = thumb.getAttribute('image-size').split('×'),
+				Adapt = adaptSize(oSize, HM.PictureView > 0 ? 500 : (window.innerWidth > window.innerHeight ? window.innerHeight : window.innerWidth), 200),
+				lPic = _z.setup(MP['Picture'], {'id': 'mpic_'+ Id, 'class': 'magic-picture '+ PP +'-qview'});
+				lPic.src = thumb.parentNode.href
+				lPic.fullSize = oSize
+				switch(PP) {
+					case 'onpost':
+						lPic.style['background-image'] = 'url(\''+ thumb.parentNode.href +'\')'
+						break;
+					case 'gallery':
+						HM.zIndex++;
+						lPic.style['left'] = (Adapt.width >= window.innerWidth ? '0' : (window.innerWidth - Adapt.width) / 2) +'px'
+						lPic.style['top'] = (Adapt.height >= window.innerHeight ? '0' : (window.innerHeight - Adapt.height) / 2) +'px'
+						lPic.style['background-image'] = 'url(\''+ thumb.parentNode.href +'\'), url(/src/svg/1511/alpha-cells.svg)'
+						lPic.style['z-index'] = HM.zIndex;
+				}
+				lPic.style['width'] = Adapt.width +'px'
+				lPic.style['height'] = Adapt.height +'px'
+				Idx = MP['Gallery'].indexOf(thumb)
+				_z.before(thumb, lPic);
+		}
+		this.openPicture = function(n) {
+			MP.makePicture(MP['Gallery'][Idx + n])
+			if (HM.PictureView == '1') {
+				_scrollIfOverPage(_z.route(MP['Picture'], function(node) {
+					return node.className === 'reply';
+				}));
+			}
 		}
 	}
 	
@@ -3268,19 +3553,27 @@ function MagicExtension() {
 		'contextmenu': function(e) {
 			switch (e.target.getAttribute('contextmenu')) {
 				case 'image-context':
-					mEl['ContextMenu'].contentSource = e.target.parentNode.href;
-					mEl['ContextMenu'].editTool = e.target.getAttribute('edit-tool');
-					mEl['ContextMenu'].classList.add('active');
-					mEl['ContextMenu'].style['left'] = (e.pageX + 5) +'px';
-					mEl['ContextMenu'].style['top'] = (e.pageY + 5) +'px';
-					mEl['ContextMenu'].style['z-index'] = HM.zIndex + 1;
-					_z.fall(e);
+					if (!['r-18g', 'r-18', 'r-15', 'unrated', 'illegal'].isThere(e.target.alt)) {
+						mEl['ContextMenu'].contentSource = e.target.src;
+						mEl['ContextMenu'].editTool = e.target.getAttribute('edit-tool');
+						mEl['ContextMenu'].classList.add('active');
+						mEl['ContextMenu'].style['left'] = (e.pageX + 5) +'px';
+						mEl['ContextMenu'].style['top'] = (e.pageY + 5) +'px';
+						mEl['ContextMenu'].style['z-index'] = HM.zIndex + 1;
+						_z.fall(e);
+					}
 			}
 		},
 		'mouseup': function(e) {
 			HM.DragableObj = null;
-			if (!e.target.classList.contains('dropdown-label') && !e.target.classList.contains('dropdown-input') && !e.target.getAttribute('contextmenu'))
-				_z.each('.dropdown-toggle.active', function(dt_a){ dt_a.classList.remove('active')} );
+			switch (e.button) {
+				case 0:
+					if (!stopCloseReact)
+						_z.remove('.magic-picture.gallery-qview');
+					if (!e.target.classList.contains('dropdown-label') && !e.target.classList.contains('dropdown-input'))
+						_z.each('.dropdown-toggle.active', function(dt_a){ dt_a.classList.remove('active')} );
+			}
+			stopCloseReact = false;
 		},
 		'dblclick': function(e) {
 			if (!['TEXTAREA', 'INPUT'].isThere(e.target.tagName))
@@ -3288,6 +3581,12 @@ function MagicExtension() {
 		},
 		'keydown': function(e) {
 			switch (e.keyCode) {
+				case 37:
+					Megia.image.openPicture(-1)
+					break;
+				case 39:
+					Megia.image.openPicture(1)
+					break;
 				case 27:
 					Chanabira.closeLastPopup(e);
 					break;
@@ -3297,20 +3596,29 @@ function MagicExtension() {
 					break;
 				case 9:
 					if (e.target.id === 'code_edit_ta') {
-						wmarkText(e.target, '\	', '\n\	');
+						wmarkText(e.target, '\t', '\n\t');
 						return _z.fall(e);
 					}
 			}
 		},
-		'mousemove': function(e, scr) {
+		'mousemove': function(e) {
 			if (HM.DragableObj) {
-				if (HM.DragableObj.el.style.position === 'fixed') {
-					scr = { Y: e.clientY, X: e.clientX }
-				} else {
-					scr = { Y: e.pageY, X: e.pageX }
+				switch (HM.DragableObj.position) {
+					case 'custom':
+						var W = _cid(HM.DragableObj.el.style['width']), H = _cid(HM.DragableObj.el.style['height']),
+							Adapt = adaptSize(HM.DragableObj.shift, (W > H ? W + e.movementX : H + e.movementY));
+						HM.DragableObj.el.style['height'] = Adapt.height +'px';
+						HM.DragableObj.el.style['width']  = Adapt.width  +'px';
+						break;
+					case 'absolute':
+						HM.DragableObj.el.style['left'] = e.pageX - HM.DragableObj.shift[0] +'px';
+						HM.DragableObj.el.style['top']  = e.pageY - HM.DragableObj.shift[1] +'px';
+						break;
+					case 'fixed':
+					default:
+						HM.DragableObj.el.style['left'] = e.clientX - HM.DragableObj.shift[0] +'px';
+						HM.DragableObj.el.style['top']  = e.clientY - HM.DragableObj.shift[1] +'px';
 				}
-				HM.DragableObj.el.style.top  = scr.Y - HM.DragableObj.shiftY + 'px';
-				HM.DragableObj.el.style.left = scr.X - HM.DragableObj.shiftX + 'px';
 				_z.fall(e);
 			}
 		}
@@ -3318,7 +3626,12 @@ function MagicExtension() {
 	var pinf = document.title.split(' — ')
 	if (pinf.length > 1)
 		document.title = (HM.URL.board !== document.location.host ? '/'+ HM.URL.board +'/ · ' : '') + pinf.pop();
-	
+	// simulate mouse button events
+	function simulateMouseEvent(node, eventType) {
+		var clickEvent = document.createEvent('MouseEvents');
+		clickEvent.initEvent(eventType, true, true);
+		node.dispatchEvent(clickEvent);
+	}
 	// animation listener events
 	PrefixedEvent("AnimationStart", insertListenerS);
 	PrefixedEvent("AnimationIteration", insertListenerI);
@@ -3346,8 +3659,8 @@ var mesShadows = /* hr shadow */ 'hr{border-style:none none solid!important;bord
 /* input checkbox style */ '.checkarea{box-shadow:inset 1px 1px 2px rgba(0,0,0,.3),0 0 2px #fff;border-radius:3px;padding:0 4px;background-color:#fff;font-size:14px;}.checkarea:before{content:"✗";color:transparent;}input[type="checkbox"]:checked + .checkarea:before{color:grey;}'+
 /* text shadows */ '.etch-text,.mapped,.mapped:hover{font-variant:small-caps;font-weight:bold;color:transparent!important;text-shadow:0 1px 1px rgba(255,255,255,.8),-1px 0 0 #666;}'+
 /* video-container shadows */ '.video-container,.content-frame{box-shadow:0 0 2px rgba(0,0,0,.2),0 0 4px rgba(0,0,0,.4),0 9px 9px -8px rgba(0,0,0,.8);}'+
-/* yuki-form previews shadows */ '.yukiFile img{box-shadow:0 4px 8px 0 rgba(0,0,0,.2);}';
-var mesAnimations = '.new .reply,#yuki-replyForm.reply{animation:pview .3s ease-out;-webkit-animation:pview .3s ease-out;}.popup{animation:pview .2s linear;-webkit-animation:pview .2s linear;}\
+/* yuki-form previews shadows */ '.yf_preview{box-shadow:0 4px 8px 0 rgba(0,0,0,.2);}';
+var mesAnimations = '.new .reply,form.reply{animation:pview .3s ease-out;-webkit-animation:pview .3s ease-out;}table.popup,.stored{animation:pview .2s linear;-webkit-animation:pview .2s linear;}\
 .content-frame{animation:slide .2s linear;-webkit-animation:slide .2s linear;}#shadow-box{animation:thaw 1s ease;-webkit-animation:thaw 1s ease;}\
 .magic-picture{animation:imageQView .3s ease-out;-webkit-animation:imageQView .3s ease-out;}.turn-on{animation:kinescope-on .4s ease;-webkit-animation:kinescope-on .4s ease;}.turn-off{animation:kinescope-off .2s ease-out;-webkit-animation:kinescope-off .2s ease-out;}\
 @keyframes kinescope-on {from {transform: scale(1, 0);} to {transform: scale(1, 1);}}@-webkit-keyframes kinescope-on {from {-webkit-transform: scale(.5, 0);} to {-webkit-transform: scale(1, 1);}}@keyframes kinescope-off {from {transform: scale(1, 2);} to {transform: scale(1, 1);}}@-webkit-keyframes kinescope-on {from {-webkit-transform: scale(1, 2);} to {-webkit-transform: scale(1, 1);}}\
@@ -3357,10 +3670,10 @@ var mesAnimations = '.new .reply,#yuki-replyForm.reply{animation:pview .3s ease-
 @keyframes pview{from {scale(0,0);opacity:0;}25%{transform:scale(.3,.3);opacity:.1;}50%{transform:scale(.9,.9);opacity:.3;}75%{transform:scale(1.02,1.02);opacity:.7;}100%{transform:scale(1,1);opacity:1;}}\
 @-webkit-keyframes pview{0%{-webkit-transform:scale(0,0);opacity:0;}25%{-webkit-transform:scale(.3,.3);opacity:.1;}50%{-webkit-transform:scale(.9,.9);opacity:.3;}75%{-webkit-transform:scale(1.02,1.02);opacity:.7;}100%{-webkit-transform:scale(1,1);opacity:1;}}';
 
-var MagicStyle = '.hidout,.hide.icon,.add_,.play_,.view_,.edit_,.search_iqdb,.search_google,#postform_placeholder,.report #yuki-newThread-create,.reply #yuki-newThread-create,.edit #yuki-newThread-create,.submit-button.process input,.pleer-container + br,.artwork select,.magic-info + br,.autohidden,.autohidden + .dummy-line,.text-original, .reply-link[hidden] + .rl-inf, .magic-picture.onpost-qview + img.thumb,.submit-button span,form.edit ~ *:not(.abbrev),#delete-overlay,.popup .chek-to-del{display:none!important;}\
+var MagicStyle = '.hidout,.hide.icon,.view_,.edit_,.search_iqdb,.search_google,#open-top-form + #postform_placeholder,#open-top-form + * + #postform_placeholder,#yuki-newThread-create,#yuki-targetInfo,#conn-push,.submit-button.process input,.pleer-container + br,.artwork select,.magic-info ~ *:not(.magic-audio),.autohidden,.autohidden + .dummy-line,.text-original, .reply-link[hidden] + .rl-inf, .magic-picture.onpost-qview + img.thumb,.submit-button span,form.edit ~ *:not(.abbrev),#delete-overlay,.popup .chek-to-del{display:none!important;}\
 .unexpanded,.rated{max-width:200px!important;max-height:200px!important;}.expanded{width:100%;height:auto;}.hideinfo{margin:5px;}.sp-r.rate{color:darkred;}#yuki-dropBox tr,.f-sect,.hideinfo{text-align:center!important;}\
 .dpop,#wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}.artwork{background:url(/src/svg/1505/ma-artwork.svg)no-repeat scroll center center / 100% auto;}.movie{background:url(/src/svg/1505/cm-movie.svg)no-repeat scroll center center / 100% auto;}\
-.content-frame,.scbc-container,.mhs-title,#magic-panel,.active > #timer-update-sets,.yukiFile,.dropdown-menu,.message code,#status-panel{background-color:#fefefe;}\
+.content-frame,.scbc-container,.mhs-title,#magic-panel,.active > #timer-update-sets,.yukiFile,.dropdown-menu,.message code,#status-panel{background-color:#fefefe;}.global #yuki-newThread-create,form.popup #yuki-targetInfo,.report #yuki-targetInfo,form.reply #conn-push,form.popup #conn-push{display:inline!important;}\
 .yuki_clickable,.txt-btn,.wmark-button,.button,.el-li,.icon{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}\
 .replylinks,.button{line-height:2em;font-size:75%;clear:both;}#post-count,.txt-btn{color:#999;}.mapped,.mapped:hover{cursor:default;color:#666!important;}.hidup{top:-9999px!important;}\
 .footer:after,.stored:not(.stub):after,.new .reply:not(.stub):after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.cm-button{text-decoration:none;}.s-sect{text-align:left;padding-left:2em;color:#777;}\
@@ -3369,15 +3682,15 @@ var MagicStyle = '.hidout,.hide.icon,.add_,.play_,.view_,.edit_,.search_iqdb,.se
 #yuki-errorMsg{text-align:center;color:#FFF;background-color:#E04000;}.wmark-button{color:#fefefe;text-shadow:0 1px 0 rgba(0,0,0,.4);}a:hover > .wmark-button{color:inherit;}.spoiler > .wmark-button{vertical-align:inherit;color:inherit;text-shadow:none;}\
 .rating_SFW{background:green;}.rating_R15{background:yellow;}.rating_R18{background:orange;}.rating_R18G{background:red;}.line-sect,.yukiFile,.cpop,.mpanel-btn,.postdeleted .doubledash{display:inline-block;}#warning-massage{color:#ff3428;}\
 .yukiFile,.yukiFileSets{font-size:66%;}.yukiFile{text-align:center;width:210px;-webkit-border-radius:5px;margin:5px;padding:2px;}.new .reply{background-color:rgba(212,115,94,.1);}\
-#yuki-files-placeholder > *{vertical-align:top;}.yukiFile img{max-width:150px;margin:5px 0;}.yukiFile span{max-width:200px;word-wrap:break-word;}\
-#yuki-replyForm{text-align:left;padding:4px 8px;}.selected:before{content:"✓ ";color:green;}.chek-to-del.selected:before{margin:5px;position:relative;bottom:2px;}.cpop{margin-left:.4em;}#oembedapi + .checkarea,#set-show-spoilers + .checkarea{font-size:20px!important;}\
-#yuki-dropBox tr,.magic-picture.onpost-qview{display:block;}.droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em;}.yukiFile > .magic-audio{width:210px;height:210px;}.yukiFile > .magic-info{width:200px;}\
+#yuki-files-placeholder > *{vertical-align:top;}.yf_preview{max-width:150px;margin:5px 0;}.yf_info{padding:0 2px;word-wrap:break-word;}\
+#yuki-replyForm{text-align:left;padding:4px 8px;}.selected:before{content:"✓ ";color:green;}.chek-to-del.selected:before{margin:5px;position:relative;bottom:2px;}.cpop{margin-left:.4em;}.checkarea.super{font-size:20px!important;}\
+#yuki-dropBox tr,.magic-picture{display:block;}.droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em;}.yukiFile > .magic-audio{width:210px;height:210px;}.yukiFile > .magic-info{width:200px;}\
 #rf-cb-ty{background-image:url(/src/svg/1411/closepopup.svg);}#rf-cb-all{background-image:url(/src/svg/1411/closeallpopups.svg);}.dpop{float:right;background-image:url(/src/svg/1505/cmove.svg);cursor:move;}.sagearrow{cursor:default;}\
 .cpop{width:14px;height:14px;}.dpop,.sagearrow,.paperclip,.view-eye,.chek-to-del{width:20px;height:20px;}.reply-button{margin-left:3px;width:23px;height:14px;background:url(/src/svg/1505/reply-arrow.svg)no-repeat center top;}\
-#magic-buttons-panel,#magic-panel,#status-panel{position:fixed;z-index:99;}#magic-buttons-panel{right:1em;bottom:1em;}.mpanel-btn{padding:0 9px;width:28px;height:28px;opacity:.2;filter:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'grayscale\'><feColorMatrix type=\'matrix\' values=\'.3 .3 .3 0 0 .3 .3 .3 0 0 .3 .3 .3 0 0 0 0 0 1 0\'/></filter></svg>#grayscale");-webkit-filter:grayscale(100%);}\
+#magic-buttons-panel,#magic-panel,#status-panel,#yuki-replyForm.popup,#yuki-replyForm.report,.gallery-qview{position:fixed;}#magic-buttons-panel{right:1em;bottom:1em;}.mpanel-btn{padding:0 9px;width:28px;height:28px;opacity:.2;filter:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'grayscale\'><feColorMatrix type=\'matrix\' values=\'.3 .3 .3 0 0 .3 .3 .3 0 0 .3 .3 .3 0 0 0 0 0 1 0\'/></filter></svg>#grayscale");-webkit-filter:grayscale(100%);}\
 .ta-inact::-moz-selection{background:rgba(99,99,99,.3);}.ta-inact::selection{background:rgba(99,99,99,.3);}#int-upd{bottom:2px;position:relative;}#allowed-posts a{text-decoration:none;text-shadow:none;font-weight:normal;font-size:14px;}\
 .mpanel-btn:hover,.mpanel-btn.active{opacity:1;filter:none;-webkit-filter:grayscale(0%);}#magic-panel tr{height:3em;}#vsize-textbox{color:#bbb;font-family:Trebuchet;}\
-#magic-panel{right:5px;bottom:5px;max-width:450px;height:300px;border-radius:8px;padding:9px;padding-bottom:3em;}.sp-r{text-align:right;font-size:18px;}\
+#magic-panel{right:5px;bottom:5px;max-width:450px;height:350px;border-radius:8px;padding:9px;padding-bottom:3em;}.sp-r{text-align:right;font-size:18px;}\
 .postdeleted,.t-sec{opacity:.6;}.inactive{opacity:.4;}img[src="#transparent"]{opacity:0;}.wmark-button,.reply-button,.sagearrow{vertical-align:middle;}.content-window{position:fixed;left:0;top:0;z-index:2999}\
 .submit-button.process{font-size:13px;font-style:italic;color:#777;}@keyframes process{0%{width:0;}100%{width:1em;}}@-webkit-keyframes process{0%{width:0;}100%{width:1em;}}\
 .submit-button.process span{display:inline!important;}.process:after{content:"....";display:inline-block;overflow:hidden;animation:process 3s linear .1s infinite;-webkit-animation:process 3s linear .1s infinite;}\
@@ -3395,18 +3708,18 @@ var MagicStyle = '.hidout,.hide.icon,.add_,.play_,.view_,.edit_,.search_iqdb,.se
 .dropdown,.dropdown-menu{padding-left:0;list-style:outside none none;}.active > * {visibility:visible;}.active > .dropdown-label{border-radius:4px 4px 0 0;}.dropdown-label{padding:2px 4px;font-variant:small-caps;font-size:14px;}.dropdown-label + .dropdown-menu{border-top-left-radius:0;border-top-right-radius:0;}.dropdown-menu{border-radius:4px;position:absolute;color:#777;min-width:150px;font-size:14px;line-height:1.8;}\
 .dropdown-item,.dropdown-br{padding:0 10px;}.dropdown-item:hover{background-color:rgba(0,0,0,.1);}.dropdown-br{font-size:12px;line-height:16px;border:1px solid #e1e1e1;}#timer-update-sets:before{content:"⟨ ";}#timer-update-sets:after{content:" ⟩";}#int-val{width:50px;margin:0 4px;}.red-light{color:red;text-shadow:0 0 4px red;}.cpanel > .reply-button{top:-1px;position:relative;}\
 .blink{-webkit-animation-name:blinker;-webkit-animation-duration:1s;-webkit-animation-timing-function:linear;-webkit-animation-iteration-count:infinite;animation-name:blinker;animation-duration:1s;animation-timing-function:linear;animation-iteration-count:infinite;}\
-.oppost.highlighted,.highlighted .reply{border-style:dashed!important;border-width:2px!important;border-color:#F50!important;}.postcontent,.rl-inf,.f-left{float:left;}br + .postbody{clear:both;}.sinf{color:#666;font-size:.8em;}.magic-picture:before{content:" "}.celrly:not([hidden]) + .celrly:before, .celrly + * + .celrly:before{content:",   ";color:#666!important;cursor:default;}.celrly:not([hidden]) ~ .rl-inf{display:inline!important;}.report{background-color:#FFE2D4;}\
+.oppost.highlighted,.highlighted .reply{border-style:dashed!important;border-width:2px!important;border-color:#F50!important;}.postcontent,.rl-inf,.f-left{float:left;}br + .postbody{clear:both;}.sinf{color:#666;font-size:.8em;}.onpost-qview:hover:before{content:"";display:inline-block;width:100%;height:100%;background:url(/src/svg/1511/fedge.svg) no-repeat bottom right / 10%;}.gallery-qview{background-color:rgba(255,255,255,.6);}.magic-picture{background-repeat:no-repeat,repeat;background-position:center,top left;background-size:contain,auto;}.celrly:not([hidden]) + .celrly:before, .celrly + * + .celrly:before{content:",\t";color:#666!important;cursor:default;}.celrly:not([hidden]) ~ .rl-inf{display:inline!important;}.report{background-color:#FFE2D4;}\
 .view-eye{background:url(/src/png/1506/p-stub-hide.png)no-repeat scroll center;}.i-block{display:inline-block;}.postermenu{display:block;background:url(/src/svg/1508/new-dropdown-arrow.svg)no-repeat scroll bottom center / 18px;padding:9px;}.active > .postermenu{transform:rotate(180deg);-webkit-transform:rotate(180deg);box-shadow:none!important;background-position:top center;}\
 .turn-on{position:absolute;bottom:50px;}.i-fav:before{content:"";margin-right:5px;padding:8px;background:transparent no-repeat scroll center center / 16px;}#icm-fsw-google:before{background-image:url(/src/svg/1508/google_ico_monochrome.svg);}#icm-create-macro:before{background-image:url(/src/svg/1508/macroeditor_ico_monochrome.svg);}#icm-fsw-iqdb:before{background-image:url(/src/svg/1508/new-cube-icon-monochrome.svg);}#icm-fsw-saucenao:before{background-image:url(/src/svg/1508/soucenao_ico_monochrome.svg);}#icm-fsw-derpibooru:before{background-image:url(/src/svg/1508/trixie_cutie_mark_by_rildraw-d3khewr.svg);}\
 #status-panel{bottom:0;border-radius:0 5px;padding:3px 6px;}.break-lines + *:before{content:"||";font-size:12px;padding:0 2px;}.parensis:before{content:"("}.parensis:after{content:")"}.break-midot + *:before{content:"・";}\
 @-webkit-keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}@keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}\
 @keyframes onReady{50% {opacity:0;}} @-webkit-keyframes onReady{50% {opacity:0;}}'+ mesShadows + mesAnimations;
 	
-	try{ MagicExtension() }catch(e){ _z.dbg(e) }
+	MagicExtension();
 	
 	_z.append(document.head, [
-		_z.setup("script", {"src": "/src/js/1501/aurora_0.4.4.js"}, null),
-		_z.setup("style", {"text": MagicStyle}, null)
+		_z.setup("script", {"src": "/src/js/1501/aurora_0.4.4.js"}),
+		_z.setup("style", {"text": MagicStyle})
 	]);
 }
 
