@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.6.0
+// @version 		1.6.1
 // @grant   		none
 // ==/UserScript==
 
@@ -2433,7 +2433,6 @@ function MagicExtension() {
 					}
 			}
 		}
-		
 		function yukiAddFile(data) { // FileList object
 			var files = data.files,
 				dataURL = data.getData ? data.getData(data.effectAllowed === 'copyLink' ? 'Text' : 'URL') : null;
@@ -2455,7 +2454,7 @@ function MagicExtension() {
 			}
 		}
 		function submitProcess(st) {
-			_z.setup(Yu['Submit'], {'disabled': (st ? "disabled" : undefined)}, null);
+			_z.setup(Yu['Submit'], {'disabled': (st ? "disabled" : undefined)});
 			Yu['Submit'].parentNode.classList.toggle('process');
 		}
 		function yukiPleasePost(e) {
@@ -2923,6 +2922,7 @@ function MagicExtension() {
 			SLC = {
 				mcp: ["Post", "В посте"],
 				pvc: ["Center", "По центру"],
+				clp: ["Classic", "Классический"],
 				mcw: ["Fixed Window", "В окне"],
 				vsyz: ["Video Size", "Размер видеоплеера"],
 				maxr: ["Max Allowing Rating", "Макс. разрешенный рейтинг"],
@@ -2954,9 +2954,8 @@ function MagicExtension() {
 			(HM.EmbedField == 1 ? 'checked ' : '') +'id="gsx-EmbedField" value="1" name="emb_f" type="radio">\n'+ SLC.mcp[lng] +'\n</label></td><td class="s-sect">'+
 			SLC.cframe[lng] +'</td></tr><tr id="vs-set" class="'+ (HM.EmbedField == 0 ? 'hidout' : '') +'"><td class="f-sect"><input id="gsx-AspectRatio" min="0" value="'+
 			HM.AspectRatio +'" step="1" max="3" type="range" name="as_ratio"></td><td class="s-sect">'+ SLC.vsyz[lng] +'\n<span id="vsize-textbox" class="parensis">'+
-			AspectSize.W[HM.AspectRatio] +'×'+ AspectSize.H[HM.AspectRatio] +'</span></td></tr><tr><td class="f-sect"><label><input '+
-			(HM.PictureView == 0 ? 'checked ' : '') +'id="gsx-PictureView" value="0" name="p_view" type="radio">\n'+ SLC.pvc[lng] +'\n<input '+
-			(HM.PictureView == 1 ? 'checked ' : '') +'id="gsx-PictureView" value="1" name="p_view" type="radio">\n'+ SLC.mcp[lng] +'\n</label></td><td class="s-sect">'+
+			AspectSize.W[HM.AspectRatio] +'×'+ AspectSize.H[HM.AspectRatio] +'</span></td></tr><tr><td class="f-sect"><select id="gsx-PictureView"><option value="0">'+
+			SLC.pvc[lng] +'</option><option value="1">'+ SLC.mcp[lng] +'</option><option value="2">'+ SLC.clp[lng] +'</option></select></td><td class="s-sect">'+
 			SLC.picview[lng] +'</td></tr><tr><td class="f-sect"><select id="gsx-maXrating" class="rating_'+
 			HM.maXrating.replace('-', '') +'"><option class="rating_SFW">SFW</option><option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select></td><td class="s-sect">'+
 			SLC.maxr[lng] +'</td></tr><tr><td class="f-sect"><label><input id="gsx-oEmbedAPI" type="checkbox" hidden'+
@@ -3074,6 +3073,7 @@ function MagicExtension() {
 			MSs['ButtonsPanel'].style['z-index'] = HM.zIndex;
 		}});
 		el$('#gsx-maXrating').value = HM.maXrating;
+		el$('#gsx-PictureView').value = HM.PictureView;
 		for (var n = 0, Types = ['Nametrip', 'Title', 'Words']; n < Types.length; n++) {
 			_z.setup(this['HideBySets'].querySelector('#txt-'+ Types[n]), {'value': HM.Keywords[Types[n]].keys}, {
 				'blur': function(e) {
@@ -3313,7 +3313,7 @@ function MagicExtension() {
 					_z.fall(e);
 					break;
 				case 'iview':
-					Megia.image.makePicture(e.target)
+					Megia.image.makePicture(e.target);
 					_z.fall(e);
 					break;
 				case 'reply-button':
@@ -3448,7 +3448,15 @@ function MagicExtension() {
 	
 	/************************ MagicPicture *********************************/
 	function MagicPicture(h) {
-		var MP = this, sW, sH, Idx;
+		var MP = this, Idx, Size = {
+			original: [],
+			scaled: {},
+			get: function(image, scaleMax, scaleMin) {
+				this.scaled = adaptSize(this.original, scaleMax, scaleMin);
+				image.style['width'] = this.scaled.width +'px';
+				image.style['height'] = this.scaled.height +'px';
+			}
+		};
 		this['Gallery'] = document.getElementsByClassName('iview');
 		this['Picture'] = _z.setup('picture', {'class': 'magic-picture', 'contextmenu': 'image-context'}, {
 				'wheel': function(e) {
@@ -3456,11 +3464,8 @@ function MagicExtension() {
 						var D = e.deltaY || e.deltaX,
 							T = _cid(this.style['top']),
 							L = _cid(this.style['left']),
-							W = _cid(this.style['width']),
-							H = _cid(this.style['height']),
-							nS = adaptSize(this.fullSize, D < 0 ? (W > H ? W : H) * 1.25 : (W > H ? W : H) / 1.25);
-							this.style['width'] = nS.width +'px';
-							this.style['height'] = nS.height +'px';
+							R = Size.scaled.width > Size.scaled.height ? Size.scaled.width : Size.scaled.height;
+							Size.get(this, D < 0 ? R * 1.25 : R / 1.25);
 							this.style['left'] = parseInt(e.clientX - (D < 0 ? (e.clientX - L) * 1.25 : (e.clientX - L) / 1.25), 10) +'px';
 							this.style['top'] = parseInt(e.clientY - (D < 0 ? (e.clientY - T) * 1.25 : (e.clientY - T) / 1.25), 10) +'px';
 						return _z.fall(e);
@@ -3477,12 +3482,15 @@ function MagicExtension() {
 							}
 							break;
 						case 'onpost-qview':
-							sW = _cid(this.style['width']);
-							sH = _cid(this.style['height']);
+							Size.changed = false;
 							if ((this.scrollHeight - e.offsetY) < (this.scrollHeight / 10) && (this.scrollWidth - e.offsetX) < (this.scrollWidth / 10) ) {
 								HM.DragableObj = {
 									el: this,
-									shift: this.fullSize,
+									callback: function(e) {
+										var sW = Size.scaled.width; sH = Size.scaled.height;
+										Size.get(MP['Picture'], sW > sH ? sW + e.movementX : sH + e.movementY);
+										Size.changed = true;
+									},
 									position: 'custom'
 								}
 							}
@@ -3492,7 +3500,7 @@ function MagicExtension() {
 				'click': function(e) {
 					switch (this.classList[1]) {
 						case 'onpost-qview':
-							if (_cid(this.style['width']) === sW && _cid(this.style['height']) === sH) {
+							if (!Size.changed) {
 								this.remove();
 							}
 					}
@@ -3500,34 +3508,48 @@ function MagicExtension() {
 				}
 			});
 		this.makePicture = function(thumb) {
-			var Id = thumb.id.split('_')[1], PP = ['gallery', 'onpost'][HM.PictureView],
-				oSize = thumb.getAttribute('image-size').split('×'),
-				Adapt = adaptSize(oSize, HM.PictureView > 0 ? 500 : (window.innerWidth > window.innerHeight ? window.innerHeight : window.innerWidth), 200),
-				lPic = _z.setup(MP['Picture'], {'id': 'mpic_'+ Id, 'class': 'magic-picture '+ PP +'-qview'});
-				lPic.src = thumb.parentNode.href
-				lPic.fullSize = oSize
-				switch(PP) {
-					case 'onpost':
-						lPic.style['background-image'] = 'url(\''+ thumb.parentNode.href +'\')'
+			var Id = thumb.id.split('_')[1],
+				Pv = ['gallery', 'onpost', 'classic'][HM.PictureView];
+				Size.original = thumb.getAttribute('image-size').split('×');
+				switch(Pv) {
+					case 'classic':
+						if (thumb.classList.contains('expanded')) {
+							thumb.src = thumb.originalSrc;
+							thumb.style = '';
+						} else {
+							thumb.originalSrc = thumb.src;
+							thumb.src = thumb.parentNode.href;
+							Size.get(thumb, document.body.clientWidth - 100, 200);
+						}
+						thumb.classList.toggle('expanded')
 						break;
-					case 'gallery':
-						HM.zIndex++;
-						lPic.style['left'] = (Adapt.width >= window.innerWidth ? '0' : (window.innerWidth - Adapt.width) / 2) +'px'
-						lPic.style['top'] = (Adapt.height >= window.innerHeight ? '0' : (window.innerHeight - Adapt.height) / 2) +'px'
-						lPic.style['background-image'] = 'url(\''+ thumb.parentNode.href +'\'), url(/src/svg/1511/alpha-cells.svg)'
-						lPic.style['z-index'] = HM.zIndex;
+					default:
+						Idx = MP['Gallery'].indexOf(thumb);
+						MP['Picture'].src = thumb.parentNode.href;
+						switch (Pv) {
+							case 'onpost':
+								Size.get(MP['Picture'], 500, 200);
+								MP['Picture'].style['background-image'] = 'url(\''+ thumb.parentNode.href +'\')';
+								break;
+							case 'gallery':
+								HM.zIndex++;
+								Size.get(MP['Picture'], window.innerWidth > window.innerHeight ? window.innerHeight : window.innerWidth, 200);
+								MP['Picture'].style['left'] = (Size.scaled.width >= window.innerWidth ? '0' : (window.innerWidth - Size.scaled.width) / 2) +'px';
+								MP['Picture'].style['top'] = (Size.scaled.height >= window.innerHeight ? '0' : (window.innerHeight - Size.scaled.height) / 2) +'px';
+								MP['Picture'].style['background-image'] = 'url(\''+ thumb.parentNode.href +'\'), url(/src/svg/1511/alpha-cells.svg)';
+								MP['Picture'].style['z-index'] = HM.zIndex;
+						}
+						_z.before(thumb, _z.setup(MP['Picture'], {'id': 'mpic_'+ Id, 'class': 'magic-picture '+ Pv +'-qview'}));
 				}
-				lPic.style['width'] = Adapt.width +'px'
-				lPic.style['height'] = Adapt.height +'px'
-				Idx = MP['Gallery'].indexOf(thumb)
-				_z.before(thumb, lPic);
 		}
 		this.openPicture = function(n) {
-			MP.makePicture(MP['Gallery'][Idx + n])
-			if (HM.PictureView == '1') {
-				_scrollIfOverPage(_z.route(MP['Picture'], function(node) {
-					return node.className === 'reply';
-				}));
+			if (Idx && HM.PictureView !== '2') {
+				MP.makePicture(MP['Gallery'][Idx + n])
+				if (HM.PictureView == '1') {
+					_scrollIfOverPage(_z.route(MP['Picture'], function(node) {
+						return ['reply', 'oppost'].isThere(node.classList[0]);
+					}));
+				}
 			}
 		}
 	}
@@ -3582,10 +3604,9 @@ function MagicExtension() {
 		'keydown': function(e) {
 			switch (e.keyCode) {
 				case 37:
-					Megia.image.openPicture(-1)
-					break;
 				case 39:
-					Megia.image.openPicture(1)
+					if (!['TEXTAREA', 'INPUT'].isThere(e.target.tagName))
+						Megia.image.openPicture(e.keyCode + 1 - 39)
 					break;
 				case 27:
 					Chanabira.closeLastPopup(e);
@@ -3605,10 +3626,7 @@ function MagicExtension() {
 			if (HM.DragableObj) {
 				switch (HM.DragableObj.position) {
 					case 'custom':
-						var W = _cid(HM.DragableObj.el.style['width']), H = _cid(HM.DragableObj.el.style['height']),
-							Adapt = adaptSize(HM.DragableObj.shift, (W > H ? W + e.movementX : H + e.movementY));
-						HM.DragableObj.el.style['height'] = Adapt.height +'px';
-						HM.DragableObj.el.style['width']  = Adapt.width  +'px';
+						HM.DragableObj.callback(e);
 						break;
 					case 'absolute':
 						HM.DragableObj.el.style['left'] = e.pageX - HM.DragableObj.shift[0] +'px';
