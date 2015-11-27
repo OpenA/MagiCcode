@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.6.1
+// @version 		1.6.2
 // @grant   		none
 // ==/UserScript==
 
@@ -394,7 +394,7 @@ function MagicExtension() {
 			left: box.left + pageXOffset
 		}
 	}
-	function adaptSize(origS, sMax, sMin) {
+	function scaleSize(origS, sMax, sMin) {
 		var nW, nH,
 			ratio = origS[1] / origS[0];
 		if (sMin && sMin > origS[0] && sMin > origS[1]) {
@@ -1219,7 +1219,7 @@ function MagicExtension() {
 								HM.DragableObj = {
 									el: this,
 									shift: [e.pageX - coords.left, e.pageY - coords.top],
-									position: 'absolute'
+									layout: 'page'
 								}
 					}
 				}, 'click': function(e) {
@@ -2124,7 +2124,7 @@ function MagicExtension() {
 						HM.DragableObj = {
 							el: this,
 							shift: [e.pageX - coords.left, e.pageY - coords.top],
-							position: 'fixed'
+							layout: 'client'
 						}
 						_z.fall(e);
 					}
@@ -2278,13 +2278,16 @@ function MagicExtension() {
 				if (!fileObj['upload_name'])
 					this['upload_name'] = fileObj['original_name'];
 				
-				var YF = this, Id = makeRandId(6), Class = (Type == 'audio' ? ' artwork' : Type == 'video' ? ' movie' : ''),
-					f_size = bytesMagnitude(this.blob.size), f_ext = this.upload_name.fext();
-				this['frontend'] = _z.setup('div', {'id': 'yuki-file-'+ Id, 'class': 'yukiFile'+ Class, 'html': (Class ? '<div class="magic-info"><div class="yf_remove">[\n<a id="yf-remove" class="yuki_clickable">'+
-					LCY['rmv'][lng].toLowerCase() +'</a>\n]</div>\n'+ f_ext.toUpperCase() +', <span id="yf-size" class="yf_info">'+ f_size +'</span>\n<div id="yf-name" class="yf_info">'+ this.upload_name +
-					'</div></div><div class="magic-audio"><div class="ma-controls"><a class="w-open" id="ma-play"></a></div></div>' :
-					'<div class="yf_remove">[\n<a id="yf-remove" class="yuki_clickable">'+ LCY['rmv'][lng].toLowerCase() +'</a>\n]</div><img id="yf-preview" class="yf_preview" src="'+
-					(this.dataURL || '#transparent') +'"><div id="yf-name" class="yf_info">'+ this.upload_name +'</div><span id="yf-size" class="yf_info">'+ f_size +'</span>') +'<select class="rating_SFW" id="file_rating_sel"><option class="rating_SFW">SFW</option><option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select>'},
+				var YF = this, Id = makeRandId(6), Class = (Type == 'audio' ? 'artwork' : Type == 'video' ? 'movie' : 'default'),
+					f_size = bytesMagnitude(this.blob.size), f_ext = this.upload_name.fext(), Media = (Type == 'audio' || Type == 'video'),
+					yf_remove = '<div class="yf_remove">[\n<a id="yf-remove" class="yuki_clickable">'+ LCY['rmv'][lng].toLowerCase() +'</a>\n]</div>\n',
+					rating_sel = '<select class="rating_SFW" id="file_rating_sel"><option class="rating_SFW">SFW</option><option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select>';
+					
+				this['frontend'] = _z.setup('div', {'id': 'yuki-file-'+ Id, 'class': 'yukiFile '+ Class, 'html': (Media ? '<div class="magic-info">'+ yf_remove +
+					f_ext.toUpperCase() +', <span id="yf-size" class="yf_info">'+ f_size +'</span>\n<div id="yf-name" class="yf_info">'+ this.upload_name +
+					'</div></div><div class="magic-audio"><div class="ma-controls"><a class="w-open" id="ma-play"></a></div>'+ rating_sel +'</div>' :
+					yf_remove +'<img id="yf-preview" class="yf_preview" src="'+ (this.dataURL || '#transparent') +'"><div id="yf-name" class="yf_info">'+
+					this.upload_name +'</div><span id="yf-size" class="yf_info">'+ f_size +'</span>' + rating_sel)},
 					{'change': function(e) {
 						if (e.target.type === 'select-one') {
 							YF.rating = e.target.value;
@@ -3302,7 +3305,7 @@ function MagicExtension() {
 				case 'delete-post': delPost(this); break;
 				case 'postermenu':
 					e.target.parentNode.classList.toggle('active');
-					e.target.nextElementSibling.style['z-index'] = document.querySelectorAll('.active > .postermenu').length ;
+					e.target.nextElementSibling.style['z-index'] = document.querySelectorAll('.active > .postermenu').length;
 					break;
 				case 'chek-to-del':
 					e.target.classList.toggle('selected');
@@ -3373,7 +3376,11 @@ function MagicExtension() {
 					_z.fall(e);
 					break;
 				case 'inj-refl':
-					wmarkText(Nagato['ReplyText'], '>>'+ (Map[0] !== HM.URL.board ? Map[0] +'/' : '') + Map[2], '\x20');
+					var brd, form = document.getElementById('yuki-replyForm');
+					if (form) {
+						brd = form.getAttribute('action').split('/')[1];
+						wmarkText(document.getElementById('yuki-replyText'), '>>'+ (Map[0] !== brd ? Map[0] +'/' : '') + Map[2], '\x20');
+					}
 					_z.fall(e);
 			}
 		} catch(e) {
@@ -3413,7 +3420,6 @@ function MagicExtension() {
 			Nagato.submitForm({target: form})
 		}
 	}
-
 	function changeForms(form, type) {
 		var prevForm = document.querySelector('#'+ form.id +'.'+ type),
 			sLeft = form.style['left'],
@@ -3448,11 +3454,11 @@ function MagicExtension() {
 	
 	/************************ MagicPicture *********************************/
 	function MagicPicture(h) {
-		var MP = this, Idx, Size = {
+		var MP = this, Idx = 0, Size = {
 			original: [],
 			scaled: {},
 			get: function(image, scaleMax, scaleMin) {
-				this.scaled = adaptSize(this.original, scaleMax, scaleMin);
+				this.scaled = scaleSize(this.original, scaleMax, scaleMin);
 				image.style['width'] = this.scaled.width +'px';
 				image.style['height'] = this.scaled.height +'px';
 			}
@@ -3478,7 +3484,8 @@ function MagicExtension() {
 								stepZup.bind(this)()
 							HM.DragableObj = {
 								el: this,
-								shift: [e.pageX - coords.left, e.pageY - coords.top]
+								shift: [e.pageX - coords.left, e.pageY - coords.top],
+								layout: 'client'
 							}
 							break;
 						case 'onpost-qview':
@@ -3486,16 +3493,16 @@ function MagicExtension() {
 							if ((this.scrollHeight - e.offsetY) < (this.scrollHeight / 10) && (this.scrollWidth - e.offsetX) < (this.scrollWidth / 10) ) {
 								HM.DragableObj = {
 									el: this,
+									layout: 'custom',
 									callback: function(e) {
-										var sW = Size.scaled.width; sH = Size.scaled.height;
-										Size.get(MP['Picture'], sW > sH ? sW + e.movementX : sH + e.movementY);
+										var sW = Number(Size.scaled.width), sH = Number(Size.scaled.height),
+											eX = PropertyEvent(e, 'MovementX'), eY = PropertyEvent(e, 'MovementY');
+										Size.get(MP['Picture'], sW > sH ? sW + eX : sH + eY);
 										Size.changed = true;
-									},
-									position: 'custom'
+									}
 								}
 							}
 					}
-					return _z.fall(e);
 				},
 				'click': function(e) {
 					switch (this.classList[1]) {
@@ -3510,6 +3517,7 @@ function MagicExtension() {
 		this.makePicture = function(thumb) {
 			var Id = thumb.id.split('_')[1],
 				Pv = ['gallery', 'onpost', 'classic'][HM.PictureView];
+				Idx = MP['Gallery'].indexOf(thumb);
 				Size.original = thumb.getAttribute('image-size').split('×');
 				switch(Pv) {
 					case 'classic':
@@ -3524,7 +3532,6 @@ function MagicExtension() {
 						thumb.classList.toggle('expanded')
 						break;
 					default:
-						Idx = MP['Gallery'].indexOf(thumb);
 						MP['Picture'].src = thumb.parentNode.href;
 						switch (Pv) {
 							case 'onpost':
@@ -3539,11 +3546,11 @@ function MagicExtension() {
 								MP['Picture'].style['background-image'] = 'url(\''+ thumb.parentNode.href +'\'), url(/src/svg/1511/alpha-cells.svg)';
 								MP['Picture'].style['z-index'] = HM.zIndex;
 						}
-						_z.before(thumb, _z.setup(MP['Picture'], {'id': 'mpic_'+ Id, 'class': 'magic-picture '+ Pv +'-qview'}));
+						_z.before(thumb.parentNode, _z.setup(MP['Picture'], {'id': 'mpic_'+ Id, 'class': 'magic-picture '+ Pv +'-qview'}));
 				}
 		}
 		this.openPicture = function(n) {
-			if (Idx && HM.PictureView !== '2') {
+			if (Idx >= 0 && HM.PictureView !== '2') {
 				MP.makePicture(MP['Gallery'][Idx + n])
 				if (HM.PictureView == '1') {
 					_scrollIfOverPage(_z.route(MP['Picture'], function(node) {
@@ -3618,24 +3625,19 @@ function MagicExtension() {
 				case 9:
 					if (e.target.id === 'code_edit_ta') {
 						wmarkText(e.target, '\t', '\n\t');
-						return _z.fall(e);
+						_z.fall(e);
 					}
 			}
 		},
-		'mousemove': function(e) {
+		'mousemove': function(e, pc) {
 			if (HM.DragableObj) {
-				switch (HM.DragableObj.position) {
+				switch (HM.DragableObj.layout) {
 					case 'custom':
 						HM.DragableObj.callback(e);
 						break;
-					case 'absolute':
-						HM.DragableObj.el.style['left'] = e.pageX - HM.DragableObj.shift[0] +'px';
-						HM.DragableObj.el.style['top']  = e.pageY - HM.DragableObj.shift[1] +'px';
-						break;
-					case 'fixed':
 					default:
-						HM.DragableObj.el.style['left'] = e.clientX - HM.DragableObj.shift[0] +'px';
-						HM.DragableObj.el.style['top']  = e.clientY - HM.DragableObj.shift[1] +'px';
+						HM.DragableObj.el.style['left'] = e[HM.DragableObj.layout +'X'] - HM.DragableObj.shift[0] +'px';
+						HM.DragableObj.el.style['top']  = e[HM.DragableObj.layout +'Y'] - HM.DragableObj.shift[1] +'px';
 				}
 				_z.fall(e);
 			}
@@ -3656,11 +3658,16 @@ function MagicExtension() {
 	//PrefixedEvent("AnimationEnd", insertListenerE);
 	// apply prefixed event handlers
 	function PrefixedEvent(type, callback) {
-		var p, pfx = ["webkit", "moz", "MS", "o", ""];
-		for (var p = 0; p < pfx.length; p++) {
-			if (!pfx[p])
-				type = type.toLowerCase();
-			document.addEventListener(pfx[p]+type, callback, false);
+		for (var i = 0, p, pfx = ['', 'moz', 'webkit', 'o', 'MS']; i < pfx.length; i++) {
+			p = !pfx[i] ? type.toLowerCase() : pfx[i] + type;
+			document.addEventListener(p, callback, false);
+		}
+	}
+	function PropertyEvent(event, prop) {
+		for (var i = 0, p, pfx = ['', 'moz', 'webkit', 'o', 'MS']; i < pfx.length; i++) {
+			p = !pfx[i] ? prop.slice(0, 1).toLowerCase() + prop.slice(1) : pfx[i] + prop;
+			if (event[p] !== undefined)
+				return event[p];
 		}
 	}
 }
@@ -3688,7 +3695,7 @@ var mesAnimations = '.new .reply,form.reply{animation:pview .3s ease-out;-webkit
 @keyframes pview{from {scale(0,0);opacity:0;}25%{transform:scale(.3,.3);opacity:.1;}50%{transform:scale(.9,.9);opacity:.3;}75%{transform:scale(1.02,1.02);opacity:.7;}100%{transform:scale(1,1);opacity:1;}}\
 @-webkit-keyframes pview{0%{-webkit-transform:scale(0,0);opacity:0;}25%{-webkit-transform:scale(.3,.3);opacity:.1;}50%{-webkit-transform:scale(.9,.9);opacity:.3;}75%{-webkit-transform:scale(1.02,1.02);opacity:.7;}100%{-webkit-transform:scale(1,1);opacity:1;}}';
 
-var MagicStyle = '.hidout,.hide.icon,.view_,.edit_,.search_iqdb,.search_google,#open-top-form + #postform_placeholder,#open-top-form + * + #postform_placeholder,#yuki-newThread-create,#yuki-targetInfo,#conn-push,.submit-button.process input,.pleer-container + br,.artwork select,.magic-info ~ *:not(.magic-audio),.autohidden,.autohidden + .dummy-line,.text-original, .reply-link[hidden] + .rl-inf, .magic-picture.onpost-qview + img.thumb,.submit-button span,form.edit ~ *:not(.abbrev),#delete-overlay,.popup .chek-to-del{display:none!important;}\
+var MagicStyle = '.hidout,.hide.icon,.view_,.edit_,.search_iqdb,.search_google,#open-top-form + #postform_placeholder,#open-top-form + * + #postform_placeholder,#yuki-newThread-create,#yuki-targetInfo,#conn-push,.submit-button.process input,.pleer-container + br,.artwork select,.magic-info ~ *:not(.magic-audio),.autohidden,.autohidden + .dummy-line,.text-original, .reply-link[hidden] + .rl-inf, .magic-picture.onpost-qview + a,.submit-button span,form.edit ~ *:not(.abbrev),#delete-overlay,.popup .chek-to-del{display:none!important;}\
 .unexpanded,.rated{max-width:200px!important;max-height:200px!important;}.expanded{width:100%;height:auto;}.hideinfo{margin:5px;}.sp-r.rate{color:darkred;}#yuki-dropBox tr,.f-sect,.hideinfo{text-align:center!important;}\
 .dpop,#wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}.artwork{background:url(/src/svg/1505/ma-artwork.svg)no-repeat scroll center center / 100% auto;}.movie{background:url(/src/svg/1505/cm-movie.svg)no-repeat scroll center center / 100% auto;}\
 .content-frame,.scbc-container,.mhs-title,#magic-panel,.active > #timer-update-sets,.yukiFile,.dropdown-menu,.message code,#status-panel{background-color:#fefefe;}.global #yuki-newThread-create,form.popup #yuki-targetInfo,.report #yuki-targetInfo,form.reply #conn-push,form.popup #conn-push{display:inline!important;}\
@@ -3696,14 +3703,15 @@ var MagicStyle = '.hidout,.hide.icon,.view_,.edit_,.search_iqdb,.search_google,#
 .replylinks,.button{line-height:2em;font-size:75%;clear:both;}#post-count,.txt-btn{color:#999;}.mapped,.mapped:hover{cursor:default;color:#666!important;}.hidup{top:-9999px!important;}\
 .footer:after,.stored:not(.stub):after,.new .reply:not(.stub):after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.cm-button{text-decoration:none;}.s-sect{text-align:left;padding-left:2em;color:#777;}\
 #yuki-captcha,#yuki-pass{width:295px;}#yuki-captcha-image{vertical-align:middle;margin:2px;}#yuki-dropBox{width:7em;height:18em;border:3px dashed rgba(99,99,99,.3);padding:2px;}\
-#convert-strike,.doubledash,.global #yuki-close-form,.dropdown-menu,.magic-picture.gallery-qview + img.thumb{visibility:hidden;}.sagearrow{background:url(/src/svg/1409/Sage.svg)no-repeat center bottom;position:relative;}.paperclip{background:url(/src/png/1411/attachpopup.png)no-repeat center;}\
+#convert-strike,.doubledash,.global #yuki-close-form,.dropdown-menu,.magic-picture.gallery-qview + a{visibility:hidden;}.sagearrow{background:url(/src/svg/1409/Sage.svg)no-repeat center bottom;position:relative;}.paperclip{background:url(/src/png/1411/attachpopup.png)no-repeat center;}\
 #yuki-errorMsg{text-align:center;color:#FFF;background-color:#E04000;}.wmark-button{color:#fefefe;text-shadow:0 1px 0 rgba(0,0,0,.4);}a:hover > .wmark-button{color:inherit;}.spoiler > .wmark-button{vertical-align:inherit;color:inherit;text-shadow:none;}\
 .rating_SFW{background:green;}.rating_R15{background:yellow;}.rating_R18{background:orange;}.rating_R18G{background:red;}.line-sect,.yukiFile,.cpop,.mpanel-btn,.postdeleted .doubledash{display:inline-block;}#warning-massage{color:#ff3428;}\
-.yukiFile,.yukiFileSets{font-size:66%;}.yukiFile{text-align:center;width:210px;-webkit-border-radius:5px;margin:5px;padding:2px;}.new .reply{background-color:rgba(212,115,94,.1);}\
+.yukiFile,.yukiFileSets{font-size:66%;}.yukiFile{text-align:center;margin:5px;}.yukiFile.default{padding:2px;width:210px;-webkit-border-radius:5px;}.movie select{position:relative;top:118px;}\
 #yuki-files-placeholder > *{vertical-align:top;}.yf_preview{max-width:150px;margin:5px 0;}.yf_info{padding:0 2px;word-wrap:break-word;}\
 #yuki-replyForm{text-align:left;padding:4px 8px;}.selected:before{content:"✓ ";color:green;}.chek-to-del.selected:before{margin:5px;position:relative;bottom:2px;}.cpop{margin-left:.4em;}.checkarea.super{font-size:20px!important;}\
-#yuki-dropBox tr,.magic-picture{display:block;}.droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em;}.yukiFile > .magic-audio{width:210px;height:210px;}.yukiFile > .magic-info{width:200px;}\
+#yuki-dropBox tr,.magic-picture{display:block;}.droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em;}\
 #rf-cb-ty{background-image:url(/src/svg/1411/closepopup.svg);}#rf-cb-all{background-image:url(/src/svg/1411/closeallpopups.svg);}.dpop{float:right;background-image:url(/src/svg/1505/cmove.svg);cursor:move;}.sagearrow{cursor:default;}\
+.new .reply{background-color:rgba(212,115,94,.1);}\
 .cpop{width:14px;height:14px;}.dpop,.sagearrow,.paperclip,.view-eye,.chek-to-del{width:20px;height:20px;}.reply-button{margin-left:3px;width:23px;height:14px;background:url(/src/svg/1505/reply-arrow.svg)no-repeat center top;}\
 #magic-buttons-panel,#magic-panel,#status-panel,#yuki-replyForm.popup,#yuki-replyForm.report,.gallery-qview{position:fixed;}#magic-buttons-panel{right:1em;bottom:1em;}.mpanel-btn{padding:0 9px;width:28px;height:28px;opacity:.2;filter:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'grayscale\'><feColorMatrix type=\'matrix\' values=\'.3 .3 .3 0 0 .3 .3 .3 0 0 .3 .3 .3 0 0 0 0 0 1 0\'/></filter></svg>#grayscale");-webkit-filter:grayscale(100%);}\
 .ta-inact::-moz-selection{background:rgba(99,99,99,.3);}.ta-inact::selection{background:rgba(99,99,99,.3);}#int-upd{bottom:2px;position:relative;}#allowed-posts a{text-decoration:none;text-shadow:none;font-weight:normal;font-size:14px;}\
@@ -3726,7 +3734,7 @@ var MagicStyle = '.hidout,.hide.icon,.view_,.edit_,.search_iqdb,.search_google,#
 .dropdown,.dropdown-menu{padding-left:0;list-style:outside none none;}.active > * {visibility:visible;}.active > .dropdown-label{border-radius:4px 4px 0 0;}.dropdown-label{padding:2px 4px;font-variant:small-caps;font-size:14px;}.dropdown-label + .dropdown-menu{border-top-left-radius:0;border-top-right-radius:0;}.dropdown-menu{border-radius:4px;position:absolute;color:#777;min-width:150px;font-size:14px;line-height:1.8;}\
 .dropdown-item,.dropdown-br{padding:0 10px;}.dropdown-item:hover{background-color:rgba(0,0,0,.1);}.dropdown-br{font-size:12px;line-height:16px;border:1px solid #e1e1e1;}#timer-update-sets:before{content:"⟨ ";}#timer-update-sets:after{content:" ⟩";}#int-val{width:50px;margin:0 4px;}.red-light{color:red;text-shadow:0 0 4px red;}.cpanel > .reply-button{top:-1px;position:relative;}\
 .blink{-webkit-animation-name:blinker;-webkit-animation-duration:1s;-webkit-animation-timing-function:linear;-webkit-animation-iteration-count:infinite;animation-name:blinker;animation-duration:1s;animation-timing-function:linear;animation-iteration-count:infinite;}\
-.oppost.highlighted,.highlighted .reply{border-style:dashed!important;border-width:2px!important;border-color:#F50!important;}.postcontent,.rl-inf,.f-left{float:left;}br + .postbody{clear:both;}.sinf{color:#666;font-size:.8em;}.onpost-qview:hover:before{content:"";display:inline-block;width:100%;height:100%;background:url(/src/svg/1511/fedge.svg) no-repeat bottom right / 10%;}.gallery-qview{background-color:rgba(255,255,255,.6);}.magic-picture{background-repeat:no-repeat,repeat;background-position:center,top left;background-size:contain,auto;}.celrly:not([hidden]) + .celrly:before, .celrly + * + .celrly:before{content:",\t";color:#666!important;cursor:default;}.celrly:not([hidden]) ~ .rl-inf{display:inline!important;}.report{background-color:#FFE2D4;}\
+.oppost.highlighted,.highlighted .reply{border-style:dashed!important;border-width:2px!important;border-color:#F50!important;}.postcontent,.rl-inf,.f-left{float:left;}br + .postbody{clear:both;}.sinf{color:#666;font-size:.8em;}.onpost-qview:hover:before{content:"";display:inline-block;width:100%;height:100%;background:url(/src/svg/1511/fedge.svg) no-repeat bottom right / 10%;}.gallery-qview{background-color:rgba(255,255,255,.6);}.magic-picture{cursor:pointer;background-repeat:no-repeat,repeat;background-position:center,top left;background-size:contain,auto;}.celrly:not([hidden]) + .celrly:before, .celrly + * + .celrly:before{content:",\t";color:#666!important;cursor:default;}.celrly:not([hidden]) ~ .rl-inf{display:inline!important;}.report{background-color:#FFE2D4;}\
 .view-eye{background:url(/src/png/1506/p-stub-hide.png)no-repeat scroll center;}.i-block{display:inline-block;}.postermenu{display:block;background:url(/src/svg/1508/new-dropdown-arrow.svg)no-repeat scroll bottom center / 18px;padding:9px;}.active > .postermenu{transform:rotate(180deg);-webkit-transform:rotate(180deg);box-shadow:none!important;background-position:top center;}\
 .turn-on{position:absolute;bottom:50px;}.i-fav:before{content:"";margin-right:5px;padding:8px;background:transparent no-repeat scroll center center / 16px;}#icm-fsw-google:before{background-image:url(/src/svg/1508/google_ico_monochrome.svg);}#icm-create-macro:before{background-image:url(/src/svg/1508/macroeditor_ico_monochrome.svg);}#icm-fsw-iqdb:before{background-image:url(/src/svg/1508/new-cube-icon-monochrome.svg);}#icm-fsw-saucenao:before{background-image:url(/src/svg/1508/soucenao_ico_monochrome.svg);}#icm-fsw-derpibooru:before{background-image:url(/src/svg/1508/trixie_cutie_mark_by_rildraw-d3khewr.svg);}\
 #status-panel{bottom:0;border-radius:0 5px;padding:3px 6px;}.break-lines + *:before{content:"||";font-size:12px;padding:0 2px;}.parensis:before{content:"("}.parensis:after{content:")"}.break-midot + *:before{content:"・";}\
