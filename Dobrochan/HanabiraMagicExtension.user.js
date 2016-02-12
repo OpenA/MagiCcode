@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.6.2
+// @version 		1.7.0
 // @grant   		none
 // ==/UserScript==
 
@@ -18,19 +18,14 @@
 /* SpelzZ - a lightweight Node Work Tool */
 (function(){
 	var _z = {
-		each: $each, setup: $setup, route: $route, fall: fallback, dbg: $dbg,
+		each: $each, setup: $setup, route: $route, fall: fallback,
 		sessionS: $storeItem('session'), localS: $storeItem('local'),
-		append: function(el, nodes) { try { $nodeUtil('append', el, nodes) } catch(e) { $dbg(e) } },
-		prepend: function(el, nodes) { try { $nodeUtil('prepend', el, nodes) } catch(e) { $dbg(e) } },
-		after: function(el, nodes) { try { $nodeUtil('after', el, nodes) } catch(e) { $dbg(e) } },
-		before: function(el, nodes) { try { $nodeUtil('before', el, nodes) } catch(e) { $dbg(e) } },
-		replace: function(el, nodes) { try { $nodeUtil('replace', el, nodes) } catch(e) { $dbg(e) } },
-		remove: function(el, nodes) { try { $nodeUtil('remove', el, nodes) } catch(e) { $dbg(e) } }
-	}
-	function $dbg(e) {
-		if (e.stack)
-			e.stack = e.stack.replace(new RegExp(e.fileName, 'g'), '');
-		console.error(e)
+		append: function(el, nodes) { $nodeUtil('append', el, nodes) },
+		prepend: function(el, nodes) { $nodeUtil('prepend', el, nodes) },
+		after: function(el, nodes) { $nodeUtil('after', el, nodes) },
+		before: function(el, nodes) { $nodeUtil('before', el, nodes) },
+		replace: function(el, nodes) { $nodeUtil('replace', el, nodes) },
+		remove: function(el, nodes) { $nodeUtil('remove', el, nodes) }
 	}
 	function $each(el, Fn) {
 		el = typeof el === 'string' ? document.querySelectorAll(el) : el;
@@ -178,21 +173,20 @@
 			initScripts();
 		}
 	} catch(e) {
-		_z.dbg(e)
+		console.error(e)
 	} finally {
 		localStorage.removeItem('EmbedIn');
 		localStorage.removeItem('VideoSize');
-		localStorage.removeItem('AlbumArts');
-		localStorage.removeItem('LinksCache');
 	}
 })();
 
 function MagicExtension() {
 	var HM = {
 		zIndex: 1, UnreadCount: 0, DragableObj: null, Played: null, LastKey: null,
-		ThreadListener: {}, LoadedPosts: {}, VActive: [], RepliesMap: {}, AlbumArts: {}, URL: ParseUrl(),
+		ThreadListener: {}, LoadedPosts: {}, VActive: [], RepliesMap: {}, URL: ParseUrl(),
 		APIKey: _z.localS.get('APIKey', '9cccaccb6ddc490a97bcd2ba6c282191'),
 		LinksMap: JSON.parse(_z.sessionS.get('LinksCache', '{}')),
+		UserStyle: JSON.parse(_z.localS.get('UserStyle', JSON.stringify(''))),
 		oEmbedAPI: _z.localS.get('oEmbedAPI', true),
 		maXrating: _z.localS.get('maXrating', 'SFW'),
 		FormStyle: _z.localS.get('FormStyle', 1),
@@ -208,21 +202,47 @@ function MagicExtension() {
 		Keywords: JSON.parse(_z.localS.get('Keywords', JSON.stringify({Nametrip:{},Title:{},Words:{},conceal:false}))),
 		User: JSON.parse(_z.localS.get('User', '{}'))
 	},
+	AspectSize = {
+		W: [360, 480, 720, 854],
+		H: [270, 360, 480, 576]},
+	Files = {
+		audio: ['wav', 'm4a', 'm4r', 'aac', 'ogg', 'mp3', 'opus', 'flac', 'alac', 'aiff', 'aif'],
+		video: ['webm', 'ogv', 'ogm', 'mp4', 'm4v', 'flv', '3gp', 'swf', '3gpp'],
+		image: ['jpeg', 'jpg', 'png', 'svg', 'gif', 'bmp', 'ico', 'webp'],
+		arch: ['zip', 'rar', '7z'], pdf: ['pdf'],
+		matchType: function(ext) {
+			for (var key in this) {
+				if ( key !== 'matchType' && this[key].indexOf(ext) >= 0 ) {
+					return key;
+				}
+			}
+		}
+	},
+	AlbumArts = {
+		makeCover: function(dataImage, artist, album) {
+			var aId = getKeyByValue(this, dataImage) || ((artist || makeRandId(4)) +' — '+ (album || makeRandId(4))).hashCode();
+			switch (true) {
+				case (this[aId] && dataImage !== this[aId]):
+					aId += '_'+ makeRandId(4);
+				case (!this[aId]):
+					this[aId] = dataImage;
+			}
+			if (!document.getElementById('cover_'+ aId)) {
+				document.body.appendChild(_z.setup('style', { 'id': 'cover_'+ aId,
+					'text': '#album_'+ aId +'{background-image:url("'+ dataImage +'");}'
+				}))
+			}
+			return 'album_'+ aId;
+		}
+	},
 	Megia = {
+		'audio': new Harmony(),
 		'image': new MagicPicture(),
 		'video': new MagicEmbeds(),
 		'scbc': new MagicEmbeds(),
 		'docs': new MagicEmbeds(true),
 		'pdf': new MagicEmbeds(true)
 	},
-	AspectSize = {
-		W: [360, 480, 720, 854],
-		H: [270, 360, 480, 576]},
-	Files = {
-		audio: ['wav', 'm4a', 'm4r', 'aac', 'ogg', 'mp3', 'opus', 'flac', 'alac'],
-		video: ['webm', 'ogv', 'ogm', 'mp4', 'm4v', 'flv', '3gp', 'swf', '3gpp'],
-		image: ['jpeg', 'jpg', 'png', 'svg', 'gif', 'bmp', 'ico', 'webp'],
-		arch: ['zip', 'rar', '7z']},
 	Names = {
 		'en': ['Anonymous', 'Developer', 'Lawrense', 'Anonymous Expert', 'Slowpoke', 'Experimenter'],
 		'ru': ['Анонимус', 'Доброкодер', 'Лоуренс', 'Анонимный эксперт', 'Добропок', 'Экспериментатор'],
@@ -263,19 +283,11 @@ function MagicExtension() {
 		omit: [" omited ", " ответов "],
 		delp: [" deleted ", " удаленных "],
 		pmod: [' pre-moderated', ' на премодерации'],
-		subscrb: ["Subscribe", "Отслеживать"],
 		txtspoils: ["Disclose text spoilers", "Раскрывать текстовые спойлеры"],
-		clck_img_to: [" - Click the image", " - Нажмите на картинку"],
 		broken_link: ["Broken and useless URL Link", "Нерабочая и абсолютно бесполезная ссылка"],
-		cens: ['Your censorship settings forbid this file.', 'Ваши настройки цензуры запрещают этот файл.'],
-		expd: [" to expand", " для увеличения"],
-		vitf: [" to view this file", " для просмотра"],
-		pvid: [" to play video", " для воспроизведения"],
 		allw: ["allowed", "раскрытых"],
 		remv: ["Remove", "Убрать"],
 		clos: ["Close", "Закрыть"],
-		page: [" page", " страниц"],
-		line: [" line", " строк"],
 		all: [" All", " все"],
 		add: ["Add", "Добавить"],
 		to: ['to', 'в'],
@@ -394,24 +406,6 @@ function MagicExtension() {
 			left: box.left + pageXOffset
 		}
 	}
-	function scaleSize(origS, sMax, sMin) {
-		var nW, nH,
-			ratio = origS[1] / origS[0];
-		if (sMin && sMin > origS[0] && sMin > origS[1]) {
-			nW = ratio <= 1 ? sMin : sMin / ratio;
-			nH = ratio <= 1 ? sMin * ratio : sMin;
-		} else if (sMin && sMax > origS[0] && sMax > origS[1]) {
-			nW = origS[0];
-			nH = origS[1];
-		} else if (ratio <= 1) {
-			nW = sMax;
-			nH = sMax * ratio;
-		} else {
-			nH = sMax;
-			nW = sMax / ratio;
-		}
-		return { width: nW, height: nH };
-	}
 	function escapeUrl(url) {
 		var eUrl = encodeURI(url).allReplace({'%2?5?E2%2?5?80%2?5?8B': '', '%2?5?3C/?\\w*%2?5?3E': '', '%2?5?22': ''});
 		return decodeURI(eUrl);
@@ -439,8 +433,8 @@ function MagicExtension() {
 	function _show (el) { el.classList.remove('hidout') }
 	function _shide(el) { el.classList.toggle('hidout') }
 	function _hide (el) { el.classList.add('hidout') }
-	function _cid(ns) {
-		return Number(ns.match(/-?\d+(?:.\d+)?/));
+	function _cid(id) {
+		return id.split('_')[1] || id.split('reply')[1];
 	}
 	function _unc(str, n) {
 		return (str || n || 'Unknown');
@@ -449,21 +443,34 @@ function MagicExtension() {
 		var stb = _z.setup('div', {'html': html}, null);
 		return stb.querySelector(tag);
 	}
-	function _bitonum(arr, hex) {
-		for (var i = 0, hexNum = ""; i < arr.length; i++) {
-			hexNum += arr[i].toString(16);
-		}
-		return hex ? '0x'+ hexNum : parseInt(hexNum, 16);
+	function _blobURL(blob) {
+		var URL = window.URL || window.webkitURL;
+		return URL.createObjectURL(blob);
 	}
-	function _b64Str(arr) {
-		for (var i = 0, base64String = ""; i < arr.length; i++) {
-			base64String += String.fromCharCode(arr[i]);
+	function extractStringNumbers(str) {
+		var match_numbers = new Array(0), i,
+			m = str.match(/0x(?:[\dA-Fa-f]+)|-?\d+(?:\.\d+)?/g) || ["NaN"];
+		for (i = 0; i < m.length; i++) {
+			match_numbers.push(Number(m[i]))
 		}
-		return btoa(base64String)
+		return match_numbers;
 	}
 	function _scrollIfOverPage(elem) {
 		if (elem.offsetTop < pageYOffset || elem.offsetTop > (pageYOffset + window.innerHeight))
 			elem.scrollIntoView();
+	}
+	function makeRandId(size) {
+		var text = "", 
+			possible = "0123456789abcdef",
+			len = possible.length;
+		if (!size)
+			size = len;
+		for (var i = 0; i < size; i++)
+			text += possible.charAt(Math.floor(Math.random() * len));
+		return text;
+	}
+	function capitaliseFirstLetter(string) {
+		return string.charAt(0).toUpperCase() + string.slice(1);
 	}
 	
 	/************************************************************************/
@@ -496,7 +503,9 @@ function MagicExtension() {
 				onload: function(gm_xhr) {
 					if (gm_xhr.readyState !== 4)
 						return;
-					if (gm_xhr.status === 200) {
+					if (gm_xhr.status === 304) {
+						console.warn('304 '+ gm_xhr.statusText);
+					} else {
 						Fn(gm_xhr.response, gm_xhr.finalUrl, gm_xhr);
 						Fn = null;
 					}
@@ -508,7 +517,9 @@ function MagicExtension() {
 				dtReq.onload = function() {
 					if (this.readyState !== 4)
 						return;
-					if (this.status === 200) {
+					if (this.status === 304) {
+						console.warn('304 '+ this.statusText);
+					} else {
 						Fn(this.response, this.responseURL, this);
 						Fn = null;
 					}
@@ -594,6 +605,19 @@ function MagicExtension() {
 		return result;
 	}
 	
+	function timerCalc(secn, cc) {
+		if (!secn)
+			return '- -:- -';
+		var x = Math.floor(secn),
+			s = x % 60, h,
+			m = Math.floor(x / 60);
+		if (m > 59) {
+			h = Math.floor(m / 60);
+			m %= 60;
+		}
+		return (h ? h +':' : '') + (m > 9 || cc ? m : '0'+ m) +':'+ (s > 9 ? s : '0'+ s);
+	}
+	
 	function bytesMagnitude(bytes) {
 		return (bytes < 1024 ? bytes +' B' :
 				bytes < 1024 * 1024 ? (bytes / 1024).toFixed(2) +' KB' :
@@ -618,7 +642,7 @@ function MagicExtension() {
 				Outer = '\n<span id="'+ uDate.toJSON() +'" class="posterdate">'+ (Day < 10 ? "0" : '') + Day +" "+ LC.Month[Month][lng] +" "+
 					Year +" "+ LC.Weekday[Weday][lng] +" "+(Time.length === 7 ? "0" + Time.slice(0, 4) : Time.slice(0, 5)) +'<span class="t-sec">'+ sec +'</span></span>';
 		} catch(e) {
-			_z.dbg(e);
+			console.error(e);
 		} finally {
 			return Outer;
 		}
@@ -638,24 +662,61 @@ function MagicExtension() {
 		}
 	}
 	
-	function stepZup() {
+	function stepZup(e) {
 		HM.zIndex++;
-		stopCloseReact = true;
+		stopCloseReact = !e._scr;
 		this.style['z-index'] = HM.zIndex;
 	}
 	
+	function getRandomColor(str) {
+		var a = 0x4872d1e6 % 0x1f4b, color = ['#'];
+		function g() {
+			for (var j = 0, b; j < str.length; j++){
+				b = 0.02519603282416938 * (a += str.charCodeAt(j));
+				a = b >>> 0;
+				b = (b - a) * a;
+				a = b >>> 0;
+				a += (b - a) * 0x100000000;
+			}
+			return (a >>> 0) * 2.3283064365386963e-10;
+		}
+		for (var i = 0; i < 6; i ++) {
+			color.push('0123456789abcdef'[g() * 16 | 0]);
+		}
+		return color.join('');
+	}
+	
 	/*** Magic Thread Listener ***/
-	function MagicThreadListener(Thread) {
-		var MListen = this, CiD = HM.URL.thread, Posts, thread_updating, play_notify, Autosage,
-			Timer = { id: 0, offset: 0, ql: UpdateInterval(0) },
-			Count = { dif: 0, new: 0, del: 0, mod: 0 },
-			WarningMsg = _z.setup('strong', {'id': 'warning-massage', 'class': 'blink'}),
-			SageIcon = '<span class="sagearrow line-sect" style="right:6px;"></span>',
+	function MagicThreadListener(Thread, _OPTS) {
+		
+		Thread['CiD']       = _cid(Thread.id);
+		Thread['Posts']     = Thread.getElementsByClassName('post');
+		Thread['Replys']    = Thread.getElementsByClassName('replypost');
+		Thread['BumpLimit'] = !!Thread.querySelector('img[src="/images/autosage.gif"]');
+		
+		var MListen = this,
 			ExpCache = new Array(0),
+			SageIcon = '<span class="sagearrow line-sect" style="right:6px;"></span>',
+			WarningMsg = _z.setup('strong', {'id': 'warning-massage', 'class': 'blink'}),
+			Timer = { id: 0, offset: 0, ql: UpdateInterval(0), update: function() {
+				clearTimeout(this.id);
+				if (HM.AutoUpdate) {
+					this.ql = UpdateInterval(this.offset);
+					this.id = setTimeout(timerSet, this.ql.int * 1000);
+				}
+			}},
+			Count = { dif: 0, new: 0, del: 0, mod: 0, update: function(new_count) {
+					var i = (new_count + this.mod) - Thread['Posts'].length - this.dif,
+						n = i > 0 ? i : 0, d = i < 0 ? i : 0;
+						this.dif += i; this.new += n; this.del += d;
+				}, set: function(values) {
+					for (var key in values) {
+						this[key] = values[key]
+					}
+				}},
 			Notif = _z.setup('audio', {'html': '<source src="/src/mp3/1406/musbox.mp3" type="audio/mpeg"><source src="/src/ogg/1404/musbox.ogg" type="audio/ogg">'}, {
-				'play' : function(e) { play_notify = true },
-				'ended': function(e) { play_notify = false }
-			}),
+				'play' : function(e) { this.played = true },
+				'ended': function(e) { this.played = false }}),
 			MLLC = {
 				snd_notify: ["Sound Notifications", "Звуковые уведомления"],
 				loadnew: ["Load New Posts", "Подгрузить посты"],
@@ -669,102 +730,110 @@ function MagicExtension() {
 					'quet': ['Quet Mode', 'Тихий режим'],
 					'autotimer': ['Аutotimer', 'Автотаймер'],
 					'manual': ['Manual', 'Вручную']
+				}}
+		this.updateThread = updateThread; this.updateTimer = Timer.update; this.expandThread = expandThread; this.truncatThread = truncatThread; this.getThread = getHanabiraFullThread;
+		this.getArchive = getHanabiraArchiveThread;
+		function el$(child) { return MListen['NewPostLoader'].querySelector(child) }
+		this['NewPostLoader'] = _z.setup('span', {'id': 'new-post-loader', 'html': '<div class="stat-line"><a id="load-new">'+ MLLC.loadnew[lng] +
+				'</a></div><label><input id="SoundNotify-chbx" type="checkbox" hidden'+ (HM.SoundNotify ? ' checked' : '') +'><span class="checkarea"></span>\n'+ MLLC.snd_notify[lng] +
+				'</label><br><label><input id="AutoUpdate-chbx" type="checkbox" hidden'+ (HM.AutoUpdate ? ' checked' : '') +'><span class="checkarea"></span>\n'+ MLLC.updauto[lng] +
+				'</label><ul class="dropdown line-sect"><li class="dropdown-toggle"><label id="timer-update-sets" class="dropdown-label el-li t-sec">'+
+				(MLLC.dsl[Timer.ql.value] || checkHTime(Timer.ql.value))[lng] +'</label><ul class="dropdown-menu"><li class="dropdown-item el-li" id="quet-mode-set">'+
+				MLLC.dsl['quet'][lng] +'</li><li class="dropdown-item el-li" id="autotimer-set">'+ MLLC.dsl['autotimer'][lng] +'</li><li class="dropdown-item el-li" id="manual-int-set">'+
+				MLLC.dsl['manual'][lng] +':\n<input id="int-val" class="dropdown-input" max="180" min="15" type="number"></li></ul></li></ul>'
+			}, {'click': function(e) {
+				var val, txt;
+				switch (e.target.id) {
+					case 'load-new':
+						updateThread(e, true);
+						break;
+					case 'timer-update-sets':
+						el$('.dropdown-toggle').classList.toggle('active');
+						break;
+					case 'manual-int-set':
+						val = MListen['setInterval'].value;
+						txt = checkHTime(val)[lng];
+					case 'quet-mode-set':
+					case 'autotimer-set':
+						_z.sessionS.set('UpdateMode', (val || e.target.id.split('-')[0]));
+						el$('.dropdown-label').textContent = (txt || e.target.textContent);
+						Timer.update();
+				}
+			}, 'change': function(e) {
+				switch (e.target.id) {
+					case 'SoundNotify-chbx':
+					case 'AutoUpdate-chbx':
+						setupOptions(e.target, e.target.id.split('-')[0], 'session');
+						Timer.update();
 				}
 			}
-		if (Thread) {
-			CiD = _cid(Thread.id);
-			Posts = Thread.getElementsByClassName('post');
-			Autosage = Thread.querySelector('img[src="/images/autosage.gif"]');
-			this.updateThread = updateThread; this.updateTimer = updateTimer; this.expandThread = expandThread; this.truncatThread = truncatThread; this.getThread = getHanabiraFullThread;
-			function el$(child) { return MListen['NewPostLoader'].querySelector(child) }
-			this['NewPostLoader'] = _z.setup('span', {'id': 'new-post-loader', 'html': '<div class="stat-line"><a id="load-new">'+ MLLC.loadnew[lng] +
-					'</a></div><label><input id="SoundNotify-chbx" type="checkbox" hidden'+ (HM.SoundNotify ? ' checked' : '') +'><span class="checkarea"></span>\n'+ MLLC.snd_notify[lng] +
-					'</label><br><label><input id="AutoUpdate-chbx" type="checkbox" hidden'+ (HM.AutoUpdate ? ' checked' : '') +'><span class="checkarea"></span>\n'+ MLLC.updauto[lng] +
-					'</label><ul class="dropdown line-sect"><li class="dropdown-toggle"><label id="timer-update-sets" class="dropdown-label el-li t-sec">'+
-					(MLLC.dsl[Timer.ql.value] || checkHTime(Timer.ql.value))[lng] +'</label><ul class="dropdown-menu"><li class="dropdown-item el-li" id="quet-mode-set">'+
-					MLLC.dsl['quet'][lng] +'</li><li class="dropdown-item el-li" id="autotimer-set">'+ MLLC.dsl['autotimer'][lng] +'</li><li class="dropdown-item el-li" id="manual-int-set">'+
-					MLLC.dsl['manual'][lng] +':\n<input id="int-val" class="dropdown-input" max="180" min="15" type="number"></li></ul></li></ul>'
-				}, {'click': function(e) {
-					var val, txt;
-					switch (e.target.id) {
-						case 'load-new':
-							updateThread(e, true);
-							break;
-						case 'timer-update-sets':
-							el$('.dropdown-toggle').classList.toggle('active');
-							break;
-						case 'manual-int-set':
-							val = MListen['setInterval'].value;
-							txt = checkHTime(val)[lng];
-						case 'quet-mode-set':
-						case 'autotimer-set':
-							_z.sessionS.set('UpdateMode', (val || e.target.id.split('-')[0]));
-							el$('.dropdown-label').textContent = (txt || e.target.textContent);
-							updateTimer();
-					}
-				}, 'change': function(e) {
-					switch (e.target.id) {
-						case 'SoundNotify-chbx':
-						case 'AutoUpdate-chbx':
-							setupOptions(e.target, e.target.id.split('-')[0], 'session');
-							updateTimer();
-					}
+		});
+		this['DummyLine'] = _z.setup('div', {'class': 'dummy-line', 'html': '<a id="dummy-load">'+ MLLC.loadnew[lng] +'</a>'}, {
+			'click': function(e) {
+				switch (e.target.id) {
+					case 'dummy-load': updateThread(e, false);
 				}
-			});
-			this['DummyLine'] = _z.setup('div', {'class': 'dummy-line', 'html': '<a id="dummy-load">'+ MLLC.loadnew[lng] +'</a>'}, {
-				'click': function(e) {
-					switch (e.target.id) {
-						case 'dummy-load': updateThread(e, false);
-					}
-				}
-			});
-			this['PostsCount'] = _z.setup('label', {'id': 'post-count', 'class': 'etch-text break-lines', 'html': (Autosage ? SageIcon : '') + Posts.length + LC.omit[lng]});
-			this['SpeedCount'] = _z.setup('label', {'id': 'speed-count', 'class': 'etch-text', 'html': speedMether(Posts)[0]});
-			this['AllowedPosts'] = _z.setup('label', {'id': 'allowed-posts', 'class': 'etch-text', 'html': '<span class="rl-inf">'+ LC.allw[lng] +':&nbsp;\n</span>'});
-			this['setInterval'] = _z.setup(el$('#int-val'), {'value': Timer.ql.int});
-		} else {
-			return {
-				getSpeedCount: speedMether,
-				getThread: function(ts) {
-					getDataResponse('/api/thread/'+ HM.URL.board +'/'+ HM.URL.thread +'/all.json?new_format&message_html', function(status, sText, json, xhr) {
-						if (status !== 200 || json.error) {
-							return _z.setup(WarningMsg, {'class': undefined, 'text': (json.error ? json.error.message +' '+ json.error.code : status +' '+ sText)});
-						} else {
-							for (var i = 0, temp_post, jTS = json.result, jsonPosts = jTS.posts; jsonPosts[i]; i++) {
-								temp_post = getHanabiraPost(jsonPosts[i], [jTS.archived, jTS.autosage], [HM.URL.board, jTS.display_id]);
-								ts.appendChild(temp_post);
-							}
-							genReplyMap(ts.getElementsByClassName('post'));
-							_z.replace(WarningMsg, ts)
-						}
-					});
-					return _z.setup(WarningMsg, {'text':['Loading from Archive', 'Загружается из архива'][lng] +' ...', 'style': 'display:block;text-align:center;font-size:1.4em;'});
-				},
-				getPost: getHanabiraPost,
-				getFile: getHanabiraFile
 			}
+		});
+		this['PostsCount'] = _z.setup('label', {'id': 'post-count', 'class': 'etch-text break-lines', 'html': (Thread['BumpLimit'] ? SageIcon : '') + Thread['Posts'].length + LC.omit[lng]});
+		this['SpeedCount'] = _z.setup('label', {'id': 'speed-count', 'class': 'etch-text', 'html': speedMether(Thread['Posts'])[0]});
+		this['AllowedPosts'] = _z.setup('label', {'id': 'allowed-posts', 'class': 'etch-text', 'html': '<span class="rl-inf">'+ LC.allw[lng] +':&nbsp;\n</span>'});
+		this['setInterval'] = _z.setup(el$('#int-val'), {'value': Timer.ql.int});
+		function getHanabiraArchiveThread(center) {
+			_z.replace(center, _z.setup(WarningMsg, {
+				'text': ['Loading from Archive', 'Загружается из архива'][lng] +' ...',
+				'style': 'display:block;text-align:center;font-size:1.4em;'}));
+			getDataResponse('/api/thread/expand/'+ HM.URL.board +'/'+ Thread['CiD'], function(status, sText, xhtml, xhr) {
+				Thread.innerHTML = xhtml;
+				if (Thread['Posts'].length === 0) {
+					_z.setup(WarningMsg, {'class': undefined, 'text': xhtml});
+				} else {
+					Thread.querySelector('.abbrev a[onclick^="Truncate"]').parentNode.remove();
+					_z.each(Thread['Posts'], handlePost);
+					genReplyMap(Thread['Posts']);
+					_z.replace(WarningMsg, Thread);
+				}
+			});
 		}
 		function speedMether(posts) {
 			try {
 				var i = total_posts_board = total_posts = 0, tp_s, tp_bs, I,
 					last_date = Math.round(new Date(posts.last().querySelector('.posterdate').id).getTime() / 1000) - (60 * 60),
-					last_id = _cid(posts.last().id),
+					last_id = extractStringNumbers(posts.last().id)[0],
 					nstr = function(num) {
 						return num +' '+ LC.hidden[2][lng] + (num === 0 || num >= 5 ? LC.few['u-b'][lng] : num === 1 ? '' : LC.few['u-a'][lng]) +'/'+ LC.tm['h'][lng];
 					}
 				for (i = posts.length - 1; posts[i]; i--) {
 					if (Math.round(new Date(posts[i].querySelector('.posterdate').id).getTime() / 1000) > last_date) {
-						total_posts_board = last_id - _cid(posts[i].id) + 1;
+						total_posts_board = last_id - extractStringNumbers(posts[i].id)[0] + 1;
 						total_posts++;
 					}
 				}
 				I = Math.round(100*total_posts/total_posts_board);
 				tp_s = '<span class="break-lines">\n&nbsp;'+ nstr(total_posts) + (I === Infinity ? '∞' : '\n('+ I +'%)') +'&nbsp;\n</span>';
 				tp_bs = '<span class="break-lines">\n&nbsp;'+['On board: ', 'доска: '][lng] + nstr(total_posts_board) +'&nbsp;\n</span>';
-			} catch(e) { _z.dbg(e) } finally {
+			} catch(e) { console.error(e) } finally {
 				return [tp_s + tp_bs, tp_s, tp_bs]
 			}
 		}
+		function timerSet() {
+			if (Timer.ql.value === 'quet') {
+				getDataResponse('/api/thread/'+ HM.URL.board +'/'+ Thread['CiD'] +'.json?new_format',
+					function(status, sText, json, xhr) {
+						if (json.result) {
+							Thread['BumpLimit'] = json.result.autosage;
+							Count.update(json.result.posts_count);
+							Timer.offset += Count.new > 0 ? 0 : 15;
+							var postStat = (Count.new > 0 ? '<span class="break-midot">\n+'+ Count.new + LC.newp[lng] +'</span>' : '') + (Count.del < 0 ? '<span class="break-midot">\n'+
+								Count.del + LC.delp[lng] +'</span>' : '') + (Count.mod > 0 ? '<span class="break-midot">\n'+ Count.mod + LC.pmod[lng] +'</span>' : '');
+							MListen['PostsCount'].innerHTML = (Thread['BumpLimit'] ? SageIcon : '') + Thread['Posts'].length + LC.omit[lng] + (postStat ? '<span class="parensis">'+ postStat +'</span>' : '');
+						}
+					});
+				Timer.update();
+			} else
+				updateThread(15, true);
+		}
+		
 		function UpdateInterval(offset) {
 			var t, val = _z.sessionS.get('UpdateMode', 'autotimer');
 			if (isNaN(val))
@@ -783,48 +852,27 @@ function MagicExtension() {
 			}
 			return ['every '+ x +' '+ LC.tm[v][0] +'.', 'каждые '+ x +' '+ LC.tm[v][1] +'.'];
 		}
-		function updateCount(jPC) {
-			var i = (jPC + Count.mod) - Posts.length - Count.dif,
-				n = i > 0 ? i : 0, d = i < 0 ? i : 0;
-				Count.dif += i; Count.new += n; Count.del += d;
-		}
-		function updateTimer() {
-			clearTimeout(Timer.id);
-			if (HM.AutoUpdate) {
-				Timer.ql = UpdateInterval(Timer.offset);
-				Timer.id = setTimeout(function() {
-					if (Timer.ql.value === 'quet') {
-						getDataResponse('/api/thread/'+ HM.URL.board +'/'+ CiD +'.json?new_format',
-							function(status, sText, json, xhr) {
-								if (json.result) {
-									Autosage = json.result.autosage;
-									updateCount(json.result.posts_count);
-									Timer.offset += Count.new > 0 ? 0 : 15;
-									var postStat = (Count.new > 0 ? '<span class="break-midot">\n+'+ Count.new + LC.newp[lng] +'</span>' : '') + (Count.del < 0 ? '<span class="break-midot">\n'+
-										Count.del + LC.delp[lng] +'</span>' : '') + (Count.mod > 0 ? '<span class="break-midot">\n'+ Count.mod + LC.pmod[lng] +'</span>' : '');
-									MListen['PostsCount'].innerHTML = (Autosage ? SageIcon : '') + Posts.length + LC.omit[lng] + (postStat ? '<span class="parensis">'+ postStat +'</span>' : '');
-								}
-							});
-						updateTimer();
-					} else
-						updateThread(15, true);
-				}, Timer.ql.int * 1000);
-			}
-		}
 		function expandThread(e) {
 			if (ExpCache.length === 0) {
+				var personalStyle =_z.setup('style', {'text': '#thread_'+ Thread['CiD'] +' > .post:not(.new) .reply{box-shadow:0 1px 50px -25px '+getRandomColor(Thread['CiD'])+' inset,0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);!important}'});
 				statusButton(e.target, 0);
-				getHanabiraFullThread(e.target, ExpCache);
+				getHanabiraFullThread({
+					button: e.target,
+					expand: true
+				});
+				Thread.appendChild(personalStyle)
+				ExpCache.push(personalStyle)
 			} else {
 				_z.after(Thread.firstElementChild, ExpCache);
 				e.target.textContent = MLLC.unexpt[lng];
 			}
 		}
 		function truncatThread(e) {
-			_z.remove(ExpCache)
-			e.target.textContent = MLLC.expant[lng]
+			_z.remove(ExpCache);
+			e.target.textContent = MLLC.expant[lng];
 		}
 		function statusButton(btn, v) {
+			Thread.updating = !v;
 			switch (btn.id) {
 				case 'load-new': 
 				case 'dummy-load': btn.textContent = [MLLC.updprog[lng], MLLC.loadnew[lng]][v];
@@ -836,236 +884,128 @@ function MagicExtension() {
 		}
 		function updateThread(e, rexk) {
 			var UpdBtn = typeof e === 'object' ? e.target : el$('#load-new')
-			if (thread_updating)
+			if (Thread.updating)
 				return;
-			thread_updating = true;
 			statusButton(UpdBtn, 0)
-			getDataResponse('/api/thread/'+ HM.URL.board +'/'+ CiD +'/new.json?new_format&message_html&last_post='+ _cid(Posts.last().id),
+			getDataResponse('/api/thread/'+ HM.URL.board +'/'+ Thread['CiD'] +'/new.json?new_format&post_html&last_post='+ _cid(Thread['Posts'].last().id),
 			function(status, sText, json, xhr) {
 				try {
-					var i, temp_post, el, pCount, len, error;
+					var i, temp_post, el, posts_count, len, error;
 					if (status !== 200 || json.error) {
 						error = _z.setup(WarningMsg, {'text': (json.error ? json.error.message +' '+ json.error.code : status +' '+ sText)});
 						error.dozZe = function(e) {
 							if (this.iterations >= 8) {
 								_z.replace(this, UpdBtn);
 								if (rexk)
-									updateTimer();
+									Timer.update();
 								this.iterations = 0;
 							}
 						}
 						_z.replace(UpdBtn, error);
 					} else {
-						Autosage = json.result.autosage;
-						pCount = json.result.posts_count;
+						Thread['BumpLimit'] = json.result.autosage;
+						posts_count = json.result.posts_count;
 						el = json.result.posts;
 						len = el ? el.length : 0;
-						Count.dif = Count.new = 0;
+						Count.set({dif: 0, new: 0})
 						if (len > 0) {
 							Timer.offset = 0;
+							HM.UnreadCount += len;
+							if (HM.SoundNotify && !Notif.played)
+								Notif.play();
 							for (i = 0; i < len; i++) {
-								temp_post = getHanabiraPost(el[i]);
+								temp_post = _z.setup('div', {'html': el[i]}).firstElementChild
+								handlePost(temp_post);
+								temp_post.classList.add('new');
 								Thread.appendChild(temp_post);
 							}
 							Tinycon.setBubble(HM.UnreadCount);
-							MListen['SpeedCount'].innerHTML = speedMether(Posts)[0];
+							MListen['SpeedCount'].innerHTML = speedMether(Thread['Posts'])[0];
 						} else if (typeof e === 'number')
 							Timer.offset += e;
-					}
-					if (rexk && !error) {
-						if (Posts.length != pCount + Count.mod) {
-							updateCount(pCount)
-							return getHanabiraFullThread(UpdBtn);
+						if (rexk) {
+							if (Thread['Posts'].length != posts_count + Count.mod) {
+								Count.update(posts_count);
+								return getHanabiraFullThread({
+									button: UpdBtn,
+									expand: false
+								});
+							}
+							Timer.update();
 						}
-						updateTimer();
+						if (e) {
+							MListen['PostsCount'].innerHTML = (Thread['BumpLimit'] ? SageIcon : '') + posts_count + LC.omit[lng] + (Count.mod > 0 ? '<span class="parensis">\n+'+ Count.mod + LC.pmod[lng] +'\n</span>' : '');
+							genReplyMap(Thread['Posts']);
+						}
 					}
-					if (e && !error) {
-						MListen['PostsCount'].innerHTML = (Autosage ? SageIcon : '') + pCount + LC.omit[lng] + (Count.mod > 0 ? '<span class="parensis">\n+'+ Count.mod + LC.pmod[lng] +'\n</span>' : '');
-						genReplyMap(Posts);
-					}
-				} catch(e) {
-					_z.dbg(e);
+				} catch(err) {
+					console.error(err);
 				} finally {
 					statusButton(UpdBtn, 1);
-					thread_updating = false;
 				}
 			});
 		}
-		function getHanabiraFullThread(UpdBtn, ExpandMap) {
-			getDataResponse('/api/thread/'+ HM.URL.board +'/'+ CiD +'/all.json?new_format&message_html',
+		function getHanabiraFullThread(options) {
+			getDataResponse('/api/thread/'+ HM.URL.board +'/'+ Thread['CiD'] +'/new.json?new_format&post_html&last_post='+ Thread['CiD'],
 			function(status, sText, json, xhr) {
 				try {
-					var jsonPosts = json.result.posts, pCount = json.result.posts_count,
+					var jsonPosts = json.result.posts,
+						posts_count = json.result.posts_count,
 						pnid = function (n) {
-							return !Posts[n] ? 99999999 : _cid(Posts[n].id)},
+							return !Thread['Replys'][n] ? Infinity : extractStringNumbers(Thread['Replys'][n].id)[0]},
 						jpid = function (n) {
-							return !jsonPosts[n] ? 99999999 : jsonPosts[n].display_id}
-					if (jsonPosts.length == Posts.length) {
-						Count.dif = Count.del = 0;
-						Count.mod = Posts.length - pCount;
+							return !jsonPosts[n] ? Infinity : extractStringNumbers(jsonPosts[n].slice(3, 50))[0]}
+					if (jsonPosts.length === Thread['Replys'].length) {
+						Count.set({dif: 0, del: 0, mod: Thread['Posts'].length - posts_count});
 					} else {
-						for (var i = 0, derefl, temp_post; i < (Posts.length + Count.new); i++) {
+						for (var i = 0; i < (Thread['Replys'].length + Count.new); i++) {
 							switch (true) {
 								case (pnid(i) < jpid(i)):
 									while (pnid(i) < jpid(i)) {
-										var patchId = HM.URL.board +'_'+ json.result.display_id +'_'+ pnid(i);
-										Posts[i].className = 'postdeleted';
-										HM.LoadedPosts[patchId].delete_input.remove();
+										Thread['Replys'][i].delete_input.remove();
+										Thread['Replys'][i].className = 'postdeleted';
 									}
 									break;
 								case (pnid(i) > jpid(i)):
 									while (pnid(i) > jpid(i)) {
-										var derefl, temp_post = getHanabiraPost(jsonPosts[i], [json.result.archived, json.result.autosage]);
-										if (!Posts[i]) {
-											Thread.appendChild(temp_post);
-										} else
-											_z.before(Posts[i], temp_post);
-										if (ExpandMap) {
-											ExpandMap.push(temp_post);
+										var derefl, temp_post = _z.setup('div', {'html': jsonPosts[i]}).firstElementChild;
+											handlePost(temp_post);
+										if (options.expand) {
+											ExpCache.push(temp_post);
 										} else {
-											derefl = _z.setup('a', {'class': 'reply-link celrly', 'id': 'nrl-'+ HM.URL.board +'-'+ CiD +'-'+ jpid(i),
-												'href': '/'+ HM.URL.board +'/res/'+ CiD +'.xhtml#i'+ jpid(i), 'text': '>>'+ jpid(i)}, {
-												'click': Chanabira.MagicHighlight, 'mouseover': Chanabira.MagicPostView
-											});
+											HM.UnreadCount++;
+											if (HM.SoundNotify && !Notif.played)
+												Notif.play();
+											temp_post.classList.add('new');
+											derefl = _z.setup('a', {'class': 'reply-link celrly', 'id': 'nrl-'+ HM.URL.board +'-'+ Thread['CiD'] +'-'+ jpid(i),
+												'href': '/'+ HM.URL.board +'/res/'+ Thread['CiD'] +'.xhtml#i'+ jpid(i), 'text': '>>'+ jpid(i)}, {
+													'click': Chanabira.MagicHighlight, 'mouseover': Chanabira.MagicPostView });
 											_z.after(Thread, MListen['AllowedPosts'])
 											_z.before(MListen['AllowedPosts'].lastElementChild, derefl);
 										}
+										if (!Thread['Replys'][i]) {
+											Thread.appendChild(temp_post);
+										} else
+											_z.before(Thread['Replys'][i], temp_post);
 									}
 								default: continue;
 							}
 						}
 						Tinycon.setBubble(HM.UnreadCount);
-						genReplyMap(Posts);
-						Count = { dif: 0, new: 0, del: 0, mod: 0 }
-						if (pCount !== Posts.length && jsonPosts.length === Posts.length) {
-							Count.mod = Posts.length - pCount;
-						}
+						genReplyMap(Thread['Posts']);
+						Count.set({dif: 0, new: 0, del: 0, mod: (
+							posts_count !== Thread['Posts'].length && jsonPosts.length === Thread['Replys'].length ? Thread['Posts'].length - posts_count : 0
+						)});
 					}
 				} catch(e) {
-					_z.dbg(e);
+					console.error(e);
 				} finally {
-					statusButton(UpdBtn, 1)
-					thread_updating = false;
-					if (!ExpandMap)
-						updateTimer();
-					MListen['PostsCount'].innerHTML = (Autosage ? SageIcon : '') + pCount + LC.omit[lng] + (Count.mod > 0 ? '<span class="parensis">\n+'+ Count.mod + LC.pmod[lng] +'\n</span>' : '');
+					if (!options.expand)
+						Timer.update();
+					MListen['PostsCount'].innerHTML = (Thread['BumpLimit'] ? SageIcon : '') + posts_count + LC.omit[lng] + (Count.mod > 0 ? '<span class="parensis">\n+'+ Count.mod + LC.pmod[lng] +'\n</span>' : '');
+					statusButton(options.button, 1);
 				}
 			});
-		}
-		function getHanabiraPost(postJson, threadStat, mapArr) {
-			var threadId = mapArr ? mapArr[1] : CiD,
-				archive = threadStat ? threadStat[0] : false,
-				blimit = threadStat ? threadStat[1] : false,
-				postId = postJson.display_id,
-				board = mapArr ? mapArr[0] : HM.URL.board,
-				files = postJson.files,
-				len = files.length,
-				op = postJson.op,
-				patchId = board +'_'+ threadId +'_'+ postId,
-				wrap = _z.setup((op ? 'div' : 'table'), {'id': 'post_'+ postId, 'class': (op ? 'oppost' : 'replypost' + (archive ? '' : ' new')) +' post', 'patch-id': patchId}, {'click': PDownListener, 'mouseover': Chanabira.MagicPostView}),
-				html = (op ? '' : '<tbody><tr><td class="doubledash">&gt;&gt;</td><td id="replyr{post_id}" class="reply">') + '<a name="ir{post_id}"></a><label>'+
-						(archive ? '&nbsp;\n' : '<ul class="dropdown line-sect"><li class="dropdown-toggle"><label class="postermenu dropdown-label el-li"></label><ul class="dropdown-menu"><li class="edit-post dropdown-item el-li">Редактировать</li><li class="mod-report dropdown-item el-li">Пожаловаться</li><li class="hide-post dropdown-item el-li">Скрыть</li><li class="delete-post dropdown-item el-li">Удалить<span class="chek-to-del dropdown-input line-sect"></span></li></ul></li></ul>\n') +
-						(op ? '<a class="unsigned icon" onclick="sign_thread(event, \'r{board}\',r{post_id});"><img src="/images/blank.png" title="'+
-						LC.subscrb[lng] +'" alt="✩"></a>\n' : '') + (board === 'mad' ? '<span class="iphash">'+
-							'<span class="ipmark" style="background:rgba(0,0,0,.5)">&nbsp;</span><span class="ipmark" style="background:rgba(255,255,255,.5)">&nbsp;</span>'+
-							'<span class="ipmark" style="background:rgba(25,25,25,.6)">&nbsp;</span><span class="ipmark" style="background:rgba(99,99,99,.6)">&nbsp;</span>'+
-							'<span class="ipmark" style="background:rgba(175,175,175,.6)">&nbsp;</span></span>\n<img class="geoicon" src="/src/png/1408/polandball_kawaii_16.png" alt="(^ ^)" title="Polandball (^ ^)">\n' : '') +
-				'<span class="replytitle">'+ postJson.subject +'</span>\n<span class="postername">'+ Names.get(board, postJson.name) +'</span>\n'+
-				(op && archive ? '<img src="/images/archive.gif" alt="В архиве" title="В архиве">\n' : '') +
-				(op && blimit ? '<img src="/images/autosage.gif" alt="Бамп-лимит" title="Бамп-лимит">\n' : '') + getDateTime(postJson.date) +
-				'\n</label><span class="reflink"><a class="inj-refl" href="/r{board}/res/r{thread_id}.xhtml#ir{post_id}">No.r{post_id}</a></span>\n<span class="cpanel">'+
-				(archive ? '&nbsp;\n' : '<a title="'+ LC.repl[lng] +'" id="r{board}-r{thread_id}-r{post_id}" class="reply-button line-sect txt-btn"></a>') +'</span><br>';
-			for (var i = 0; i < len; i++) {
-				html += getHanabiraFile(files[i], postJson.post_id, (len === 1), (board === 'b' || board === 'rf'));
-			}
-			wrap.insertAdjacentHTML('afterbegin', html.allReplace({'r{board}': board, 'r{thread_id}': threadId, 'r{post_id}': postId}) +
-				(len > 1 ? '<br style="clear:both;">' : '') +'<div class="postbody">'+ postJson.message_html +'</div><div class="abbrev"></div>' + (op ? '' : '</td></tr></tbody>'));
-			HM.LoadedPosts[patchId] = wrap;
-			if (!archive) {
-				HM.LoadedPosts[patchId].delete_input = _z.setup('input', {'id': 'delbox_'+ postId, 'class': 'delete_checkbox', 'type': 'checkbox', 'value': postJson.thread_id, 'name': postId});
-				HM.LoadedPosts[patchId].formBinding  = function(el) { _z.after(this, el) }
-				mEl['DeleteOverlay'].appendChild(HM.LoadedPosts[patchId].delete_input);
-			}
-			if (!mapArr) {
-				HM.UnreadCount++;
-				if (HM.SoundNotify && !play_notify)
-					Notif.play();
-			}
-			if (threadStat)
-				genReplyMap([wrap]);
-			handleLinks(wrap, {board: board, thread: threadId, pid: postId});
-			return wrap;
-		}
-		function getHanabiraFile(file, pid, ONE, RFB) {
-			var meta = frontend = action = filetext = fileinfo = filediv = '',
-				src = file.src, fid = file.file_id, fmd = file.metadata,
-				imgW = fmd.width, metatype = fmd.type, lines = fmd.lines,
-				pages = fmd.pages, files = fmd.files_count, imgH = fmd.height,
-				rating = file.rating, type = (file.type || fmd.type),
-				size = bytesMagnitude(file.size), filename = getPageName(src),
-				maXr = HM.maXrating.toLowerCase(), ext = filename.fext(),
-				R = maXr === rating ? false : ((maXr.match(/\d+/)||NaN) >= (rating.match(/\d+g?/)||NaN) ? false : rating !== 'sfw'),
-				thumb = R ? 'images/'+ rating +'.png' : file.thumb,
-				thumbW = thumb !== file.thumb ? 200 : file.thumb_width,
-				thumbH = thumb !== file.thumb ? 200 : file.thumb_height,
-				name = RFB ? (['archive', 'flash', 'music'].isThere(type) ? pid +''+ fid +'.'+ ext : getPageName(file.thumb).split('s')[0] +'.'+ ext) :
-							 (!ONE && filename.length > 17 ? filename.substring(0, 17) + '...' : filename);
-			if (type == 'music') {
-				var brate = (fmd.bitrate / 1000).toFixed(0),
-					srate = (fmd.sample_rate / 1000).toFixed(1),
-					trlen = (fmd.length * 0.01572).toFixed(2).replace('.', ':'),
-					trnam = _unc(fmd.artist) +' — '+ _unc(fmd.album),
-					trnum = _unc(fmd.tracknumber, '0') +'/'+ _unc(fmd.totaltracks, '0'),
-					avid = Files.video.isThere(ext);
-				meta = trlen +' @ '+ brate +' kbps / '+ srate +' kHz<br>'+ (!ONE && trnam.length > 40 ? trnam.substring(0, 40) +'<br>'+ trnam.slice(40) : trnam) +' / '+ _unc(fmd.title) +' ['+ trnum +']';
-				frontend = '<div class="magic-audio thumb '+ (avid ? 'movie' : 'artwork') +'"><div class="ma-controls"><a href="/'+src+'" class="'+ (avid ? 'cm' : 'ma') +'-button" id="ma-play"></a></div></div>';
-			} else {
-				var hash = encodeURI(HM.URL.host +'/'+ src).hashCode(),
-					fnc = 'vitf', classlist = 'mview ';
-				switch (type) {
-					case 'code':
-					case 'text':
-						meta = lines + LC.line[lng] + (lines === 1 ? LC.few['ru'][lng] : lines < 5 ? LC.few['u-d'][lng] : LC.few['en'][lng] );
-						HM.LinksMap[hash] = {Embed: '/utils/text/'+ fid +'/'+ pid, Type: 'docs'};
-						break;
-					case 'archive':
-						thumb = 'src/png/1405/archive-icon.png';
-						meta = files +' '+ LC.file[lng].toLowerCase() + (files === 1 ? '' : files < 5 ? LC.few['u-a'][lng] : LC.few['u-b'][lng] );
-						HM.LinksMap[hash] = {Embed: '/utils/archive/'+ fid +'/'+ pid, Type: 'pdf'};
-						break;
-					case 'pdf':
-						meta = imgW +'×'+ imgH +', '+ pages + LC.page[lng] + (pages === 1 ? LC.few['ru'][lng] : pages < 5 ? LC.few['u-c'][lng] : LC.few['en'][lng] );
-						HM.LinksMap[hash] = {Embed: 'iframe', Type: 'pdf'};
-						break;
-					case 'flash':
-						metatype = 'Flash Application';
-						thumb = 'src/png/1405/archive-icon.png';
-						HM.LinksMap[hash] = {Embed: 'flash', Type: 'video'};
-						break;
-					case 'video':
-						fnc = 'pvid';
-						action = 'contextmenu="image-context"';
-						metatype = fmd["File Type"] == 'WEBM' ? 'WebM' : fmd["File Type"];
-						meta = fmd["Image Size"] +' @ '+ fmd["Duration"];
-						HM.LinksMap[hash] = {Embed: 'html5', Type: 'video'};
-						break;
-					case 'vector':
-					case 'image':
-						fnc = 'expd';
-						metatype = ext.slice(0, 1).toUpperCase() + ext.slice(1);
-						meta = imgW +'×'+ imgH;
-						action = 'id="thmb_'+ hash +'" image-size="'+ meta +'" contextmenu="image-context" edit-tool="/utils/image/edit/'+ fid +'/'+ pid +'"';
-						classlist = 'iview ';
-						break;
-					default: classlist = '';
-				}
-				frontend = (!src ? '<img class="' : '<a href="/'+ src +'"><img class="'+ classlist) +'thumb" width="'+ thumbW +'" height="'+ thumbH +'" src="/'+ thumb +'" '+ action +' alt="'+ (R ? rating : filename) + (!src ? '">' : '"></a>')
-				filetext = R ? '<br>'+ LC.cens[lng] : (ONE ? LC.clck_img_to[lng] + LC[fnc][lng] : '');
-			}
-			fileinfo = '<div class="fileinfo'+ (!ONE ? ' limited' : '') +'">'+ (!src ? '<em' : LC.file[lng] +': <a class="download-link" download="'+ filename +'" href="/'+ src +'" title="'+ filename +'">'+ name +'</a><br><em') +
-				(type == 'music' ? ' class="magic-info"' : '') +'>'+ metatype +', '+ size + (meta ? ', '+ meta : '') +'</em>'+ filetext +'</div>';
-			filediv = '<div id="file_r{post_id}_'+ fid +'" class="file">';
-			return (ONE ? fileinfo + filediv : filediv + fileinfo) + frontend +'\n</div>';
 		}
 	}
 	
@@ -1125,7 +1065,7 @@ function MagicExtension() {
 							} else {
 								BindRemoveRef(_a, reftab);
 							}
-							_z.replace(loading, _z.setup(load, {'id': 'load-' + id, 'class': el.cast}));
+							_z.replace(loading, _z.setup(load, {'id': 'load-'+ id, 'class': el.cast}));
 							_z.each(reftab.querySelectorAll('a'+ lpth), add_mapping);
 						}
 					if (reftab) {
@@ -1147,8 +1087,8 @@ function MagicExtension() {
 						} else if (HM.URL.thread == tid) {
 							binded(post_stub);
 						} else {
-							getDataResponse('/api/post/'+ brd +'/'+ tid +'/'+ pid +'.json?message_html&new_format&thread',
-							function(status, sText, json, xhr) {
+							getDataResponse('/api/post/'+ brd +'/'+ tid +'/'+ pid +'.xhtml',
+							function(status, sText, xhtml, xhr) {
 								var temp_post, node, tstat, jpost, ErrorMSG;
 								if (status !== 200) {
 									ErrorMSG = _z.setup('strong', {'id': 'warning-massage', 'class': 'blink', 'text': status +' '+ sText});
@@ -1157,14 +1097,13 @@ function MagicExtension() {
 											reftab.remove();
 									}
 									return _z.replace(loading, ErrorMSG);
-								} else if (json.error) {
+								} else if (['Specified element does not exist.', 'Post is deleted.'].isThere(xhtml)) {
 									node = post_stub;
 								} else {
-									tstat = [json.result.threads[0].archived, json.result.threads[0].autosage];
-									jpost = json.result.threads[0].posts[0];
-									temp_post = MagicThreadListener().getPost(jpost, tstat, [brd, tid, pid]);
-									node = temp_post;
+									node = _z.setup('td', {'id': 'load-'+ id, 'html': xhtml});
 									node.cast = 'stored';
+									handlePost(node);
+									genReplyMap([node]);
 								}
 								binded(node);
 								set_style(_a, reftab);
@@ -1174,10 +1113,10 @@ function MagicExtension() {
 					}
 					set_style(_a, reftab);
 				} catch(e) {
-					_z.dbg(e)
+					console.error(e)
 				}
 			});
-			_a.onmouseout = function(e) {
+			_a.onmouseleave = function(e) {
 				Timrs.clear('PopupOpen');
 			}
 		}
@@ -1193,8 +1132,9 @@ function MagicExtension() {
 				offsetY = clientR.top + pageYOffset,
 				clientX = document.documentElement.clientWidth,
 				clientY = document.documentElement.clientHeight,
-				isLeft = offsetX < clientX / 2,
-				isTop = _rtab.offsetHeight + clientR.top + _lnk.offsetHeight < clientY && _lnk.id.split('-')[0] === 'cvl' || clientR.top - _rtab.offsetHeight < 5,
+				isLeft = offsetX < clientX / 3, Yd = _rtab.offsetHeight / 3,
+				isTop = Yd + clientR.top + _lnk.offsetHeight < clientY && _lnk.id.split('-')[0] === 'cvl' ||
+						Yd * -1 > clientR.top - _rtab.offsetHeight || pageYOffset === 0 && _rtab.offsetHeight > clientR.top,
 				left = isLeft ? offsetX : offsetX - Math.min(parseInt(_rtab.offsetWidth, 10), offsetX - 10),
 				top = isTop ? offsetY + _lnk.offsetHeight : offsetY - _rtab.offsetHeight,
 				mw = clientX - left - 10;
@@ -1211,7 +1151,8 @@ function MagicExtension() {
 			_z.setup(reftab, {}, {
 				'mousedown': function(e) {
 					var idx = Popups.durab.indexOf(this);
-						stepZup.bind(this)()
+						e._scr = this.querySelector('.magic-picture.gallery-qview') && e.target !== Megia.image['Picture'];
+						stepZup.bind(this)(e);
 						Popups.durab.move(idx, Popups.durab.length -1);
 					switch (e.target.id) {
 						case 'rf-da-ty':
@@ -1254,7 +1195,7 @@ function MagicExtension() {
 				});
 				Timrs.clear(a.href);
 			}
-			a.onmouseleave = function(e) {
+			a.onmouseout = function(e) {
 				Timrs.set(this.href, function() {
 					reftab.remove();
 				});
@@ -1339,7 +1280,7 @@ function MagicExtension() {
 				TA = false;
 			}
 			var YRT = TextArea.id === 'yuki-replyText',
-				CED = TextArea.id === 'code_edit_ta',
+				CED = TextArea.id.isThere('code_'),
 				key = String.fromCharCode(e.charCode),
 				val = TextArea.value,
 				end = TextArea.selectionEnd,
@@ -1381,7 +1322,7 @@ function MagicExtension() {
 				}
 			}
 		} catch(e) {
-			_z.dbg(e);
+			console.error(e);
 		}
 	}
 	
@@ -1499,19 +1440,9 @@ function MagicExtension() {
 			href = escapeUrl($btn.href),
 			hash = href.hashCode(),
 			th = HM.LinksMap[hash], Id = th.Type +'_'+ hash,
-			pTYPES = ['img', 'audio'].isThere(th.Type),
 			wTYPES = ['pdf', 'docs'].isThere(th.Type) && th.Embed != 'Pbin',
-			pcont = _z.route($btn, function jumpCont(el) {
-				var pb = el.querySelector('.postbody');
-				if (pb) {
-					var prev = pb.previousElementSibling,
-						node = prev.style['clear'] === 'both' ? prev : pb;
-					if (node.previousElementSibling.className != 'postcontent')
-						node.insertAdjacentHTML('beforebegin', '<span class="postcontent"></span>');
-					return node.previousElementSibling;
-				} else return false;
-			});
-		if ($btn.classList.contains('w-open') || wTYPES || HM.EmbedField == 0 && !pTYPES) {
+			pcont = _z.route($btn, jumpCont);
+		if ($btn.classList.contains('w-open') || wTYPES || HM.EmbedField == 0) {
 			last = mEl['ContentWindow'].lastElementChild;
 			if (last.id != 'content_'+ hash) {
 				embc = th.Embed.allReplace({'(visual=)true': '1$false', 'notracklist%3Dtrue': 'notracklist%3Dfalse', 
@@ -1540,17 +1471,11 @@ function MagicExtension() {
 					_z.before($btn, cont)
 				}
 			} else {
-				if (pTYPES)
-					Megia[th.Type] = { 'Container': pcont.querySelector('#'+ Id) }
 				if (pcont.querySelector('#'+ Id)) {
 					Megia[th.Type]['Container'].remove();
 				} else {
-					if (pTYPES) {
-						cont = createFileContent(href, hash, Id, th.Type);
-					} else {
-						cont = _z.setup(Megia[th.Type].makePlayer(href, th.Embed), {'class': th.Type +'-container', 'id': Id});
-						_z.setup(Megia[th.Type]['Frame'], {'width': AspectSize[th.Type == 'scbc' ? 'H' : 'W'][HM.AspectRatio], 'height': AspectSize.H[HM.AspectRatio]});
-					}
+					cont = _z.setup(Megia[th.Type].makePlayer(href, th.Embed), {'class': th.Type +'-container', 'id': Id});
+					_z.setup(Megia[th.Type]['Frame'], {'width': AspectSize[th.Type == 'scbc' ? 'H' : 'W'][HM.AspectRatio], 'height': AspectSize.H[HM.AspectRatio]});
 					pcont.appendChild(cont);
 				}
 			}
@@ -1559,166 +1484,210 @@ function MagicExtension() {
 			HM.VActive = [pcont, cont];
 		return _z.fall(e);
 	}
+	function jumpCont(el) {
+		var pb = el.querySelector('.postbody');
+		if (pb) {
+			var prev = pb.previousElementSibling,
+				node = prev.style['clear'] === 'both' ? prev : pb;
+			if (node.previousElementSibling.className != 'postcontent')
+				node.insertAdjacentHTML('beforebegin', '<span class="postcontent"></span>');
+			return node.previousElementSibling;
+		} else return false;
+	}
 	
-	function attachFile(el, fileUrl, hash, type) {
-		var fExt = fileUrl.fext(), fileName = (type === 'img' ? 'Image' : type === 'audio' ? 'Audio' : 'Video') +': '+ getPageName(fileUrl);
-		function _attach(e) {
-			switch (type) {
-				case 'img': _exec(fExt.slice(0, 1).toUpperCase() + fExt.slice(1, fExt.length) +', '+ this.width +'×'+ this.height);
-					break;
-				case 'audio':
-					//_unc(metadata.artist) +' — '+ _unc(metadata.album) +' / '+ _unc(metadata.title) + ' ['+ metadata.tracknum +'/0]'
-					_exec()
-					break;
-				default: _exec('', 'html5');
-			}
-		}
-		function _exec(ttl, emb) {
-			_z.setup(el, {'id': 'cm-link', 'class': 'cm-button', 'rel': 'nofollow', 'text': fileName, 'title': ttl});
-			HM.LinksMap[hash] = UrlCache[hash] = {Name: fileName, Type: type};
-			if (emb)
-				HM.LinksMap[hash]['Embed'] = UrlCache[hash]['Embed'] = emb
-			if (ttl)
-				HM.LinksMap[hash]['Title'] = UrlCache[hash]['Title'] = ttl
-			_z.sessionS.set('LinksCache', JSON.stringify(UrlCache));
-		}
-		_z.setup(type, {'src': fileUrl}, {'load': _attach, 'loadedmetadata': _attach, 'error': function _err(e) { oEmbedMedia(el, fileUrl, hash) }});
-	}
-	function oEmbedMedia(el, mediaUrl, hash, type, provider, endpoint, embed) {
-		var extras;
-		getDataResponse((endpoint || 'http://api.embed.ly/1/oembed?key='+ HM.APIKey +'&url=') + encodeURIComponent(mediaUrl) +'&format=json&origin=anonymous',
-		function(status, sText, data, xhr) {
-			if (status !== 200 || !data) {
-				extras = {'target': '_blank'}
-				if (status > 399 && status < 500) {
-					extras['title'] = LC.broken_link[lng] +'「'+ status +'」';
-					HM.LinksMap[hash] = UrlCache[hash] = {Embed: status};
-				}
-			} else {
-				var harr = el.host.split('.'), dm = harr[harr.length - 1], host = harr[harr.length - 2], ws = harr[harr.length - 3],
-					p_name = (provider || data.provider_name || (ws && ws !== 'www' ? ws.slice(0, 1).toUpperCase() + ws.slice(1, ws.length) +' ' : '') + host.slice(0, 1).toUpperCase() + host.slice(1, host.length)),
-					rw = new RegExp('(?:\\s-\\s)?(?:'+ (data.provider_name || host) +'|Википедия)(\\.'+ dm +')?(?:\\:\\s|\\s-\\s)?', 'i'),
-					name = (data.title || getPageName(mediaUrl).replace(el.host, '')).replace(rw, '');
-					extras = {'id': 'cm-link', 'rel': 'nofollow'}; HM.LinksMap[hash] = UrlCache[hash] = {};
-					HM.LinksMap[hash].Name = UrlCache[hash].Name = extras['text'] = p_name + (name ? ': '+ name : '');
-				if (data.description || data.author)
-					HM.LinksMap[hash].Title = UrlCache[hash].Title = extras['title'] = (data.description || data.author);
-				if (embed || !embed && data.html && data.type != 'link') {
-					switch (p_name.toLowerCase()) {
-						case 'bandcamp':
-							type = 'scbc';
-							break;
-						case 'google docs':
-							type = 'docs';
-					}
-					if (!embed && data.html)
-						embed = _stub('iframe', data.html).src;
-					extras['class'] = 'cm-button'; 
-					HM.LinksMap[hash].Embed = UrlCache[hash].Embed = embed;
-					HM.LinksMap[hash].Type = UrlCache[hash].Type = type;
-				}
-			}
-			if (UrlCache[hash])
-				_z.sessionS.set('LinksCache', JSON.stringify(UrlCache));
-			_z.setup(el, extras);
-		});
-	}
 	function handleLinks(node, map) {
 		_z.each((node || document).querySelectorAll(
 		'.message a[href^="http"]:not(#cm-link), .message a[href^="/"]:not(.reply-link), .abbrev a[href*="/deleted/"], .abbrev a[href^="/utils/"]'
 		),  function(link, i) {
-			var href = escapeUrl(link.href);
-			switch (true) {
-				case link.host.isThere("dobrochan"):
-					if (href.isThere("/res/") && map) {
-						var targ = ParseUrl(href);
-						if (targ != null && targ.thread) {
-							var reply_id = (targ.pid || targ.thread),
-								diffb = (targ.board !== map.board) || (map.board !== HM.URL.board),
-								dataArr = [map.board, map.thread, map.pid, (diffb ? targ.board : '')];
-							_z.replace(link, _z.setup('a', {'class': 'reply-link', 'href': '/'+ targ.board +'/res/'+ targ.thread +'.xhtml#i'+ reply_id,
-								'id': 'rl-'+ targ.board +'-'+ targ.thread +'-'+ reply_id, 'text': '>>'+ (diffb ? targ.board +'/' : '') + reply_id}));
-							if (!HM.RepliesMap[reply_id])
-								HM.RepliesMap[reply_id] = new Array(0);
-							if (!JSON.stringify(HM.RepliesMap[reply_id]).isThere(JSON.stringify(dataArr)))
-								HM.RepliesMap[reply_id].push(dataArr);
+				switch (true) {
+					case link.host.isThere("dobrochan"):
+						if (link.href.isThere("/res/") && map) {
+							var targ = ParseUrl(link.href);
+							if (targ != null && targ.thread) {
+								var pid = targ.pid || targ.thread,
+									reply_id = targ.board +'-'+ pid,
+									diffb = (targ.board !== map.board) || (map.board !== HM.URL.board),
+									dataArr = [map.board, map.thread, map.pid, (diffb ? targ.board : '')];
+								_z.replace(link, _z.setup('a', {'class': 'reply-link', 'href': '/'+ targ.board +'/res/'+ targ.thread +'.xhtml#i'+ pid,
+									'id': 'rl-'+ targ.board +'-'+ targ.thread +'-'+ pid, 'text': '>>'+ (diffb ? targ.board +'/' : '') + pid}));
+								if (!HM.RepliesMap[reply_id])
+									HM.RepliesMap[reply_id] = new Array(0);
+								if (!JSON.stringify(HM.RepliesMap[reply_id]).isThere(JSON.stringify(dataArr)))
+									HM.RepliesMap[reply_id].push(dataArr);
+							}
+						} else if (link.href.isThere("/deleted/") || link.href.isThere("/utils/")) {
+							HM.LinksMap[link.href.hashCode()] = {Embed: 'iframe', Type: 'pdf'};
+							link.className = 'cm-button'
 						}
-					} else if (href.isThere("/deleted/") || href.isThere("/utils/")) {
-						HM.LinksMap[link.href.hashCode()] = {Embed: 'iframe', Type: 'pdf'};
-						link.className = 'cm-button'
-					}
-					break;
-				case (href === 'https://mega.nz/#'):
-					_z.setup(link, {'href': 'https://mega.nz/#'+ link.nextSibling.textContent, 'text': 'Mega: '+ link.nextSibling.textContent});
-					link.nextSibling.remove();
-					break;
-				case (HM.oEmbedAPI):
-					var hash = link.href.hashCode(), extras;
-					if (HM.LinksMap[hash]) {
-						extras = {'id': 'cm-link', 'rel': 'nofollow', 'text': HM.LinksMap[hash].Name, 'title': HM.LinksMap[hash].Title}
-						if (HM.LinksMap[hash].Embed || HM.LinksMap[hash].Type) {
-							if (!isNaN(HM.LinksMap[hash].Embed)) {
-								extras = {'target': '_blank', 'title': LC.broken_link[lng] +'「'+ HM.LinksMap[hash].Embed +'」'}
-							} else
-								extras['class'] = 'cm-button';
-						}
-						_z.setup(link, extras);
-					} else {
-						var type = 'video', endp = 'http://open.iframe.ly/api/oembed?url=', embed = '', prov = '', EXT = href.fext(), Macont = new MagicEmbeds();
-						switch (true) {
-							case Files.video.concat(Files.audio.concat(Files.image)).isThere(EXT):
-								return attachFile(link, href, hash, (Files.image.isThere(EXT) ? 'img' : Files.audio.isThere(EXT) ? 'audio' : 'video'));
-								break;
-							case (link.host === 'pleer.com'):
-								if (Macont.matchPlayer(href, 'Pleer')) {
-									var pleer = Macont.makePlayer(href, 'Pleer')
-									_z.after(link, pleer);
-									pleer.appendChild(_z.setup(link, {'text': ''}))
-									return;
+						break;
+					case (link.href === 'https://mega.nz/#'):
+						_z.setup(link, {'href': 'https://mega.nz/#'+ link.nextSibling.textContent, 'text': 'Mega: '+ link.nextSibling.textContent});
+						link.nextSibling.remove();
+						break;
+					case (HM.oEmbedAPI):
+						var _Attrs = {'id': 'cm-link', 'rel': 'nofollow'},
+							href = escapeUrl(link.href),
+							hash = link.href.hashCode();
+						if (HM.LinksMap[hash]) {
+							_Attrs['text'] = HM.LinksMap[hash]['Name']; _Attrs['title'] = HM.LinksMap[hash]['Title'];
+							if (HM.LinksMap[hash]['Embed'] || HM.LinksMap[hash]['Type']) {
+								if (!isNaN(HM.LinksMap[hash]['Embed'])) {
+									_Attrs = {'target': '_blank', 'title': LC.broken_link[lng] +'「'+ HM.LinksMap[hash]['Embed'] +'」'}
+								} else {
+									_Attrs['class'] = 'cm-button';
+									if (!HM.LinksMap[hash]['Name']) {
+										_Attrs['text'] = capitaliseFirstLetter(HM.LinksMap[hash]['Type']) +': '+ getPageName(href);
+									}
+									switch (HM.LinksMap[hash]['Type']) {
+										case 'image':
+											var inf = HM.LinksMap[hash]['Title'].split(', ');
+												_Attrs['image-size'] = inf[1];
+												_Attrs['class'] = 'iview btn-link';
+											break;
+										case 'audio':
+											var inf = HM.LinksMap[hash]['Title'].split(', '),
+												alt = inf[2].split(' — ');
+												_Attrs['id'] = 'ma-play';
+												_Attrs['class'] = 'ma-button btn-link';
+											Megia.audio.addTrack({
+												frontend: {button: link},
+												duration: inf[1],
+												artist: alt[0],
+												album: 'Unknown',
+												title: alt[1],
+												url: href
+											});
+									}
 								}
-								break;
-							case link.host.isThere("youtu"):
-								prov = 'YouTube'; embed = 'YT'; endp = '';
-								break;
-							case link.host.isThere("soundcloud"):
-								prov = 'SoundCloud'; type = 'scbc'; endp = 'https://soundcloud.com/oembed?url=';
-								break;
-							case link.host.isThere("vimeo"):
-								prov = 'Vimeo'; embed = 'Vm'; endp = 'https://vimeo.com/api/oembed.json?url=';
-								break;
-							case link.host.isThere("coub"):
-								prov = 'Coub'; embed = 'Cb';
-								break;
-							case link.host.isThere("rutube"):
-								prov = 'RuTube'; embed = 'RT';
-								break;
-							case link.host.isThere("pastebin"):
-								prov = 'Pastebin'; embed = 'Pbin'; type = 'docs';
-								break;
-							case (href.isThere("mail.ru/") &&  href.isThere("/video/")):
-								prov = 'M@il.RU Видео'; embed = 'my';
-								break;
-							case link.host.isThere("video.yandex.ru"):
-								prov = 'Яндекс.Видео'; endp = '//video.yandex.ru/oembed.json?url=';
-								break;
-							case link.host.isThere("vk.com"):
-								if (href.isThere("hash"))
-									embed = 'VK';
-								if (href.isThere("video"))
-									prov = 'VK Видео';
-								if (href.isThere("ext.php"))
-									href = href.replace(Macont.RegEx('VK.com'), 'https://vk.com/video$1_$2?$3$4$5');
-								break;
-							case (href.isThere("/iframe/") || href.isThere("/embed/")):
-								embed = 'iframe'; endp = '';
-			 					if (!href.isThere("/html/"))
-			 						href = href.replace('embed/', '');
-								break;
-							default: endp = '';
+							}
+							_z.setup(link, _Attrs);
+						} else {
+							var type = 'video', endp = 'http://open.iframe.ly/api/oembed?url=', embc = '', prov = '',
+								EXT = href.fext(), file_type = Files.matchType(EXT), Macont = new MagicEmbeds();
+								function _attachFile(e) {
+									var name = getPageName(href);
+										_Attrs['text'] = capitaliseFirstLetter(file_type) +': '+ name;
+										HM.LinksMap[hash] = UrlCache[hash] = {Type: file_type};
+									switch (file_type) {
+										case 'image':
+											_Attrs['image-size'] = this.naturalWidth +'×'+ this.naturalHeight;
+											_Attrs['title'] = HM.LinksMap[hash]['Title'] = UrlCache[hash]['Title'] = capitaliseFirstLetter(EXT)+', '+ _Attrs['image-size'];
+											_Attrs['class'] = 'iview btn-link';
+											break;
+										case 'audio':
+											name = name.replace('.'+EXT, '').replace(/\_/g, ' ').replace(/^\d*(?:\s-|\.)?\s/, '').split(' - ');
+											var dur = timerCalc(this.duration, true),
+												art = name[1] ? name[0] : 'Unknown',
+												ttl = name[1] ? name[1] : name[0];
+												_Attrs['id'] = 'ma-play';
+												_Attrs['class'] = 'ma-button btn-link';
+												_Attrs['title'] = HM.LinksMap[hash]['Title'] = UrlCache[hash]['Title'] = EXT.toUpperCase() +', '+ dur +', '+ art +' — '+ ttl;
+											Megia.audio.addTrack({
+												frontend: {button: link},
+												duration: dur,
+												artist: art,
+												album: 'Unknown',
+												title: ttl,
+												url: href
+											});
+											break;
+										case 'video':
+											HM.LinksMap[hash]['Embed'] = UrlCache[hash]['Embed'] = 'html5';
+											_Attrs['class'] = 'cm-button';
+									}
+									_z.setup(link, _Attrs);
+									_z.sessionS.set('LinksCache', JSON.stringify(UrlCache));
+								}
+								function _oEmbedMedia(e, embed) {
+									getDataResponse((endp || 'http://api.embed.ly/1/oembed?key='+ HM.APIKey +'&url=') + encodeURIComponent(href) +'&format=json&origin=anonymous',
+									function(status, sText, data, xhr) {
+										if (status !== 200 || !data) {
+											_Attrs = {'target': '_blank'}
+											if (status > 399 && status < 500) {
+												_Attrs['title'] = LC.broken_link[lng] +'「'+ status +'」';
+												HM.LinksMap[hash] = UrlCache[hash] = {Embed: status};
+											}
+										} else {
+											var harr = link.host.split('.'), dm = harr[harr.length - 1], host = harr[harr.length - 2], ws = harr[harr.length - 3],
+												p_name = (prov || data.provider_name || (ws && ws !== 'www' ? capitaliseFirstLetter(ws) +' ' : '') + capitaliseFirstLetter(host)),
+												rw = new RegExp('(?:\\s-\\s)?(?:'+ (data.provider_name || host) +'|Википедия)(\\.'+ dm +')?(?:\\:\\s|\\s-\\s)?', 'i'),
+												name = (data.title || getPageName(href).replace(link.host, '')).replace(rw, '');
+												HM.LinksMap[hash] = UrlCache[hash] = {};
+												HM.LinksMap[hash]['Name'] = UrlCache[hash]['Name'] = _Attrs['text'] = p_name + (name ? ': '+ name : '');
+											if (data.description || data.author)
+												HM.LinksMap[hash]['Title'] = UrlCache[hash]['Title'] = _Attrs['title'] = (data.description || data.author);
+											if (embed || data.html && data.type != 'link') {
+												switch (p_name.toLowerCase()) {
+													case 'bandcamp':
+														type = 'scbc';
+														break;
+													case 'google docs':
+														type = 'docs';
+												}
+												if (!embed && data.html)
+													embed = _stub('iframe', data.html).src;
+												_Attrs['class'] = 'cm-button'; 
+												HM.LinksMap[hash]['Embed'] = UrlCache[hash]['Embed'] = embed;
+												HM.LinksMap[hash]['Type'] = UrlCache[hash]['Type'] = type;
+											}
+										}
+									});
+								}
+							switch (true) {
+								case (!!file_type):
+									_z.setup((file_type === 'image' ? 'img' : file_type), {'src': href}, {
+										'load': _attachFile, 'loadedmetadata': _attachFile, 'error': _oEmbedMedia});
+									return;
+								case (link.host === 'pleer.com'):
+									if (Macont.matchPlayer(href, 'Pleer')) {
+										var pleer = Macont.makePlayer(href, 'Pleer')
+										_z.after(link, pleer);
+										pleer.appendChild(_z.setup(link, {'text': ''}))
+										return;
+									}
+									break;
+								case link.host.isThere("youtu"):
+									prov = 'YouTube'; embc = 'YT'; endp = '';
+									break;
+								case link.host.isThere("soundcloud"):
+									prov = 'SoundCloud'; type = 'scbc'; endp = 'https://soundcloud.com/oembed?url=';
+									break;
+								case link.host.isThere("vimeo"):
+									prov = 'Vimeo'; embc = 'Vm'; endp = 'https://vimeo.com/api/oembed.json?url=';
+									break;
+								case link.host.isThere("coub"):
+									prov = 'Coub'; embc = 'Cb';
+									break;
+								case link.host.isThere("rutube"):
+									prov = 'RuTube'; embc = 'RT';
+									break;
+								case link.host.isThere("pastebin"):
+									prov = 'Pastebin'; embc = 'Pbin'; type = 'docs';
+									break;
+								case (href.isThere("mail.ru/") &&  href.isThere("/video/")):
+									prov = 'M@il.RU Видео'; embc = 'my';
+									break;
+								case link.host.isThere("video.yandex.ru"):
+									prov = 'Яндекс.Видео'; endp = '//video.yandex.ru/oembed.json?url=';
+									break;
+								case link.host.isThere("vk.com"):
+									if (href.isThere("hash"))
+										embc = 'VK';
+									if (href.isThere("video"))
+										prov = 'VK Видео';
+									if (href.isThere("ext.php"))
+										href = href.replace(Macont.RegEx('VK.com'), 'https://vk.com/video$1_$2?$3$4$5');
+									break;
+								case (href.isThere("/iframe/") || href.isThere("/embed/")):
+									embc = 'iframe'; endp = '';
+				 					if (!href.isThere("/html/"))
+				 						href = href.replace('embed/', '');
+									break;
+								default: endp = '';
+							}
+							_oEmbedMedia(null, (embc && Macont.matchPlayer(href, embc) ? embc : false));
 						}
-						oEmbedMedia(link, href, hash, type, prov, endp, (embed && Macont.matchPlayer(href, embed) ? embed : false));
-					}
-			}
+				}
 		});
 	}
 	function handleElements(node) {
@@ -1761,7 +1730,7 @@ function MagicExtension() {
 							HM.LinksMap[hash] = {Embed: Files.video.indexOf(fext) > 4 ? 'flash' : 'html5', Type: 'video'};
 							if (el.getAttribute('src') === '/thumb/generic/sound.png') {
 								em.className = 'magic-info';
-								makeMagicPlayer('movie', a, el)
+								makeMagicPlayer('movie', null, a, el)
 							} else
 								params['contextmenu'] = 'image-context';
 							break;
@@ -1771,12 +1740,18 @@ function MagicExtension() {
 							params = {'id': 'thmb_'+ hash, 'class': 'iview thumb', 'image-size': WH[1], 'contextmenu': 'image-context', 'edit-tool': '/utils/image/edit/'+fid[2]+'/'+fid[1], 'onclick': undefined};
 							break;
 						case Files.audio.isThere(fext):
-							var artalb = (/kHz(?:[\s\n]*)(.*(?:[\s\n]*)—(?:[\s\n]*).*)(?:[\s\n]*)\s\//).exec(em.textContent)[1],
-								mav = makeMagicPlayer('artwork', a, el);
+							var time = em.textContent.match(/\d+\:\d+/),
+								meta = (/kHz[\s\n]*((.*)[\s\n]*\s—[\s\n]*(.*))[\s\n]*\s\/[\s\n]*(.*)[\s\n]*\s\[/).exec(em.textContent);
 								em.className = 'magic-info';
 								fileinfo.lastChild.remove();
-							if (HM.AlbumArts[artalb.hashCode().toString()])
-								mav.id = _cover(artalb);
+							Megia.audio.addTrack({
+								frontend: makeMagicPlayer('artwork', 'album_'+ meta[1].hashCode(), a, el),
+								duration: time[0],
+								artist: meta[2],
+								album: meta[3],
+								title: (meta[4] === 'Unknown' ? name.replace('.'+fext, '').replace(/---/g, ' — ').replace(/-/g, ' ') : meta[4]),
+								url: dl.href
+							});
 							break;
 						default:
 							if (clickFn && clickFn.isThere('open_url')) {
@@ -1789,16 +1764,35 @@ function MagicExtension() {
 					_z.setup(dl, {'class': 'download-link', 'download': name, 'title': name});
 					_z.setup(el, params);
 			}
-			function makeMagicPlayer(clss, a, el) {
-				var magicPlayer = _z.setup('div', {'class': 'magic-audio thumb '+ clss, 'html': '<div class="ma-controls"></div>'});
-				_z.after(a, magicPlayer); _z.append(magicPlayer.firstElementChild, _z.setup(a, {'id': 'ma-play', 'class': (clss === 'movie' ? 'cm' : 'ma') +'-button'})); el.remove();
+			function makeMagicPlayer(clss, id, a, el) {
+				var magicPlayer = _z.setup('div', {'id': id, 'class': 'magic-audio thumb '+ clss, 'html': '<div class="ma-controls"></div>'});
+					magicPlayer.button = _z.setup(a, {'id': 'ma-play', 'class': (clss === 'movie' ? 'cm' : 'ma') +'-button'});
+				_z.after(a, magicPlayer); _z.append(magicPlayer.firstElementChild, a); el.remove();
 				return magicPlayer;
 			}
 		});
 	}
+	function handlePost(post) {
+		var reflink = _z.setup(post.querySelector('.reflink > a[href*="/res/"]'), {'onclick': undefined}),
+			url = ParseUrl(reflink.href),
+			patchId = url.board +'_'+ url.thread +'_'+ url.pid,
+			delbox = post.getElementsByClassName('delete_checkbox')[0],
+			pMenu = _z.setup('ul', {'class': 'dropdown line-sect', 'html': '<li class="dropdown-toggle"><label class="postermenu dropdown-label el-li"></label><ul class="dropdown-menu"><li class="edit-post dropdown-item el-li">Редактировать</li><li class="mod-report dropdown-item el-li">Пожаловаться</li><li class="hide-post dropdown-item el-li">Скрыть</li><li class="delete-post dropdown-item el-li">Удалить<span class="chek-to-del dropdown-input line-sect"></span></li></ul></li>'});
+		HM.LoadedPosts[patchId]              = _z.setup(post,   {'patch-id': patchId}, {'click': PDownListener, 'mouseover': Chanabira.MagicPostView});
+		HM.LoadedPosts[patchId].delete_input = _z.setup(delbox, {'checked': false   });
+		HM.LoadedPosts[patchId].formBinding  = function(el) { _z.after(this, el) }
+		if (delbox) {
+			_z.replace(delbox.parentNode, pMenu);
+			mEl['DeleteOverlay'].appendChild(delbox);
+		}
+		_z.setup(post.querySelector('.abbrev a[onclick^="GetFullText"]'), {'class': 'Get-Full-Text', 'onclick': undefined});
+		handleLinks(post, url);
+		handleElements(post);
+	}
 	function genReplyMap(posts) {
 		_z.each(posts, function(post) {
-			var cid = _cid(post.id);
+			var cid = post.getAttribute('patch-id').split('_');
+				cid = cid[0] +'-'+ cid[2];
 			if (HM.RepliesMap[cid]) {
 				if (!post.repliesNode) {
 					post.repliesNode = _z.setup('div', {'class': 'replylinks', 'html': '<span class="rl-inf">'+  LC.repl[lng] + LC.few['u-c'][lng] +':&nbsp;\n</span>'});
@@ -1816,33 +1810,6 @@ function MagicExtension() {
 				}
 			}
 		});
-	}
-	function createFileContent(fileSrc, hash, Id, type) {
-		var fileName = getPageName(fileSrc),
-			fileCont = _z.setup('div', {'id': Id, 'class': 'file'}, null);
-			switch (type) {
-				case 'audio': fileCont.innerHTML = '<div class="fileinfo limited">\n<em class="magic-info">'+ fileSrc.fext().toUpperCase() +', <span>'+ (HM.LinksMap[hash]['Title'] || fileName) +
-					'</span></em>\n</div><div class="magic-audio thumb artwork"><div class="ma-controls"><a href="'+ fileSrc +'" class="ma-button'+ (HM.LinksMap[hash]['Title'] ? '' : ' load-ttl') +'" id="ma-play"></a></div></div>';
-					fileCont.querySelector('.ma-button');
-					break;
-				case 'img': fileCont.innerHTML = '<div class="fileinfo limited"><em>'+ HM.LinksMap[hash]['Title'] +
-					'</em></div>\n<img class="spr-image thumb unexpanded" contextmenu="image-context" src="'+ 
-					fileSrc +'"style="border:medium none;cursor:pointer;" alt="'+ fileName +'">';
-					fileCont.querySelector('.spr-image').addEventListener('click', MagicSpoirate, false);
-					break;
-			}
-		return fileCont;
-	}
-	function createImgContext(img) {
-		var fid, events = null, params = {'contextmenu': 'image-context'};
-		if (img.parentNode.href.fext() == 'svg') {
-			params['class'] = 'spr-image thumb unexpanded';
-			events = {'click': MagicSpoirate};
-		} else {
-			fid = img.parentNode.parentNode.id.split('_');
-			params['edit-tool'] = '/utils/image/edit/'+fid[2]+'/'+fid[1];
-		}
-		_z.setup(img, params, events);
 	}
 	
 	/*** Base64Binary ***/
@@ -1984,6 +1951,7 @@ function MagicExtension() {
 				rmv: ["Remove", "Убирать"],
 				fnm: ["File Name", "имя файла"],
 				send: ['Sending', 'Отправка'],
+				line: [" line", " строк"],
 				ten: ['Ten', 'Десять'],
 				fiv: ['Five', 'Пять'],
 				via: ['via', 'по'],
@@ -2002,6 +1970,23 @@ function MagicExtension() {
 				cerr: {
 					'en': ['captcha', 'human.'],
 					'ru': ['капча', 'человек.']
+				} },
+			YuPlayer = {
+				current: null,
+				playlist: [],
+				set: function(action, audioObj) {
+					if (this.current)
+						this.current['pause']();
+					this.current = audioObj;
+					this.current[action]();
+				},
+				playnext: function(audioObj) {
+					var plix = this.playlist.indexOf(audioObj);
+					if (this.playlist[plix +1]) {
+						this.set('play', this.playlist[plix +1]);
+					} else {
+						this.current = null;
+					}
 				}
 			},
 		replyform_tamplate = '<input id="yuki-targetThread" name="thread_id" value="" type="hidden"><input name="task" value="post" type="hidden"><input name="goto" value="thread" type="hidden">'+
@@ -2118,7 +2103,7 @@ function MagicExtension() {
 						}
 					}
 				case (FP):
-					stepZup.bind(this)();
+					stepZup.bind(this)(e);
 					if (!['INPUT', 'SELECT', 'TEXTAREA', 'IMG'].isThere(e.target.tagName)) {
 						var coords = getCoords(this);
 						HM.DragableObj = {
@@ -2158,9 +2143,10 @@ function MagicExtension() {
 		this['ReplyText'] = _z.setup(el$('#yuki-replyText'), {
 			'value': stored ? JSON.parse(_z.sessionS.get('SafeText', JSON.stringify(el$('#yuki-replyText').value))) : ''
 		}, {'keyup': function(e) {
-			var height = _cid(this.style['height']);
+			var height = extractStringNumbers(this.style['height'])[0],
+				flexh = Math.floor(window.innerHeight / 3 * 2);
 			if (height + 26 < this.scrollHeight)
-				this.style['height'] = this.scrollHeight +'px';
+				this.style['height'] = (this.scrollHeight > flexh ? flexh : this.scrollHeight) +'px';
 			if (this.safe_text)
 				_z.sessionS.set('SafeText', JSON.stringify(this.value));
 		}});
@@ -2178,16 +2164,16 @@ function MagicExtension() {
 			}
 		});
 		this['DropBox'] = _z.setup(el$("#yuki-dropBox"), {}, {
-			'dragover': _z.fall,
-			'dragenter': function(e) {
+			'dragover': function(e) {
 				var items = e.dataTransfer.mozItemCount || '';
 				if (this.classList[0] != 'thumb') {
-					this.firstChild.textContent = LC.add[lng] +' '+ items +' '+ LC.file[lng].toLowerCase() +
+					this.firstElementChild.textContent = LC.add[lng] +' '+ items +' '+ LC.file[lng].toLowerCase() +
 						(items == 1 ? '' : !items ? LC.few['u-c'][lng] : items < 5 ? LC.few['u-a'][lng] : LC.few['u-b'][lng]);
 					this.classList.add('thumb');
 				}
-			},'dragout': function(e) {
-				this.firstChild.textContent = '';
+				_z.fall(e);
+			}, 'dragleave': function(e) {
+				this.firstElementChild.textContent = '';
 				this.classList.remove('thumb');
 			}, 'drop': function(e) {
 				if (e.dataTransfer.mozSourceNode && e.dataTransfer.mozSourceNode.id === 'yuki-captcha-image') {
@@ -2195,9 +2181,9 @@ function MagicExtension() {
 				} else {
 					yukiAddFile(e.dataTransfer);
 				}
-				this.firstChild.textContent = '';
+				this.firstElementChild.textContent = '';
 				this.classList.remove('thumb');
-				return _z.fall(e);
+				_z.fall(e);
 			}
 		});
 		this['GlobalFormArea'] = _z.setup('div', {'id': 'global-form-area', 'class': 'postarea hidout', 'html': '<table><tbody><tr><td id="hide-global-form" class="hideinfo">[\n<a id="hgf-btn">'+
@@ -2284,22 +2270,25 @@ function MagicExtension() {
 					rating_sel = '<select class="rating_SFW" id="file_rating_sel"><option class="rating_SFW">SFW</option><option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select>';
 					
 				this['frontend'] = _z.setup('div', {'id': 'yuki-file-'+ Id, 'class': 'yukiFile '+ Class, 'html': (Media ? '<div class="magic-info">'+ yf_remove +
-					f_ext.toUpperCase() +', <span id="yf-size" class="yf_info">'+ f_size +'</span>\n<div id="yf-name" class="yf_info">'+ this.upload_name +
-					'</div></div><div class="magic-audio"><div class="ma-controls"><a class="w-open" id="ma-play"></a></div>'+ rating_sel +'</div>' :
+					f_ext.toUpperCase() +', <span id="yf-size" class="yf_info">'+ f_size +'</span><span id="yf-length" class="yf_info"></span>\n<div id="yf-name" class="yf_info">'+
+					this.upload_name +'</div></div><div class="magic-audio"><div class="ma-controls"><a class="w-open" id="yf-play"></a></div>'+ rating_sel +'</div>' :
 					yf_remove +'<img id="yf-preview" class="yf_preview" src="'+ (this.dataURL || '#transparent') +'"><div id="yf-name" class="yf_info">'+
-					this.upload_name +'</div><span id="yf-size" class="yf_info">'+ f_size +'</span>' + rating_sel)},
+					this.upload_name +'</div><span id="yf-size" class="yf_info">'+ f_size +'</span><span id="yf-length" class="yf_info"></span>' + rating_sel)},
 					{'change': function(e) {
 						if (e.target.type === 'select-one') {
 							YF.rating = e.target.value;
 						}
 					},'click': function(e) {
 						switch (e.target.id) {
-							case 'ma-pause':
-							case 'ma-play':
+							case 'yf-pause':
+							case 'yf-play':
 								switch (Type) {
 									case 'video': loadMediaContainer(e); break;
-									case 'audio': initMagicAudio(e, YF.blob, f_ext);
+									case 'audio':
+										var A = e.target.id.split('-')[1];
+										YuPlayer.set(A, YF['Media']);
 								}
+								_z.fall(e);
 								break;
 							case 'yf-name':
 								if (YF.upload_name !== YF.original_name) {
@@ -2313,22 +2302,28 @@ function MagicExtension() {
 								YF.frontend.remove();
 								delete fileList[idx];
 								fileList.splice(idx, 1);
+								if (YF['Media']) {
+									var adx = YuPlayer.playlist.indexOf(YF['Media']);
+									delete YuPlayer.playlist[adx];
+									YuPlayer.playlist.splice(adx, 1);
+								}
 						}
 					}
 				});
 				this['Preview'] = _z.setup((YF['frontend'].querySelector('#yf-preview') || 'img'), {}, {'load':
 					function(e) {
 						if (Type === 'image')
-							YF['FileSize'].textContent = bytesMagnitude(YF.blob.size) +', '+ this.naturalWidth +'×'+ this.naturalHeight;
+							YF['FileInfo'].textContent = '| '+ this.naturalWidth +'×'+ this.naturalHeight;
 					}
 				});
 				this['FileName'] = YF['frontend'].querySelector('#yf-name');
 				this['FileSize'] = YF['frontend'].querySelector('#yf-size');
+				this['FileInfo'] = YF['frontend'].querySelector('#yf-length');
 				this['rating'] = 'SFW';
 				fileList.push(this);
 				Yu['FilesPlaceholder'].appendChild(this['frontend']);
 			} catch(e) {
-				_z.fall(e)
+				console.error(e);
 			}
 		}
 		function checkfileName(file_name) {
@@ -2382,53 +2377,63 @@ function MagicExtension() {
 					// Read in the text file as a UTF-8 encoding text.
 					getFileReaderData('Text', f, function(text) {
 						var canvas = _z.setup('canvas', {'class': 'yf_preview _text', 'width': 150, 'height': 150}),
-							context = canvas.getContext("2d");
+							context = canvas.getContext("2d"),
+							lines = text.split("\n");
 							context.font = "10px serif";
-						for (var i = 0, x = 3, y = 11, cars = text.split("\n"); i < cars.length; i++) {
-							context.fillText(cars[i], x, y);
+						for (var i = 0, x = 3, y = 11; i < lines.length; i++) {
+							context.fillText(lines[i], x, y);
 							y += 11;
 						}
 						_z.replace(theFile['Preview'], canvas);
 						theFile['Preview'] = canvas;
+						theFile['FileInfo'].textContent = '| '+ lines.length +' '+ LCY.line[lng] + (lines.length === 1 ?
+							LC.few['ru'][lng] : lines.length < 5 ? LC.few['u-d'][lng] : LC.few['en'][lng]);
 					});
 					break;
 				case 'audio':
 				case 'video':
-					var URL = window.URL || window.webkitURL,
-						blobURL = URL.createObjectURL(f);
-						_z.setup(theFile['frontend'].querySelector('#ma-play'), {'href': blobURL});
+					var fileURL = _blobURL(f);
+						theFile['MediaButton'] = _z.setup(theFile['frontend'].querySelector('#yf-play'), {'href': fileURL});
 				default:
 					switch (true) {
-						case (['ogg', 'opus'].isThere(f_ext) && typeof mozRTCSessionDescription !== "undefined"):
-							var HTMLAE = new Audio(blobURL);
-							HTMLAE.onloadedmetadata = function() {
-								var mozMdata = this.mozGetMetadata();
-								if (Object.keys(mozMdata).length > 0) {
-									MDPBlockParser(theFile['frontend'], mozMdata)
-								}
-							}
-							HTMLAE.load()
-							break;
-						case (['flac', 'alac', 'm4a'].isThere(f_ext)):
-							var AVAsset = new AV.Asset.fromFile(f);
-							AVAsset.get('metadata', function(md) {
-								AVMetadata(theFile['frontend'], md)
-							});
-							break;
 						case (Files.audio.isThere(f_ext)):
-							MAParser('file', f, function(metadata) {
+							function nextAudio() {
+								theFile['FileInfo'].textContent = theFile['duration'];
+								YuPlayer.playnext(this, theFile['MediaButton']) }
+							function durationLoad() {
+								theFile['duration'] = timerCalc(this.duration);
+								theFile['FileInfo'].textContent = ', '+ theFile['duration'] }
+							function updateTime() {
+								theFile['FileInfo'].textContent = timerCalc(this.currentTime) +'/'+ theFile['duration'] }
+							function mediaBind() {
+								YuPlayer.playlist.push(this) }
+							function btnChange(e) {
+								theFile['MediaButton'].id = 'yf-'+ (e.type === 'play' ? 'pause' : 'play')}
+							parse_audio_metadata(f, function(metadata) {
 								if ("picture" in metadata) {
-									getFileReaderData('dataurl', metadata.picture, function(dataImage){
-										theFile['frontend'].id = _cover(metadata.artist, metadata.album, dataImage)
-									})
-								}
-							});
+									getFileReaderData('dataurl', metadata.picture, function(dataImage) {
+										theFile['frontend'].id = AlbumArts.makeCover(dataImage, metadata.artist, metadata.album);
+									});
+								} });
+							theFile['Media'] = _z.setup(new Audio(fileURL), {}, {
+								'loadedmetadata': durationLoad, 'canplay': mediaBind,
+								'timeupdate'    : updateTime  , 'ended'  : nextAudio,
+								'pause'         : btnChange   , 'play'   : btnChange, 
+								'error'         : function(e) {
+									theFile['Media'] = new AV.Player.fromFile(f);
+									theFile['Media'].on('end'     , nextAudio   );
+									theFile['Media'].on('progress', updateTime  );
+									theFile['Media'].on('duration', durationLoad);
+									theFile['Media'].onPlayerAction = btnChange;
+									theFile['Media'].preload();
+									mediaBind.bind(theFile['Media'])();
+								} });
 							break;
 						case (['pdf'].isThere(f_ext)):
 							theFile['Preview'].src = '/thumb/pdf/1406/140217014000620s.jpg';
 							break;
 						case (Files.video.isThere(f_ext)):
-							HM.LinksMap[blobURL.hashCode()] = {Embed: (Files.video.indexOf(f_ext) > 4 ? 'flash' : 'html5'), Type: 'video'}
+							HM.LinksMap[fileURL.hashCode()] = {Embed: (Files.video.indexOf(f_ext) > 4 ? 'flash' : 'html5'), Type: 'video'}
 							break;
 						case (Files.arch.isThere(f_ext)):
 							theFile['Preview'].src = '/src/png/1405/archive-icon.png';
@@ -2453,7 +2458,7 @@ function MagicExtension() {
 					makeYukiFile(blob);
 				}
 			} catch(e) {
-				_z.dbg(e);
+				console.error(e);
 			}
 		}
 		function submitProcess(st) {
@@ -2474,7 +2479,7 @@ function MagicExtension() {
 						if (this.status === 304) {
 							Yu['ErrorMassage'].textContent = 'Не получилось отправить пост.\n'+
 								'Попробуйте чуть попозже ещё разок или перезагрузить страницу.'+
-								'〔\n'+ this.statusText+ '\n〕';
+								'〔\n'+ this.statusText +'\n〕';
 							submitProcess(false);
 						} else {
 							var rText = this.responseText,
@@ -2606,16 +2611,6 @@ function MagicExtension() {
 				Yu['NewThreadCreate'].className = (HM.URL.thread ? 'yuki_clickable ' : '') + (Yu['TargetThread'].value !== '0' ? 'inactive' : 'selected');
 			}
 		}
-		function makeRandId(size) {
-			var text = "", 
-				possible = "0123456789abcdef",
-				len = possible.length;
-			if (!size)
-				size = len;
-			for (var i = 0; i < size; i++)
-				text += possible.charAt(Math.floor(Math.random() * len));
-			return text;
-		}
 		function arrayBufferDataUri(raw) {
 			var base64 = ''
 			var encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
@@ -2709,168 +2704,238 @@ function MagicExtension() {
 		}
 	}
 	
-	/****************** MagicAudio Player *********************/
-	function initMagicAudio(e, file, type) {
-		var btn = e.target, AS = btn.href, EXT = (type || AS.fext()),
-			frontend = _z.route(btn, function(node) {
-				return node.classList.contains('artwork')
-			});
-			function _stop() {
-				_z.each('#ma-pause',
-					function(a) { a.id = 'ma-play' });
-				HM.Played.pause();
-			}
-			function _play() {
-				btn.id = 'ma-pause';
-				HM.Played.play();
-			}
-			function _nextTrack(e) {
-				var nxtfp, fpart = _z.route(frontend, function(node) {
-					return ['file', 'yukiFile'].isThere(node.classList[0]);
-				}).nextElementSibling;
-				_stop();
-				while (fpart) {
-					nxtfp = fpart.querySelector('.ma-button')
-					if (!['file', 'yukiFile'].isThere(fpart.classList[0]) || nxtfp)
-						break;
-					fpart = fpart.nextElementSibling
+	/****************** Harmony Audio Player *********************/
+	function Harmony(h) {
+		var HP = this, _Played = {}, _eST = 2, pModes = ['', 'RT', 'PL', 'RL'], MA = {
+			_pause: function() {
+				if ('audio' in _Played) {
+					_Played.audio.pause();
+					_Played.track.frontend.button.id = HP['PlayButton'].id = 'ma-play';
 				}
-				return nxtfp ? nxtfp.click() : null;
-			}
-			function _AVPlayer() {
-				HM.Played = file ? new AV.Player.fromFile(file) : new AV.Player.fromURL(AS);
-				if (!frontend.id) {
-					HM.Played.asset.get('metadata', function(md) {
-						AVMetadata(frontend, md)
-					});
-				}
-				HM.Played.on('end', _nextTrack)
-				HM.Played.on('error', _stop)
-				_play()
-			}
-		if (btn.id == 'ma-pause') {
-			_stop();
-		} else {
-			if (HM.Played != null)
-				_stop();
-			if (['flac', 'alac'].isThere(EXT)) {
-				_AVPlayer();
-			} else {
-				HM.Played = _z.setup(new Audio(AS), {}, {'ended': _nextTrack,
-					'loadedmetadata': function(e) {
-						var moz = typeof this.mozGetMetadata !== "undefined",
-							mozMdata = moz ? this.mozGetMetadata() : false;
-						if (!frontend.id && mozMdata && Object.keys(mozMdata).length > 0) {
-							MDPBlockParser(frontend, mozMdata)
-						} else if (!frontend.id) {
-							MAParser((file ? 'file' : 'url'), (file ? file : AS), function(metadata) {
-								if (btn.classList[1] === 'load-ttl') {
-									var ttl = _unc(metadata.artist) +' — '+ _unc(metadata.album) +' / '+ _unc(metadata.title) + ' ['+ metadata.tracknum +'/0]',
-										nttl = _z.route(btn, '.magic-info > span'), hash = btn.href.hashCode();
-									HM.LinksMap[hash]['Title'] = UrlCache[hash]['Title'] = nttl.textContent = ttl
-									btn.classList.remove('load-ttl')
-									_z.sessionS.set('LinksCache', JSON.stringify(UrlCache));
-								}
-								if ("picture" in metadata) {
-									getFileReaderData('dataurl', metadata.picture, function(dataImage) {
-										frontend.id = _cover(metadata.artist, metadata.album, dataImage)
-									})
-								}
-							});
-						}
-					},
-					'error': function(e) {
-						if (EXT === 'm4a') {
-							_AVPlayer();
-						} else
-							_stop();
+				_z.each('#ma-pause', function(a) { a.id = 'ma-play' });
+			},
+			_play: function(track, ifront) {
+				if (!ifront)
+					ifront = {cover:{},button:{}};
+				this._pause();
+				if (track !== _Played.track) {
+					_infoUpdate(track.frontend.id, track.album, track.artist, !!track.previousElementSibling, !!track.nextElementSibling);
+					_Played = {
+						audio: _z.setup(_HTML5Audio, {'src': track.url}),
+						track: _z.setup(track, {'id': 'now_playing'})
 					}
-				});
-				_play()
+					if (!track.dataLoad) {
+						MAParser(track, ifront);
+					}
+				}
+				HP['PlayButton'].id = track.frontend.button.id = ifront.button.id = 'ma-pause';
+				_Played.audio.play();
+			}
+		},
+		_HTML5Audio = _z.setup('audio', {}, {
+			'loadedmetadata': _durationLoad, 'ended': _switchTrack, 
+			'timeupdate'    : _timeUpdate  , 'error': function(e, _T_) {
+				_T_ = !!_Played.track.file ? 'File' : 'URL';
+				_Played.audio = new AV.Player['from'+ _T_](_Played.track[_T_.toLowerCase()]);
+				_Played.audio.on('end'     , _switchTrack);
+				_Played.audio.on('duration', _durationLoad);
+				_Played.audio.on('progress', _timeUpdate);
+				_Played.audio.on('error'   , MA._pause);
+				_Played.audio.play();
+			}
+		});
+		this.pause = MA._pause;
+		this.play = function(button, cover) {
+			var Id = button.getAttribute('track-id');
+			if (Id in MA) {
+				MA._play(MA[Id], {button: button, cover: cover});
 			}
 		}
-		return _z.fall(e);
-	}
-	function _cover(artist, album, dataImage) {
-		var aid, baid, aa, ALB = getKeyByValue(HM.AlbumArts, dataImage);
-		if (ALB)
-			dataImage = '$>'+ ALB;
-		if (!dataImage)
-			aid = artist;
-		else
-			aid = _unc(artist) +' — '+ _unc(album);
-		aid = aid.hashCode().toString()
-		if (HM.AlbumArts[aid]) {
-			aa = HM.AlbumArts[aid]
-			if (aa.slice(0, 2) === '$>')
-				aid = aa.slice(2, aa.length)
-			dataImage = HM.AlbumArts[aid];
-		} else {
-			HM.AlbumArts[aid] = dataImage;
-			if (ALB)
-				aid = ALB;
+		this.addTrack = function(mdObj) { try {
+			var musicTrack = _z.setup('li', {'class': 'tracklist-item', 'html': '<a href="'+ mdObj.url +
+				'" class="tracktitle hp-info" style="max-width: 255px;"></a><span class="tracktime">- -:- -</span>'}),
+				mTid = mdObj.url.hashCode() +'@'+ makeRandId(3);
+			Object.defineProperty(musicTrack, 'duration', {
+				get: function()    { return this.lastElementChild.textContent },
+				set: function(txt) {        this.lastElementChild.textContent = txt }
+			});
+			Object.defineProperty(musicTrack, 'title', {
+				get: function()    { return this.firstElementChild.textContent },
+				set: function(txt) {
+					this.firstElementChild.textContent = txt;
+					if (txt.length > 37)
+						this.firstElementChild.setAttribute('title', txt) }
+			});
+			Object.defineProperty(musicTrack, 'artist', {
+				get: function()    { return this['__artist'] },
+				set: function(txt) {
+					this['__artist'] = txt;
+					if (this === _Played.track)
+						HP['TrackArtist'].textContent = txt }
+			});
+			Object.defineProperty(musicTrack, 'album', {
+				get: function()    { return this['__album'] },
+				set: function(txt) {
+					this['__album'] = txt;
+					if (this === _Played.track)
+						HP['TrackAlbum'].textContent = txt }
+			});
+			mdObj.frontend.button.setAttribute('track-id', mTid);
+			MA[mTid] = musicTrack;
+			for (var key in mdObj) {
+				musicTrack[key] = mdObj[key]
+			}
+			HP['TrackList'].appendChild(musicTrack);
+			}catch(err){console.error(err)}
 		}
-		if (!document.getElementById('cover_'+ aid)) {
-			document.body.appendChild(_z.setup('style', { 'id': 'cover_'+ aid,
-				'text': '#album_'+ aid +'{background-image:url('+ dataImage +');}'
-			}, null))
-		}
-		return 'album_'+ aid;
-	}
-	function AVMetadata(MAF, metadata) {
-		if ("coverArt" in metadata) {
-			var image = metadata.coverArt, itype = _bitonum([image.data[0], image.data[1], image.data[2], image.data[3]], true),
-				dataImage = 'data:image/'+ (itype == "0xffd8ffe0" ? 'jpeg' : 'png') +';base64,'+ _b64Str(image.data);
-			MAF.id = _cover(metadata.artist, metadata.album, dataImage)
-		}
-	}
-	function MAParser(meth, Source, callback, errback) {
-		if (typeof errback !== 'object') {
-			errback = function(e) { console.warn(e) }
-		}
-		switch (meth.toLowerCase()) {
-			case 'file':
-				getFileReaderData('ArrayBuffer', Source, function(buffer) {
-					parse_audio_metadata(new Blob([buffer]), callback, errback);
-				});
-				break;
-			case 'url':
-				getUrlData('Blob', Source, function(blob) {
-					parse_audio_metadata(blob, callback, errback);
-				});
-		}
-	}
-	function MDPBlockParser(MAF, metadata) {
-		if ('METADATA_BLOCK_PICTURE' in metadata) {
-			var bpic = metadata['METADATA_BLOCK_PICTURE'], BlobView = new BlobViewer(),
-				blob = new Blob([Base64Binary.decodeArrayBuffer(bpic)]);
-			BlobView.get(blob, 0, blob.size, function (page, error) {
-				var ptype, mimeL, mime, descL, desc, width, height, color, icolor, imageL, image, dataImage;
-				if (error)
-					return errorCallback(error);
-				// PictureType = { 0: Other, 1: 32x32 pixels 'file icon' (PNG only), 2: Other file icon, 3: Cover (front), 4: Cover (back), 5: Leaflet page,
-				// 6: Media (e.g. label side of CD), 7: Lead artist/lead performer/soloist, 8: Artist/performer, 9: Conductor, 10: Band/Orchestra, 
-				ptype  = page.getUint8(3) // 11: Composer, 12: Lyricist/text writer, 13: Recording Location, 14: During recording, 15: During performance,
-				// 16: Movie/video screen capture, 17: A bright coloured fish, 18: Illustration, 19: Band/artist logotype, 20: Publisher/Studio logotype }
-				mimeL  = page.getUint8(4 + 3)      // MIME Type section size - [image/png 0x09, image/jpeg 0x12]
-				         page.advance(5 + 3)
-				mime   = page.readASCIIText(mimeL) // MIME Type section
-				descL  = page.getUint8(5 + 3 + mimeL + 3) // Description section size
-				         page.advance(4)
-				desc   = page.readASCIIText(descL)        // Description section (it's somthing like comment)
-				width  = page.getUnsignedByteArray(7 + 3 + mimeL + 3 + descL, 3)                  // image size width (hex)
-				height = page.getUnsignedByteArray(8 + 3 + mimeL + 3 + descL + 3, 3)              // image size height (hex)
-				color  = page.getUnsignedByteArray(9 + 3 + mimeL + 3 + descL + 3 + 3, 3)          // image color depth [8, 16, 24, 32] (hex)
-				icolor = page.getUnsignedByteArray(10 + 3 + mimeL + 3 + descL + 3 + 3 + 3, 3)     // maybe color profile, i dont know
-				imageL = page.getUnsignedByteArray(11 + 3 + mimeL + 3 + descL + 3 + 3 + 3 + 3, 3) // image section size (hex)
-				image  = page.getUnsignedByteArray(11 + 3 + mimeL + 3 + descL + 3 + 3 + 3 + 3 + 3, _bitonum(imageL)) // image section
-				if (image.length + image.length < page.viewLength) { // in some files image section length is wrong
-					dataImage = bpic.match(/\/9j\/.+/g)[0];
-				} else {
-					dataImage = _b64Str(image);
+		this['Player'] = _z.setup('table', {'id': 'magic-audio-player', 'html': '<tbody class="magic-audio-min artwork line-sect"><tr class="hp-play-btn line-sect" id="ma-play"></tr></tbody><tbody class="hp-inf-ctrl line-sect"><tr style="height: 10px;"><th><div class="album hp-info">。。。</div></th></tr><tr style="height: 10px;"><td><div class="artist hp-info">. . .</div></td></tr><tr style="height: 8px;"><td style="font-size: 10px;"><div class="title hp-info"></div></td></tr><tr style="height: 24px;"><td><div class="hp-controls"></div><div style="transform: rotate(180deg); visibility: hidden;" class="forvardarrow hp-controls" id="hp-previous"></div><div style="visibility: hidden;" class="forvardarrow hp-controls" id="hp-next"></div><div class="hp-controls"></div><div class="playmode hp-controls">PL</div></td></tr><tr style="height: 10px;"><td style="line-height: 10px;"><label class="duration line-sect"><div class="thumb line-sect" style="left: 0%;" id="hp_progbar"></div></label><label id="timeoffset">- -:- -</label></td></tr></tbody><tbody><tr><td><div class="tracklist-scrollbox"><ol class="o-track-list"></ol></div><div id="hp_dropbox_layer" class="hidout"><div style="margin: 40px 30px;">Support media files:\n'+ Files.audio.join(' ').toUpperCase() +'</div></div></td></tr></tbody>'}, {'click': function(e){ try {
+			switch (e.target.classList[0]) {
+				case 'tracklist-item': MA._play(e.target); break;
+				case 'tracktitle': MA._play(e.target.parentNode); break;
+				case 'hp-play-btn':
+					MA['_'+ e.target.id.split('-')[1]](_Played.track || HP['TrackList'].firstElementChild);
+					break;
+				case 'forvardarrow':
+					MA._play(_Played.track[e.target.id.split('-')[1] +'ElementSibling']);
+					break;
+				case 'playmode':
+					_eST++;
+					if (_eST > 3)
+						_eST = 0;
+					e.target.textContent = pModes[_eST]
+					break;
+				case 'duration':
+					if (_Played.audio) {
+						var stmp = e.target.getBoundingClientRect(),
+							recm = e.pageX - Math.floor(stmp.x),
+							tset = (_Played.audio.duration / 100) * (recm * 100 / stmp.width);
+						_Played.audio.currentTime = tset;
+						_timeUpdate.bind(_Played.audio)();
+					}
+			}
+			} catch(err) {console.error(err)} finally {
+			_z.fall(e);}
+		}, 'dblclick': function(e) {
+			var $target = e.target;
+			switch ($target.classList[0]) {
+				case 'magic-audio-min':
+					break;
+				case 'tracktitle':
+					$target = e.target.parentNode;
+				case 'tracklist-item':
+					$target.frontend.scrollIntoView({block: 'start', behavior: 'smooth'});
+			}
+		}, 'dragover': function(e) {
+			_show(HP['DropLayer']);
+			_z.fall(e);
+		}, 'dragleave': function(e) {
+			_hide(HP['DropLayer']);
+		}, 'drop': function(e) {try {
+			_hide(HP['DropLayer']);
+			for (var i = 0, files = e.dataTransfer.files; i < files.length; i++) {
+				HP.addTrack({
+					frontend: {button:_z.setup('a')},
+					title: files[i].name,
+					file: files[i],
+					url: _blobURL(files[i])
+				})
+			}
+			} catch(err) {
+				console.error(err)
+			} finally{
+				_z.fall(e);
+			}
+		}});
+		this['DropLayer'] = this['Player'].querySelector('#hp_dropbox_layer');
+		this['TrackList'] = this['Player'].querySelector('.o-track-list');
+		this['PrevButton'] = this['Player'].querySelector('#hp-previous');
+		this['NextButton'] = this['Player'].querySelector('#hp-next');
+		this['PlayButton'] = this['Player'].querySelector('.hp-play-btn');
+		this['TrackAlbum'] = this['Player'].querySelector('.album');
+		this['TrackArtist'] = this['Player'].querySelector('.artist');
+		this['TimeOffset'] = this['Player'].querySelector('#timeoffset');
+		this['Cover'] = this['Player'].querySelector('.magic-audio-min');
+		this['Progbar'] = _z.setup(this['Player'].querySelector('#hp_progbar'), {}, {'mousedown': function(e) {
+			if (_Played.audio) {
+				HM.DragableObj = {
+					el: this,
+					layout: 'custom',
+					callback: function(mv) {
+						_Played.audio.pause();
+						var p = extractStringNumbers(this.el.style['left'])[0] + PropertyEvent(mv, 'MovementX') / 2,
+							n = p < 0 ? 0 : p > 90 ? 90 : p;
+						_Played.audio.currentTime = _Played.audio.duration / 90 * n;
+						this.el.style['left'] = n + '%';
+						_z.fall(mv);
+					}
 				}
-				MAF.id = _cover(metadata['ARTIST'], metadata['ALBUM'], 'data:'+ mime +';base64,'+ dataImage)
-			})
+			}
+		}, 'mouseup': function(e) {
+			if (HP['PlayButton'].id === 'ma-pause')
+				_Played.audio.play();
+		}});
+		function _timeUpdate() {
+			var timer_string = timerCalc(this.currentTime);
+			HP['TimeOffset'].textContent = timer_string;
+			HP['Progbar'].style['left'] = (this.currentTime / this.duration * 90).toFixed(4) +'%';
+		}
+		function _durationLoad() {
+			_Played.track.duration = timerCalc(this.duration, true);
+		}
+		function _infoUpdate(frontId, album, artist, prev, next) {
+			_z.setup(HP['Cover'], {'id': frontId});
+			HP['Progbar'].style['left'] = '0%';
+			HP['TimeOffset'].textContent = '- -:- -';
+			HP['TrackAlbum'].textContent = album || '。。。';
+			HP['TrackArtist'].textContent = artist || '. . .';
+			HP['PrevButton'].style['visibility'] = prev ? 'visible' : 'hidden';
+			HP['NextButton'].style['visibility'] = next ? 'visible' : 'hidden';
+			_z.setup(HP['TrackList'].querySelector('#now_playing'), {'id': undefined});
+		}
+		function _switchTrack() {
+			MA._pause();
+			switch (_eST) {
+				case 1: MA._play(_Played.track); break;
+				case 3: MA._play(_Played.track.nextElementSibling || HP['TrackList'].firstElementChild); break;
+				case 2:
+					if (_Played.track.nextElementSibling) {
+						MA._play(_Played.track.nextElementSibling);
+					} else {
+						_Played = {};
+						_infoUpdate();
+					}
+			}
+		}
+		function MAParser(Track, ifront) {
+			function callback(metadata) {
+				for (var key in metadata) {
+					switch (key) {
+						case 'picture':
+							getFileReaderData('dataurl', metadata['picture'], function(dataImage) {
+								var artId = AlbumArts.makeCover(dataImage,  metadata['artist'], metadata['album']);
+								if (Track.frontend === _Played.track.frontend)
+									HP['Cover'].id = artId;
+								Track.frontend.id = ifront.cover.id = artId;
+							});
+							break;
+						case 'artist':
+						case 'title':
+						case 'album':
+							Track[key] = _unc(metadata[key]);
+					}
+				}
+				Track.dataLoad = true;
+			}
+			switch (true) {
+				case ('file' in Track):
+					parse_audio_metadata(Track.file, callback);
+					break;
+				case ('url' in Track):
+					getUrlData('Blob', Track.url, function(blob) {
+						Track['file'] = blob;
+						parse_audio_metadata(blob, callback);
+					});
+			}
 		}
 	}
 	
@@ -2889,32 +2954,32 @@ function MagicExtension() {
 					case 'icm-fsw-iqdb': window.open('//iqdb.org/?url='+ this.contentSource, '_blank'); break;
 					case 'icm-fsw-derpibooru':
 						var input = document.getElementById('rs-url');
-						input.value = this.contentSource;
-						input.parentNode.submit();
+							input.value = this.contentSource;
+							input.parentNode.submit();
 				}
 			}
 		});
 		this['ContentWindow'] = _z.setup('div', {'class': 'content-window hidout', 'html': '<div id="shadow-box"></div><label id="close-content-window"></label>'}, {
-				'mousedown': nCR,
-				'click': function(e) {
-					switch (e.target.id) {
-						case 'shadow-box': _hide(MEt['ContentWindow']);
-							_show(MEt['ContentMarker'])
-							break;
-						case 'close-content-window': _hide(MEt['ContentWindow']);
-							e.target.nextElementSibling.remove();
-							HM.VActive = [];
-							break;
-					}
+			'mousedown': nCR,
+			'click': function(e) {
+				switch (e.target.id) {
+					case 'shadow-box': _hide(MEt['ContentWindow']);
+						_show(MEt['ContentMarker'])
+						break;
+					case 'close-content-window': _hide(MEt['ContentWindow']);
+						e.target.nextElementSibling.remove();
+						HM.VActive = [];
+						break;
 				}
-			});
+			}
+		});
 		this['DeleteOverlay'] = _z.setup('div', {'id': 'delete-overlay'});
 		this['StatusPanel'] = _z.setup('div', {'id': 'status-panel', 'style': 'z-index:'+ HM.zIndex}, {'mousedown': stepZup});
 		this['ContentMarker'] = _z.setup('label', {'id': 'show-content-window', 'class': 'hidout'}, {'mousedown': nCR, 'click': function(e) {
-					_show(MEt['ContentWindow']);
-					_hide(this)
-				}
-			});
+				_show(MEt['ContentWindow']);
+				_hide(this)
+			}
+		});
 		function nCR(e) {
 			stopCloseReact = true;
 		}
@@ -2946,8 +3011,8 @@ function MagicExtension() {
 			StyleSet = {
 				spoiler: _z.setup('style', {'text': '.spoiler, .spoiler * {color:inherit!important;}'}),
 				hinfostub: _z.setup('style', {'text': '.stub.hinfo:not(.stored), .autohidden + br, .autohidden + br + hr, .autohidden + .dummy-line + br, .autohidden + .dummy-line + br + hr{display:none;}'}),
-				true: function(style) { document.body.appendChild(StyleSet[style]) },
-				false: function(style) { StyleSet[style].remove() }
+				true: function(style) { document.body.appendChild(this[style]) },
+				false: function(style) { this[style].remove() }
 			}
 			StyleSet[HM.DiscloseTextSpoilers ? true : false]('spoiler');
 			StyleSet[HM.Keywords.conceal ? true : false]('hinfostub');
@@ -2979,6 +3044,16 @@ function MagicExtension() {
 			'</div><textarea id="txt-Title" class="keywords-input font-s" placeholder="Путеводитель*, *ожиданий от*, Унылый тред, Rozen Maiden::$1@[color:Orchid; font-family:Georgia]"></textarea></td></tr><tr><td class="o-sect"><label><input id="rhx-Words" type="checkbox" hidden'+
 			(HM.Keywords['Words'].apply ? ' checked' : '') +'><span class="checkarea"></span></label></td><td><div class="mhs-title font-s cyan-light">'+ SLC.hidby['rw'][lng] +
 			'</div><textarea id="txt-Words" class="keywords-input font-s" placeholder="*Сап добрач*, белое::черное, зеленый::$1@[color:green], &quot;::“$1”"></textarea></td></tr></tbody>'});
+		this['UserStyle'] = _z.setup('table', {'html': '<tbody><tr><td><textarea class="usercode-input" id="code_css_ta" placeholder="/* User Style Code area */"></textarea></td></tr></tbody>'}, {
+			'input': function(e) {
+				var $Item = e.target, $V = $Item.value;
+				clearTimeout(this.applyEffect);
+				this.applyEffect = setTimeout(function() {
+					_z.setup(document.getElementById('user-css'), {'text': $V});
+					_z.localS.set('UserStyle', JSON.stringify($V));
+				}, 3000);
+			}
+		});
 		this['Panel'] = _z.setup('div', {'id': 'magic-panel'}, {'change': function(e) {
 			var $Item = e.target, $Id = $Item.id.split('-'), $V = $Item.value;
 			switch($Id[0]) {
@@ -3044,13 +3119,13 @@ function MagicExtension() {
 							switch ($V) {
 								case '0': _hide(vsset);
 									if (cont) {
-										mEl['ContentWindow'].appendChild(_z.setup(cont, {'class': 'content-frame video', 'id': 'content_'+ cont.id.split('_')[1]}));
+										mEl['ContentWindow'].appendChild(_z.setup(cont, {'class': 'content-frame video', 'id': 'content_'+ _cid(cont.id)}));
 										_z.setup(Megia['video']['Frame'], {'width': '100%', 'height': '100%'});
 										_show(mEl['ContentMarker']);
 									}; break;
 								case '1': _show(vsset);
 									if (cont) {
-										_z.prepend(HM.VActive[0], _z.setup(cont, {'class': 'video-container', 'id': 'video_'+ cont.id.split('_')[1]}));
+										_z.prepend(HM.VActive[0], _z.setup(cont, {'class': 'video-container', 'id': 'video_'+ _cid(cont.id)}));
 										_z.setup(Megia['video']['Frame'], {'class': '', 'width': AspectSize.W[HM.AspectRatio], 'height': AspectSize.H[HM.AspectRatio]});
 										_hide(mEl['ContentMarker']);
 										_hide(mEl['ContentWindow']);
@@ -3072,9 +3147,10 @@ function MagicExtension() {
 				}
 			}
 		}, 'mousedown': function(e) {
-			stepZup.bind(this)()
+			stepZup.bind(this)(e);
 			MSs['ButtonsPanel'].style['z-index'] = HM.zIndex;
 		}});
+		MSs['UserStyle'].querySelector('#code_css_ta').value = HM.UserStyle;
 		el$('#gsx-maXrating').value = HM.maXrating;
 		el$('#gsx-PictureView').value = HM.PictureView;
 		for (var n = 0, Types = ['Nametrip', 'Title', 'Words']; n < Types.length; n++) {
@@ -3099,17 +3175,15 @@ function MagicExtension() {
 			if (HM.Keywords[Types[n]].apply)
 				wer(HM.Keywords[Types[n]].keys, Types[n])
 		}
+		this['MusicPlayer'] = Megia.audio['Player'];
 		this['ButtonsPanel'] = _z.setup('a', {
 				'id': 'magic-buttons-panel',
-				'html': '<span id="hide-set" class="mpanel-btn txt-btn"></span><span id="general-set" class="mpanel-btn txt-btn"></span>'
+				'html': '<span id="pb-MusicPlayer" class="mpanel-btn txt-btn"></span><span id="pb-UserStyle" class="mpanel-btn txt-btn"></span><span id="pb-HideBySets" class="mpanel-btn txt-btn"></span><span id="pb-GeneralSets" class="mpanel-btn txt-btn"></span>'
 			}, {'mousedown': stepZup, 
 				'click': function(e) {
-					var TABLE, INNER = MSs['Panel'].firstElementChild;
-					switch (e.target.id) {
-						case 'general-set': TABLE = MSs['GeneralSets']; break;
-						case    'hide-set': TABLE = MSs['HideBySets'];  break;
-					}
-					if (e.target.classList[2] === 'active') {
+					var TABLE = MSs[e.target.id.split('-')[1]],
+						INNER = MSs['Panel'].firstElementChild;
+					if (e.target.classList.contains('active')) {
 						MSs['Panel'].remove()
 					} else {
 						if (!INNER) {
@@ -3194,7 +3268,7 @@ function MagicExtension() {
 				for (n = 0; n < nodes.snapshotLength; n++) {
 					var node = nodes.snapshotItem(n), x = 2,
 						sinf = ' class="sinf"', tag = 'td',
-						Id = _cid(node.id);
+						Id = extractStringNumbers(node.id)[0];
 					if (node.classList.contains('oppost')) {
 						node = node.parentNode; x = 1;
 						tag = 'label';
@@ -3229,8 +3303,7 @@ function MagicExtension() {
 						break;
 					case 'footer': try {
 						_z.append(document.head, [
-							_z.setup("script", {"src": "/src/js/1501/alac_0.1.0.js"}, null),
-							_z.setup("script", {"src": "/src/js/1501/flac_0.2.1.js"}, null)
+							_z.setup('style', {'id': 'user-css', 'text': HM.UserStyle})
 						]);
 						var locationThread = document.getElementById('thread_'+ HM.URL.thread),
 							hideinfodiv = document.getElementById('hideinfodiv'),
@@ -3238,22 +3311,7 @@ function MagicExtension() {
 							rules = document.getElementsByClassName('rules')[0],
 							posts = document.getElementsByClassName('post');
 						
-						_z.each(posts, function(post) {
-							var reflink = _z.setup(post.querySelector('.reflink > a[href*="/res/"]'), {'class': 'inj-refl', 'onclick': undefined}),
-								url = ParseUrl(reflink.href),
-								patchId = url.board +'_'+ url.thread +'_'+ url.pid,
-								delbox = post.getElementsByClassName('delete_checkbox')[0],
-								delico = delbox.parentNode,
-								pMenu = _z.setup('ul', {'class': 'dropdown line-sect', 'html': '<li class="dropdown-toggle"><label class="postermenu dropdown-label el-li"></label><ul class="dropdown-menu"><li class="edit-post dropdown-item el-li">Редактировать</li><li class="mod-report dropdown-item el-li">Пожаловаться</li><li class="hide-post dropdown-item el-li">Скрыть</li><li class="delete-post dropdown-item el-li">Удалить<span class="chek-to-del dropdown-input line-sect"></span></li></ul></li>'});
-							HM.LoadedPosts[patchId]              = _z.setup(post,   {'patch-id': patchId}, {'click': PDownListener, 'mouseover': Chanabira.MagicPostView});
-							HM.LoadedPosts[patchId].delete_input = _z.setup(delbox, {'checked': false   });
-							HM.LoadedPosts[patchId].formBinding  = function(el) { _z.after(this, el) }
-							mEl['DeleteOverlay'].appendChild(delbox);
-							_z.replace(delico, pMenu);
-							_z.setup(post.querySelector('.abbrev a[onclick^="GetFullText"]'), {'class': 'Get-Full-Text', 'onclick': undefined});
-							handleLinks(post, url);
-							handleElements(post);
-						}); 
+						_z.each(posts, handlePost); 
 						genReplyMap(posts);
 						if (hideinfodiv) {
 							_z.after(hideinfodiv, Nagato['OpenTopForm']);
@@ -3265,14 +3323,14 @@ function MagicExtension() {
 							_z.append(mEl['StatusPanel'], [HM.ThreadListener[HM.URL.thread]['PostsCount'], HM.ThreadListener[HM.URL.thread]['SpeedCount']])
 							HM.ThreadListener[HM.URL.thread].updateTimer();
 						} else if (!locationThread && HM.URL.thread) {
-							var TS = _z.setup('div', {'id': 'thread_'+ HM.URL.thread, 'class': 'thread'})
-							_z.replace('center', MagicThreadListener().getThread(TS))
+							HM.ThreadListener[HM.URL.thread] = new MagicThreadListener(_z.setup('div', {'id': 'thread_'+ HM.URL.thread, 'class': 'thread'}))
+							HM.ThreadListener[HM.URL.thread].getArchive(document.getElementsByTagName('center')[0]);
 						} else {
 							if (hideinfodiv)
 								_z.before(delForm.querySelector('.pages'), Nagato['OpenBottomForm']);
 							_z.each('.thread:not(.stub)', function(thread) {
 								if (!thread.querySelector('img[src="/images/sticky.png"]')) {
-									var CiD = _cid(thread.id)
+									var CiD = _cid(thread.id);
 									HM.ThreadListener[CiD] = new MagicThreadListener(thread)
 									_z.after(thread, HM.ThreadListener[CiD]['DummyLine']);
 									_z.setup(thread.querySelector('.abbrev a[onclick^="ExpandThread"]'), {'class': 'excat-button', 'id': 'thread-expand', 'onclick': undefined});
@@ -3287,7 +3345,7 @@ function MagicExtension() {
 							new MagicSettings()['ButtonsPanel']
 						]);
 					} catch(e) {
-						_z.dbg(e)
+						console.error(e)
 					}
 				}
 		}
@@ -3300,7 +3358,10 @@ function MagicExtension() {
 				markAsRead(this);
 			switch (e.target.classList[0]) {
 				case 'reply-link': Chanabira.MagicHighlight(e); break;
-				case 'ma-button': initMagicAudio(e); break;
+				case 'ma-button':
+					Megia.audio[e.target.id.split('-')[1]](e.target, e.target.parentNode.parentNode);
+					_z.fall(e);
+					break;
 				case 'cm-button': loadMediaContainer(e); break;
 				case 'delete-post': delPost(this); break;
 				case 'postermenu':
@@ -3370,7 +3431,7 @@ function MagicExtension() {
 					_z.fall(e);
 					break;
 				case 'excat-button':
-					var eXcaT = e.target.id.split('-')[1]
+					var eXcaT = e.target.id.split('-')[1];
 					HM.ThreadListener[Map[1]][eXcaT +'Thread'](e);
 					e.target.id = 'thread-'+ (eXcaT === 'expand' ? 'truncat' : 'expand');
 					_z.fall(e);
@@ -3458,7 +3519,7 @@ function MagicExtension() {
 			original: [],
 			scaled: {},
 			get: function(image, scaleMax, scaleMin) {
-				this.scaled = scaleSize(this.original, scaleMax, scaleMin);
+				this.scaled = scaleSize(this.original, (scaleMax || document.body.clientWidth - image.parentNode.parentNode.getBoundingClientRect().x - 25), scaleMin, !scaleMax);
 				image.style['width'] = this.scaled.width +'px';
 				image.style['height'] = this.scaled.height +'px';
 			}
@@ -3468,20 +3529,25 @@ function MagicExtension() {
 				'wheel': function(e) {
 					if (this.classList[1] === 'gallery-qview') {
 						var D = e.deltaY || e.deltaX,
-							T = _cid(this.style['top']),
-							L = _cid(this.style['left']),
+							Y = extractStringNumbers(this.style['top'] + this.style['left']),
 							R = Size.scaled.width > Size.scaled.height ? Size.scaled.width : Size.scaled.height;
-							Size.get(this, D < 0 ? R * 1.25 : R / 1.25);
-							this.style['left'] = parseInt(e.clientX - (D < 0 ? (e.clientX - L) * 1.25 : (e.clientX - L) / 1.25), 10) +'px';
-							this.style['top'] = parseInt(e.clientY - (D < 0 ? (e.clientY - T) * 1.25 : (e.clientY - T) / 1.25), 10) +'px';
-						return _z.fall(e);
+							Size.get(this, parseInt(D < 0 ? R * 1.25 : R / 1.25, 10));
+							this.style['left'] = parseInt(e.clientX - (D < 0 ? (e.clientX - Y[1]) * 1.25 : (e.clientX - Y[1]) / 1.25), 10) +'px';
+							this.style['top'] = parseInt(e.clientY - (D < 0 ? (e.clientY - Y[0]) * 1.25 : (e.clientY - Y[0]) / 1.25), 10) +'px';
+						_z.fall(e);
+					}
+				},
+				'dblclick': function(e) {
+					if (this.classList[1] === 'gallery-qview') {
+						MP['Picture'].appendChild(jHolder)
+						_z.fall(e);
 					}
 				},
 				'mousedown': function(e) {
 					switch (this.classList[1]) {
 						case 'gallery-qview':
 							var coords = getCoords(this);
-								stepZup.bind(this)()
+								stepZup.bind(this)(e);
 							HM.DragableObj = {
 								el: this,
 								shift: [e.pageX - coords.left, e.pageY - coords.top],
@@ -3489,18 +3555,12 @@ function MagicExtension() {
 							}
 							break;
 						case 'onpost-qview':
-							Size.changed = false;
-							if ((this.scrollHeight - e.offsetY) < (this.scrollHeight / 10) && (this.scrollWidth - e.offsetX) < (this.scrollWidth / 10) ) {
-								HM.DragableObj = {
-									el: this,
-									layout: 'custom',
-									callback: function(e) {
-										var sW = Number(Size.scaled.width), sH = Number(Size.scaled.height),
-											eX = PropertyEvent(e, 'MovementX'), eY = PropertyEvent(e, 'MovementY');
-										Size.get(MP['Picture'], sW > sH ? sW + eX : sH + eY);
-										Size.changed = true;
-									}
-								}
+							var scrH = this.scrollHeight,
+								scrW = this.scrollWidth;
+								Size.changed = false;
+							if (scrH - e.offsetY < (scrH > 30 ? scrH / 10 : scrH) && scrW - e.offsetX < (scrW > 30 ? scrW / 10 : scrW)) {
+								Size.get(this, (Size.scaled.width > 500 || Size.scaled.height > 500 ? 500 : -0), 400);
+								Size.changed = true;
 							}
 					}
 				},
@@ -3511,14 +3571,14 @@ function MagicExtension() {
 								this.remove();
 							}
 					}
-					return _z.fall(e)
+					_z.fall(e)
 				}
 			});
 		this.makePicture = function(thumb) {
-			var Id = thumb.id.split('_')[1],
+			var Id = thumb.id.split('_')[1], href = thumb.href || thumb.parentNode.href,
 				Pv = ['gallery', 'onpost', 'classic'][HM.PictureView];
 				Idx = MP['Gallery'].indexOf(thumb);
-				Size.original = thumb.getAttribute('image-size').split('×');
+				Size.original = extractStringNumbers(thumb.getAttribute('image-size'));
 				switch(Pv) {
 					case 'classic':
 						if (thumb.classList.contains('expanded')) {
@@ -3526,27 +3586,31 @@ function MagicExtension() {
 							thumb.style = '';
 						} else {
 							thumb.originalSrc = thumb.src;
-							thumb.src = thumb.parentNode.href;
-							Size.get(thumb, document.body.clientWidth - 100, 200);
+							thumb.src = (thumb.parentNode.href || thumb.href);
+							Size.get(thumb, -0, 200);
 						}
 						thumb.classList.toggle('expanded')
 						break;
 					default:
-						MP['Picture'].src = thumb.parentNode.href;
+						_z.setup(MP['Picture'], {'id': 'mpic_'+ Id, 'class': 'magic-picture '+ Pv +'-qview'})
+						MP['Picture'].src = href;
 						switch (Pv) {
 							case 'onpost':
 								Size.get(MP['Picture'], 500, 200);
-								MP['Picture'].style['background-image'] = 'url(\''+ thumb.parentNode.href +'\')';
+								MP['Picture'].style['background-image'] = 'url(\''+ href +'\')';
 								break;
 							case 'gallery':
 								HM.zIndex++;
 								Size.get(MP['Picture'], window.innerWidth > window.innerHeight ? window.innerHeight : window.innerWidth, 200);
-								MP['Picture'].style['left'] = (Size.scaled.width >= window.innerWidth ? '0' : (window.innerWidth - Size.scaled.width) / 2) +'px';
-								MP['Picture'].style['top'] = (Size.scaled.height >= window.innerHeight ? '0' : (window.innerHeight - Size.scaled.height) / 2) +'px';
-								MP['Picture'].style['background-image'] = 'url(\''+ thumb.parentNode.href +'\'), url(/src/svg/1511/alpha-cells.svg)';
+								MP['Picture'].style['left'] = (Size.scaled.width >= window.innerWidth ? 0 : (window.innerWidth - Size.scaled.width) / 2) +'px';
+								MP['Picture'].style['top'] = (Size.scaled.height >= window.innerHeight ? 0 : (window.innerHeight - Size.scaled.height) / 2) +'px';
+								MP['Picture'].style['background-image'] = 'url(\''+ href +'\'), url(/src/svg/1511/alpha-cells.svg)';
 								MP['Picture'].style['z-index'] = HM.zIndex;
 						}
-						_z.before(thumb.parentNode, _z.setup(MP['Picture'], {'id': 'mpic_'+ Id, 'class': 'magic-picture '+ Pv +'-qview'}));
+						if (thumb.parentNode.href) {
+							_z.before(thumb.parentNode, MP['Picture']);
+						} else
+							_z.route(thumb, jumpCont).appendChild(MP['Picture'])
 				}
 		}
 		this.openPicture = function(n) {
@@ -3558,6 +3622,23 @@ function MagicExtension() {
 					}));
 				}
 			}
+		}
+		function scaleSize(origS, sMax, sMin, md) {
+			var nW, nH, ratio = origS[1] / origS[0];
+			if (sMin && sMin > origS[0] && sMin > origS[1]) {
+				nW = ratio <= 1 ? sMin : sMin / ratio;
+				nH = ratio <= 1 ? sMin * ratio : sMin;
+			} else if (sMin && sMax > origS[0] && sMax > origS[1]) {
+				nW = origS[0];
+				nH = origS[1];
+			} else if (ratio <= 1 || md) {
+				nW = sMax;
+				nH = sMax * ratio;
+			} else {
+				nH = sMax;
+				nW = sMax / ratio;
+			}
+			return { width: nW, height: nH };
 		}
 	}
 	
@@ -3623,7 +3704,7 @@ function MagicExtension() {
 						markAsRead();
 					break;
 				case 9:
-					if (e.target.id === 'code_edit_ta') {
+					if (e.target.id.isThere('code_')) {
 						wmarkText(e.target, '\t', '\n\t');
 						_z.fall(e);
 					}
@@ -3701,7 +3782,7 @@ var MagicStyle = '.hidout,.hide.icon,.view_,.edit_,.search_iqdb,.search_google,#
 .content-frame,.scbc-container,.mhs-title,#magic-panel,.active > #timer-update-sets,.yukiFile,.dropdown-menu,.message code,#status-panel{background-color:#fefefe;}.global #yuki-newThread-create,form.popup #yuki-targetInfo,.report #yuki-targetInfo,form.reply #conn-push,form.popup #conn-push{display:inline!important;}\
 .yuki_clickable,.txt-btn,.wmark-button,.button,.el-li,.icon{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}\
 .replylinks,.button{line-height:2em;font-size:75%;clear:both;}#post-count,.txt-btn{color:#999;}.mapped,.mapped:hover{cursor:default;color:#666!important;}.hidup{top:-9999px!important;}\
-.footer:after,.stored:not(.stub):after,.new .reply:not(.stub):after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.cm-button{text-decoration:none;}.s-sect{text-align:left;padding-left:2em;color:#777;}\
+.footer:after,.stored:not(.stub):after,.new .reply:not(.stub):after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.cm-button,.btn-link{text-decoration:none;}.s-sect{text-align:left;padding-left:2em;color:#777;}\
 #yuki-captcha,#yuki-pass{width:295px;}#yuki-captcha-image{vertical-align:middle;margin:2px;}#yuki-dropBox{width:7em;height:18em;border:3px dashed rgba(99,99,99,.3);padding:2px;}\
 #convert-strike,.doubledash,.global #yuki-close-form,.dropdown-menu,.magic-picture.gallery-qview + a{visibility:hidden;}.sagearrow{background:url(/src/svg/1409/Sage.svg)no-repeat center bottom;position:relative;}.paperclip{background:url(/src/png/1411/attachpopup.png)no-repeat center;}\
 #yuki-errorMsg{text-align:center;color:#FFF;background-color:#E04000;}.wmark-button{color:#fefefe;text-shadow:0 1px 0 rgba(0,0,0,.4);}a:hover > .wmark-button{color:inherit;}.spoiler > .wmark-button{vertical-align:inherit;color:inherit;text-shadow:none;}\
@@ -3709,15 +3790,15 @@ var MagicStyle = '.hidout,.hide.icon,.view_,.edit_,.search_iqdb,.search_google,#
 .yukiFile,.yukiFileSets{font-size:66%;}.yukiFile{text-align:center;margin:5px;}.yukiFile.default{padding:2px;width:210px;-webkit-border-radius:5px;}.movie select{position:relative;top:118px;}\
 #yuki-files-placeholder > *{vertical-align:top;}.yf_preview{max-width:150px;margin:5px 0;}.yf_info{padding:0 2px;word-wrap:break-word;}\
 #yuki-replyForm{text-align:left;padding:4px 8px;}.selected:before{content:"✓ ";color:green;}.chek-to-del.selected:before{margin:5px;position:relative;bottom:2px;}.cpop{margin-left:.4em;}.checkarea.super{font-size:20px!important;}\
-#yuki-dropBox tr,.magic-picture{display:block;}.droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em;}\
+#yuki-dropBox tr{display:block;}.droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em;}\
 #rf-cb-ty{background-image:url(/src/svg/1411/closepopup.svg);}#rf-cb-all{background-image:url(/src/svg/1411/closeallpopups.svg);}.dpop{float:right;background-image:url(/src/svg/1505/cmove.svg);cursor:move;}.sagearrow{cursor:default;}\
 .new .reply{background-color:rgba(212,115,94,.1);}\
 .cpop{width:14px;height:14px;}.dpop,.sagearrow,.paperclip,.view-eye,.chek-to-del{width:20px;height:20px;}.reply-button{margin-left:3px;width:23px;height:14px;background:url(/src/svg/1505/reply-arrow.svg)no-repeat center top;}\
-#magic-buttons-panel,#magic-panel,#status-panel,#yuki-replyForm.popup,#yuki-replyForm.report,.gallery-qview{position:fixed;}#magic-buttons-panel{right:1em;bottom:1em;}.mpanel-btn{padding:0 9px;width:28px;height:28px;opacity:.2;filter:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'grayscale\'><feColorMatrix type=\'matrix\' values=\'.3 .3 .3 0 0 .3 .3 .3 0 0 .3 .3 .3 0 0 0 0 0 1 0\'/></filter></svg>#grayscale");-webkit-filter:grayscale(100%);}\
+#magic-buttons-panel,#magic-panel,#status-panel,#yuki-replyForm.popup,#yuki-replyForm.report,.gallery-qview{position:fixed;}#magic-buttons-panel{right:1em;bottom:1em;}\
 .ta-inact::-moz-selection{background:rgba(99,99,99,.3);}.ta-inact::selection{background:rgba(99,99,99,.3);}#int-upd{bottom:2px;position:relative;}#allowed-posts a{text-decoration:none;text-shadow:none;font-weight:normal;font-size:14px;}\
 .mpanel-btn:hover,.mpanel-btn.active{opacity:1;filter:none;-webkit-filter:grayscale(0%);}#magic-panel tr{height:3em;}#vsize-textbox{color:#bbb;font-family:Trebuchet;}\
 #magic-panel{right:5px;bottom:5px;max-width:450px;height:350px;border-radius:8px;padding:9px;padding-bottom:3em;}.sp-r{text-align:right;font-size:18px;}\
-.postdeleted,.t-sec{opacity:.6;}.inactive{opacity:.4;}img[src="#transparent"]{opacity:0;}.wmark-button,.reply-button,.sagearrow{vertical-align:middle;}.content-window{position:fixed;left:0;top:0;z-index:2999}\
+.postdeleted,.t-sec{opacity:.6;}.inactive{opacity:.4;}img[src="#transparent"]{opacity:0;}.wmark-button,.reply-button,.sagearrow,.duration{vertical-align:middle;}.content-window{position:fixed;left:0;top:0;z-index:2999}\
 .submit-button.process{font-size:13px;font-style:italic;color:#777;}@keyframes process{0%{width:0;}100%{width:1em;}}@-webkit-keyframes process{0%{width:0;}100%{width:1em;}}\
 .submit-button.process span{display:inline!important;}.process:after{content:"....";display:inline-block;overflow:hidden;animation:process 3s linear .1s infinite;-webkit-animation:process 3s linear .1s infinite;}\
 .magic-info,.sp-r{width:190px;background-color:rgba(255,255,255,.8);padding:5px;opacity:.6}.magic-info:hover,.sp-r:hover,.popup,.dropdown-menu{z-index:1;opacity:1;}.magic-info,.magic-info + br,.sp-r,.content-frame{position:absolute;}\
@@ -3727,103 +3808,178 @@ var MagicStyle = '.hidout,.hide.icon,.view_,.edit_,.search_iqdb,.search_google,#
 #close-content-window,#show-content-window{transition:.5s ease;opacity:.6;width:31px;height:31px;background-image:url(/src/svg/1505/close-circle.svg);cursor:pointer;position:absolute;top:20px;right:20px;z-index:3000;}\
 .docs-container,.content-frame.docs,.docs-container > iframe,.message code pre{padding:6px 8px;overflow:auto;resize:both;background-color:#fefefe;}.message code{border-radius:3px;padding:0 3px;}code,.chek-to-del{border:1px #CCC dashed;}.chek-to-del{float:right;cursor:default;}.content-frame.pdf{top:1%;left:17%;right:20%;bottom:1%;}\
 #show-content-window{right:52%;position:fixed;background-image:url(/src/svg/1505/show-circle.svg);border-radius:100%;}#close-content-window:hover,#show-content-window:hover{opacity:1;}\
-#ma-play{background:url(/src/svg/1505/ma-play.svg)no-repeat scroll center;}#ma-pause{background:url(/src/svg/1505/ma-pause.svg)no-repeat scroll center;}.magic-audio{width:200px;height:200px;}input:focus,select:focus,textarea:focus,button:focus{outline:none;}\
+#ma-play,#yf-play{background:url(/src/svg/1505/ma-play.svg)no-repeat scroll center;}#ma-pause,#yf-pause{background:url(/src/svg/1505/ma-pause.svg)no-repeat scroll center;}input:focus,select:focus,textarea:focus,button:focus{outline:none;}\
 .ma-controls,.ma-controls a{display:block;width:50px;height:50px;}.ma-controls{position:relative;top:37%;left:37%;border:2px solid #ddd;border-radius:100%;background-color:#333;opacity:.8;}\
 .font-s{font-size:12px;}.keywords-input{width:300px;height:55px;resize:none;}.o-sect{padding:0 1em;}.cyan-light{color:rgba(90,152,155,.8);}\
-#hide-set{background:url(/src/svg/1505/hide-menu-btn.svg)no-repeat scroll center;}#general-set{background:url(/src/png/1409/list4.png)no-repeat scroll center center / 80%;}.dummy-line{position:absolute;text-align:center;width:100%;}\
+.dummy-line{position:absolute;text-align:center;width:100%;}\
 .dropdown,.dropdown-menu{padding-left:0;list-style:outside none none;}.active > * {visibility:visible;}.active > .dropdown-label{border-radius:4px 4px 0 0;}.dropdown-label{padding:2px 4px;font-variant:small-caps;font-size:14px;}.dropdown-label + .dropdown-menu{border-top-left-radius:0;border-top-right-radius:0;}.dropdown-menu{border-radius:4px;position:absolute;color:#777;min-width:150px;font-size:14px;line-height:1.8;}\
-.dropdown-item,.dropdown-br{padding:0 10px;}.dropdown-item:hover{background-color:rgba(0,0,0,.1);}.dropdown-br{font-size:12px;line-height:16px;border:1px solid #e1e1e1;}#timer-update-sets:before{content:"⟨ ";}#timer-update-sets:after{content:" ⟩";}#int-val{width:50px;margin:0 4px;}.red-light{color:red;text-shadow:0 0 4px red;}.cpanel > .reply-button{top:-1px;position:relative;}\
+.dropdown-item,.dropdown-br{padding:0 10px;}.dropdown-item:hover,.tracklist-item:hover{background-color:rgba(0,0,0,.1);}.dropdown-br{font-size:12px;line-height:16px;border:1px solid #e1e1e1;}#timer-update-sets:before{content:"⟨ ";}#timer-update-sets:after{content:" ⟩";}#int-val{width:50px;margin:0 4px;}.red-light{color:red;text-shadow:0 0 4px red;}.cpanel > .reply-button{top:-1px;position:relative;}\
 .blink{-webkit-animation-name:blinker;-webkit-animation-duration:1s;-webkit-animation-timing-function:linear;-webkit-animation-iteration-count:infinite;animation-name:blinker;animation-duration:1s;animation-timing-function:linear;animation-iteration-count:infinite;}\
-.oppost.highlighted,.highlighted .reply{border-style:dashed!important;border-width:2px!important;border-color:#F50!important;}.postcontent,.rl-inf,.f-left{float:left;}br + .postbody{clear:both;}.sinf{color:#666;font-size:.8em;}.onpost-qview:hover:before{content:"";display:inline-block;width:100%;height:100%;background:url(/src/svg/1511/fedge.svg) no-repeat bottom right / 10%;}.gallery-qview{background-color:rgba(255,255,255,.6);}.magic-picture{cursor:pointer;background-repeat:no-repeat,repeat;background-position:center,top left;background-size:contain,auto;}.celrly:not([hidden]) + .celrly:before, .celrly + * + .celrly:before{content:",\t";color:#666!important;cursor:default;}.celrly:not([hidden]) ~ .rl-inf{display:inline!important;}.report{background-color:#FFE2D4;}\
+.oppost.highlighted,.highlighted .reply{border-style:dashed!important;border-width:2px!important;border-color:#F50!important;}.postcontent,.postcontent > picture,.rl-inf,.f-left{float:left;}br + .postbody{clear:both;}.sinf{color:#666;font-size:.8em;}.onpost-qview:hover:before{content:"";display:inline-block;width:100%;height:100%;background:url(/src/svg/1511/fedge.svg) no-repeat bottom right / 10%;}.gallery-qview{background-color:rgba(255,255,255,.6);}.magic-picture{cursor:pointer;background-repeat:no-repeat,repeat;background-position:center,top left;background-size:contain,auto;display:inline-block;}.celrly:not([hidden]) + .celrly:before, .celrly + * + .celrly:before{content:",\t";color:#666!important;cursor:default;}.celrly:not([hidden]) ~ .rl-inf{display:inline!important;}.report{background-color:#FFE2D4;}\
 .view-eye{background:url(/src/png/1506/p-stub-hide.png)no-repeat scroll center;}.i-block{display:inline-block;}.postermenu{display:block;background:url(/src/svg/1508/new-dropdown-arrow.svg)no-repeat scroll bottom center / 18px;padding:9px;}.active > .postermenu{transform:rotate(180deg);-webkit-transform:rotate(180deg);box-shadow:none!important;background-position:top center;}\
 .turn-on{position:absolute;bottom:50px;}.i-fav:before{content:"";margin-right:5px;padding:8px;background:transparent no-repeat scroll center center / 16px;}#icm-fsw-google:before{background-image:url(/src/svg/1508/google_ico_monochrome.svg);}#icm-create-macro:before{background-image:url(/src/svg/1508/macroeditor_ico_monochrome.svg);}#icm-fsw-iqdb:before{background-image:url(/src/svg/1508/new-cube-icon-monochrome.svg);}#icm-fsw-saucenao:before{background-image:url(/src/svg/1508/soucenao_ico_monochrome.svg);}#icm-fsw-derpibooru:before{background-image:url(/src/svg/1508/trixie_cutie_mark_by_rildraw-d3khewr.svg);}\
 #status-panel{bottom:0;border-radius:0 5px;padding:3px 6px;}.break-lines + *:before{content:"||";font-size:12px;padding:0 2px;}.parensis:before{content:"("}.parensis:after{content:")"}.break-midot + *:before{content:"・";}\
+.usercode-input{width:350px;height:335px;resize:none;white-space:nowrap;}\
+.mpanel-btn{padding:0 9px;width:28px;height:28px;opacity:.2;filter:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'grayscale\'><feColorMatrix type=\'matrix\' values=\'.3 .3 .3 0 0 .3 .3 .3 0 0 .3 .3 .3 0 0 0 0 0 1 0\'/></filter></svg>#grayscale");-webkit-filter:grayscale(100%);background-size:contain;background-repeat:no-repeat;background-position:center;}\
+#pb-HideBySets{background-image:url(/src/svg/1505/hide-menu-btn.svg);}#pb-GeneralSets{background-image:url(/src/png/1409/list4.png);}\
+#pb-UserStyle{background-image:url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4bWxuczpza2V0Y2g9Imh0dHA6Ly93d3cuYm9oZW1pYW5jb2RpbmcuY29tL3NrZXRjaC9ucyIgd2lkdGg9IjEwMnB4IiBoZWlnaHQ9IjUycHgiIHZpZXdCb3g9IjAgMCAxMDIgNTIiIHZlcnNpb249IjEuMSI+PGRlZnM+PGZpbHRlciB4PSItNTAlIiB5PSItNTAlIiB3aWR0aD0iMjAwJSIgaGVpZ2h0PSIyMDAlIiBmaWx0ZXJVbml0cz0ib2JqZWN0Qm91bmRpbmdCb3giIGlkPSJmaWx0ZXItMSI+PGZlT2Zmc2V0IGR4PSIwIiBkeT0iMSIgaW49IlNvdXJjZUFscGhhIiByZXN1bHQ9InNoYWRvd09mZnNldElubmVyMSIvPjxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjEiIGluPSJzaGFkb3dPZmZzZXRJbm5lcjEiIHJlc3VsdD0ic2hhZG93Qmx1cklubmVyMSIvPjxmZUNvbXBvc2l0ZSBpbj0ic2hhZG93Qmx1cklubmVyMSIgaW4yPSJTb3VyY2VBbHBoYSIgb3BlcmF0b3I9ImFyaXRobWV0aWMiIGsyPSItMSIgazM9IjEiIHJlc3VsdD0ic2hhZG93SW5uZXJJbm5lcjEiLz48ZmVDb2xvck1hdHJpeCB2YWx1ZXM9IjAgMCAwIDAgMCAgIDAgMCAwIDAgMCAgIDAgMCAwIDAgMCAgMCAwIDAgMSAwIiBpbj0ic2hhZG93SW5uZXJJbm5lcjEiIHR5cGU9Im1hdHJpeCIgcmVzdWx0PSJzaGFkb3dNYXRyaXhJbm5lcjEiLz48ZmVNZXJnZT48ZmVNZXJnZU5vZGUgaW49IlNvdXJjZUdyYXBoaWMiLz48ZmVNZXJnZU5vZGUgaW49InNoYWRvd01hdHJpeElubmVyMSIvPjwvZmVNZXJnZT48L2ZpbHRlcj48L2RlZnM+PGcgaWQ9IlBhZ2UtMSIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCIgc2tldGNoOnR5cGU9Ik1TUGFnZSI+PHBhdGggZD0iTTMxLDQ5LjQzNzUgQzI3LjM3NDk4MTksNTAuNzkxNjczNCAyNC4xMjUwMTQ0LDUxLjQ2ODc1IDIxLjI1LDUxLjQ2ODc1IEMxNy40NTgzMTQ0LDUxLjQ2ODc1IDEzLjk2ODc2NTksNTAuNDUzMTM1MiAxMC43ODEyNSw0OC40MjE4NzUgQzcuNTkzNzM0MDYsNDYuMzkwNjE0OCA1LjExNDU5MjE5LDQzLjM2OTgxMTcgMy4zNDM3NSwzOS4zNTkzNzUgQzEuNTcyOTA3ODEsMzUuMzQ4OTM4MyAwLjY4NzUsMzAuODEyNTI1MyAwLjY4NzUsMjUuNzUgQzAuNjg3NSwyMC43MjkxNDE2IDEuNTYyNDkxMjUsMTYuMjE4NzcgMy4zMTI1LDEyLjIxODc1IEM1LjA2MjUwODc1LDguMjE4NzMgNy41MzEyMzQwNiw1LjE4NzUxMDMxIDEwLjcxODc1LDMuMTI1IEMxMy45MDYyNjU5LDEuMDYyNDg5NjkgMTcuNDE2NjQ3NSwwLjAzMTI1IDIxLjI1LDAuMDMxMjUgQzI0LjEyNTAxNDQsMC4wMzEyNSAyNy4zNzQ5ODE5LDAuNzA4MzI2NTYyIDMxLDIuMDYyNSBMMzEsOC44MTI1IEMyNy42NDU4MTY2LDYuODc0OTkwMzEgMjQuMzEyNTE2Niw1LjkwNjI1IDIxLDUuOTA2MjUgQzE4LjQ5OTk4NzUsNS45MDYyNSAxNi4yMTM1NTIsNi43NjA0MDgxMiAxNC4xNDA2MjUsOC40Njg3NSBDMTIuMDY3Njk4LDEwLjE3NzA5MTkgMTAuMzk1ODM5NywxMi42ODIyNzUyIDkuMTI1LDE1Ljk4NDM3NSBDNy44NTQxNjAzMSwxOS4yODY0NzQ4IDcuMjE4NzUsMjEuODc0OTgwNiA3LjIxODc1LDI1Ljc1IEM3LjIxODc1LDI5LjY4NzUxOTcgNy44NzQ5OTM0NCwzMi4zMjI5IDkuMTg3NSwzNS42NTYyNSBDMTAuNTAwMDA2NiwzOC45ODk2IDEyLjE3NzA3MzEsNDEuNDg0MzY2NyAxNC4yMTg3NSw0My4xNDA2MjUgQzE2LjI2MDQyNjksNDQuNzk2ODgzMyAxOC41MjA4MjA5LDQ1LjYyNSAyMSw0NS42MjUgQzI0LjI5MTY4MzEsNDUuNjI1IDI3LjYyNDk4MzEsNDQuNjU2MjU5NyAzMSw0Mi43MTg3NSBMMzEsNDkuNDM3NSBaIE0zNy4zMTI1LDQ3Ljk2ODc1IEwzNy4zMTI1LDQyLjAzMTI1IEM0Mi4zMTI1MjUsNDQuNDA2MjYxOSA0Ni44NTQxNDYyLDQ1LjU5Mzc1IDUwLjkzNzUsNDUuNTkzNzUgQzUyLjY0NTg0MTksNDUuNTkzNzUgNTQuMjgxMjQyMiw0NS4yNjU2MjgzIDU1Ljg0Mzc1LDQ0LjYwOTM3NSBDNTcuNDA2MjU3OCw0My45NTMxMjE3IDU4LjkyNjMwMDgsNDIuNzI3MDA4MyA1OS41OTM3NSw0MC40NDgyNDIyIEM2MC4yNjExOTkyLDM4LjE2OTQ3NjEgNjAuMDQxNjcyMiwzNS41MTU2MzIzIDU4LjkzNzUsMzQuMDQ2ODc1IEM1Ny44MzMzMjc4LDMyLjU3ODExNzcgNTUuNzYwNDMxOSwzMC45NTgzNDIyIDUyLjcxODc1LDI5LjE4NzUgTDQ5LjUzMTI1LDI3LjM0Mzc1IEw0Ni4zMTI1LDI1LjUgQzQwLjY0NTgwNSwyMi4xNDU4MTY2IDM3LjgxMjUsMTcuOTc5MTkxNiAzNy44MTI1LDEzIEMzNy44MTI1LDkuMzU0MTQ4NDQgMzkuMDc4MTEyMyw2LjI4NjQ3MDc4IDQxLjYwOTM3NSwzLjc5Njg3NSBDNDQuMTQwNjM3NywxLjMwNzI3OTIyIDQ4LjA5MzcyMzEsMC4wNjI1IDUzLjQ2ODc1LDAuMDYyNSBDNTYuOTI3MTAwNiwwLjA2MjUgNjAuMjcwODE3MiwwLjU2MjQ5NSA2My41LDEuNTYyNSBMNjMuNSw3Ljk2ODc1IEM1OS45Mzc0ODIyLDYuNTkzNzQzMTMgNTYuNDY4NzY2OSw1LjkwNjI1IDUzLjA5Mzc1LDUuOTA2MjUgQzUwLjQwNjIzNjYsNS45MDYyNSA0OC42MDA4MzAxLDYuMzUxNTYyNSA0Ni45NTExNzE5LDcuNDY3Mjg1MTYgQzQ1LjMwMTUxMzcsOC41ODMwMDc4MSA0NC4wOTM3NSwxMC4xNTYyNCA0NC4wOTM3NSwxMi4xNTYyNSBDNDQuMDkzNzUsMTQuMTM1NDI2NiA0NC43MjkxNjAzLDE1Ljc4MTI0MzQgNDYsMTcuMDkzNzUgQzQ3LjI3MDgzOTcsMTguNDA2MjU2NiA0OC44OTU4MjM0LDE5LjYxNDU3NzggNTAuODc1LDIwLjcxODc1IEw1My4zMTI1LDIyLjE4NzUgTDU2LjM0Mzc1LDI0LjAzMTI1IEw1OC45MDYyNSwyNS41MzEyNSBDNjQuMjE4Nzc2NiwyOC43ODEyNjYyIDY2Ljg3NSwzMi44NjQ1NTg4IDY2Ljg3NSwzNy43ODEyNSBDNjYuODc1LDQxLjUzMTI2ODcgNjUuNTEwNDMwMyw0NC43NDk5ODY2IDYyLjc4MTI1LDQ3LjQzNzUgQzYwLjA1MjA2OTcsNTAuMTI1MDEzNCA1NS42NzcxMTM0LDUxLjQ2ODc1IDQ5LjY1NjI1LDUxLjQ2ODc1IEM0Ny43Mzk1NzM4LDUxLjQ2ODc1IDQ1LjkxMTQ2Nyw1MS4zMDcyOTMzIDQ0LjE3MTg3NSw1MC45ODQzNzUgQzQyLjQzMjI4Myw1MC42NjE0NTY3IDQwLjE0NTg0NzUsNDkuOTg5NTg4NCAzNy4zMTI1LDQ4Ljk2ODc1IEwzNy4zMTI1LDQ3Ljk2ODc1IFogTTcyLjMxMjUsNDcuOTY4NzUgTDcyLjMxMjUsNDIuMDMxMjUgQzc3LjMxMjUyNSw0NC40MDYyNjE5IDgxLjg1NDE0NjIsNDUuNTkzNzUgODUuOTM3NSw0NS41OTM3NSBDODcuNjQ1ODQxOSw0NS41OTM3NSA4OS4yODEyNDIyLDQ1LjI2NTYyODMgOTAuODQzNzUsNDQuNjA5Mzc1IEM5Mi40MDYyNTc4LDQzLjk1MzEyMTcgOTMuOTI2MzAwOCw0Mi43MjcwMDgzIDk0LjU5Mzc1LDQwLjQ0ODI0MjIgQzk1LjI2MTE5OTIsMzguMTY5NDc2MSA5NS4wNDE2NzIyLDM1LjUxNTYzMjMgOTMuOTM3NSwzNC4wNDY4NzUgQzkyLjgzMzMyNzgsMzIuNTc4MTE3NyA5MC43NjA0MzE5LDMwLjk1ODM0MjIgODcuNzE4NzUsMjkuMTg3NSBMODQuNTMxMjUsMjcuMzQzNzUgTDgxLjMxMjUsMjUuNSBDNzUuNjQ1ODA1LDIyLjE0NTgxNjYgNzIuODEyNSwxNy45NzkxOTE2IDcyLjgxMjUsMTMgQzcyLjgxMjUsOS4zNTQxNDg0NCA3NC4wNzgxMTIzLDYuMjg2NDcwNzggNzYuNjA5Mzc1LDMuNzk2ODc1IEM3OS4xNDA2Mzc3LDEuMzA3Mjc5MjIgODMuMDkzNzIzMSwwLjA2MjUgODguNDY4NzUsMC4wNjI1IEM5MS45MjcxMDA2LDAuMDYyNSA5NS4yNzA4MTcyLDAuNTYyNDk1IDk4LjUsMS41NjI1IEw5OC41LDcuOTY4NzUgQzk0LjkzNzQ4MjIsNi41OTM3NDMxMyA5MS40Njg3NjY5LDUuOTA2MjUgODguMDkzNzUsNS45MDYyNSBDODUuNDA2MjM2Niw1LjkwNjI1IDgzLjYwMDgzMDEsNi4zNTE1NjI1IDgxLjk1MTE3MTksNy40NjcyODUxNiBDODAuMzAxNTEzNyw4LjU4MzAwNzgxIDc5LjA5Mzc1LDEwLjE1NjI0IDc5LjA5Mzc1LDEyLjE1NjI1IEM3OS4wOTM3NSwxNC4xMzU0MjY2IDc5LjcyOTE2MDMsMTUuNzgxMjQzNCA4MSwxNy4wOTM3NSBDODIuMjcwODM5NywxOC40MDYyNTY2IDgzLjg5NTgyMzQsMTkuNjE0NTc3OCA4NS44NzUsMjAuNzE4NzUgTDg4LjMxMjUsMjIuMTg3NSBMOTEuMzQzNzUsMjQuMDMxMjUgTDkzLjkwNjI1LDI1LjUzMTI1IEM5OS4yMTg3NzY2LDI4Ljc4MTI2NjIgMTAxLjg3NSwzMi44NjQ1NTg4IDEwMS44NzUsMzcuNzgxMjUgQzEwMS44NzUsNDEuNTMxMjY4NyAxMDAuNTEwNDMsNDQuNzQ5OTg2NiA5Ny43ODEyNSw0Ny40Mzc1IEM5NS4wNTIwNjk3LDUwLjEyNTAxMzQgOTAuNjc3MTEzNCw1MS40Njg3NSA4NC42NTYyNSw1MS40Njg3NSBDODIuNzM5NTczOCw1MS40Njg3NSA4MC45MTE0NjcsNTEuMzA3MjkzMyA3OS4xNzE4NzUsNTAuOTg0Mzc1IEM3Ny40MzIyODMsNTAuNjYxNDU2NyA3NS4xNDU4NDc1LDQ5Ljk4OTU4ODQgNzIuMzEyNSw0OC45Njg3NSBMNzIuMzEyNSw0Ny45Njg3NSBaIiBpZD0iQ1NTIiBmaWxsPSIjN0VEMzIxIiBmaWx0ZXI9InVybCgjZmlsdGVyLTEpIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIi8+PC9nPjwvc3ZnPg==);}\
+#pb-MusicPlayer{background-image:url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4bWxuczpza2V0Y2g9Imh0dHA6Ly93d3cuYm9oZW1pYW5jb2RpbmcuY29tL3NrZXRjaC9ucyIgd2lkdGg9IjYzcHgiIGhlaWdodD0iNjlweCIgdmlld0JveD0iMCAwIDYzIDY5IiB2ZXJzaW9uPSIxLjEiPjxnIGlkPSJQYWdlLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHNrZXRjaDp0eXBlPSJNU1BhZ2UiPjxwYXRoIGQ9Ik01MC4wNTk5MDk4LDQ5LjYzMTU2MTMgTDQzLjA1MzI3NzgsNDkuNjMxNTYwMSBDNDMuMDUzMjc3OCw0OS42MzE1NjAxIDQzLjA1NzI5ODIsMjkuNDA3NTYyNCA0My4wNTE5Mzc5LDE2LjI5NTIyNDggQzMxLjMxMzk1NjMsMTkuMDMzNzkxOCA5LjI2NTY2MTgyLDI1LjA3MTEwMjcgNy45ODc4NzE1MiwyNS4zOTAxMzk0IEM3Ljk5MTg5MTgzLDM2LjMyMTM3NzIgNy45OTA1NTE5NSw1OS4yNDg3MTgzIDcuOTkwNTUxOTUsNTkuMjQ4NzE4MyBDNy45OTA1NTE5NSw1OS4yNDg3MTgzIDEuMDIwMTAxNTgsNTkuNTAyNzI5MyAxLjAwMTM0MDExLDU5LjI0ODcxOTQgQzEuMDAxMzQwMTEsNDIuMjk3MTA0NSAxLjAwMzM1MDI2LDI4LjM0NTQ4OTcgMSwxMS4zOTM4NzQ5IEMxNi4zMTMzODIsNy44Mzc3MzQxNiA0OS4wMTU5Njg5LDAuMjIyMTc0MTI1IDUwLjA1OTkxMDcsMCBDNTAuMDYzMjYxMiwxNS4yMDE5OTM2IDUwLjA1OTkwOTgsNDkuNjMxNTYxMyA1MC4wNTk5MDk4LDQ5LjYzMTU2MTMgWiIgaWQ9IlNoYXBlIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMC4wOTM3NSIgZmlsbC1vcGFjaXR5PSIwLjc3IiBmaWxsPSIjMDAwIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIi8+PHBhdGggZD0iTTUyLjk4OTk2NzksNTguNjI3OTI5NyBDNTguNTA3Mjc0OCw1OC42Mjc5Mjk3IDYyLjk3OTkzNTcsNTQuOTI4MTY2NiA2Mi45Nzk5MzU3LDUwLjEwMDUyMyBDNjIuOTc5OTM1Nyw0NS4yNzI4Nzk1IDU4LjUwNzI3NDgsNDAuNzk5MTUzNiA1Mi45ODk5Njc5LDQwLjc5OTE1MzYgQzQ3LjQ3MjY2MSw0MC43OTkxNTM2IDQzLDQ1LjI3Mjg3OTUgNDMsNTAuMTAwNTIzIEM0Myw1NC45MjgxNjY2IDQ3LjQ3MjY2MSw1OC42Mjc5Mjk3IDUyLjk4OTk2NzksNTguNjI3OTI5NyBaIiBpZD0iT3ZhbC0yIiBmaWxsPSIjM0IzQjNCIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIi8+PHBhdGggZD0iTTExLDY4LjcxMzU0MTcgQzE2LjUyMjg0NzUsNjguNzEzNTQxNyAyMSw2NC40MDM5ODAxIDIxLDU5LjUzMzA4MjMgQzIxLDU0LjY2MjE4NDUgMTYuNTIyODQ3NSw1MC43MTM1NDE3IDExLDUwLjcxMzU0MTcgQzUuNDc3MTUyNSw1MC43MTM1NDE3IDEsNTQuNjYyMTg0NSAxLDU5LjUzMzA4MjMgQzEsNjQuNDAzOTgwMSA1LjQ3NzE1MjUsNjguNzEzNTQxNyAxMSw2OC43MTM1NDE3IFoiIGlkPSJPdmFsLTEiIGZpbGw9IiMzQjNCM0IiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiLz48L2c+PC9zdmc+)}\
+.magic-audio{width:200px;height:200px;}.magic-audio-min,.magic-audio-min:after {width:100px;height:100px;text-align:left;}.magic-audio-min:after{content:"";background-image:url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSI1MCUiIHN0b3AtY29sb3I9InJnYmEoMjU1LCAyNTUsIDI1NSwgMC4xNSkiIC8+PHN0b3Agb2Zmc2V0PSI1MCUiIHN0b3AtY29sb3I9InJnYmEoMjU1LCAyNTUsIDI1NSwgMCkiIC8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgc3R5bGU9ImZpbGw6dXJsKCNncmFkKTsiIC8+PC9zdmc+);background-size:contain;position:absolute;box-shadow:0 1px 2px rgba(0,0,0,.4),1px 1px 1px rgba(255,255,255,.5) inset;}\
+.tracklist-scrollbox{width:350px;height:245px;overflow:auto;}.o-track-list{padding:0 2px;}.tracktime{float:right;}#magic-audio-player{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;}.o-track-list,.tracktime{color:rgba(0,0,0,.5);}.o-track-list a{color:#333;text-decoration:none;}\
+.o-track-list li{cursor:pointer;border-bottom:1px solid #f0f0f0;line-height:24px;padding:0 3px;}\
+#now_playing{background-color: rgba(0,0,0,.5);border:none;color:#ddd;box-shadow:0 0 2px #000;}#now_playing > *{color:#fefefe;}#hp_progbar{background-color:white;width:22px;height:12px;position:relative;cursor:pointer;}\
+.forvardarrow{background:url(/src/svg/1601/forvard-button.svg)no-repeat scroll center / 40%;}.hp-controls{height:18px;width:20%;cursor:pointer;}\
+.hp-info,.hp-controls{display:inline-block;vertical-align:bottom;}.duration{width:205px;border:1px solid #ccc;}\
+.hp-info{text-overflow:ellipsis;max-width:210px;overflow:hidden;white-space:nowrap;margin:0 1%;}\
+.hp-play-btn{position:absolute;width:40px;height:40px;cursor:pointer;right:10px;filter:invert(30%);}.hp-inf-ctrl{height:100px;text-align:left;color:#777;}\
+#hp_dropbox_layer{position:absolute;width:100%;height:100%;color:#d2d2d2;font:small-caps 1.5em Arial;text-align:center;bottom:0;right:0;background:rgba(0,0,0,.8) url(/src/svg/1409/DropArrow.svg)no-repeat scroll center;filter:invert(80%);}\
 @-webkit-keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}@keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}\
 @keyframes onReady{50% {opacity:0;}} @-webkit-keyframes onReady{50% {opacity:0;}}'+ mesShadows + mesAnimations;
 	
 	MagicExtension();
 	
 	_z.append(document.head, [
-		_z.setup("script", {"src": "/src/js/1501/aurora_0.4.4.js"}),
-		_z.setup("style", {"text": MagicStyle})
+		_z.setup('script', {'type': 'application/javascript', 'src': '/src/js/1601/AVAudioFramework.min.js'}),
+		_z.setup('style', {'text': MagicStyle})
 	]);
 }
 
-function BlobViewer(){function e(e){throw Error(e)}function t(e,t,n,r,i,s,o){this.blob=e;this.sliceOffset=t;this.sliceLength=n;this.slice=r;this.viewOffset=i;this.viewLength=s;this.littleEndian=o;this.view=new DataView(r,i,s);this.buffer=r;this.byteLength=s;this.byteOffset=i;this.index=0}t.get=function(n,r,i,s,o){if(r<0){e("negative offset")}if(i<0){e("negative length")}if(r>n.size){e("offset larger than blob size")}if(r+i>n.size){i=n.size-r}var u=n.slice(r,r+i);var a=new FileReader;a.readAsArrayBuffer(u);a.onloadend=function(){var e=null;if(a.result){e=new t(n,r,i,a.result,0,i,o||false)}s(e,a.error)}};t.prototype={constructor:t,getMore:function(e,n,r){if(e>=this.sliceOffset&&e+n<=this.sliceOffset+this.sliceLength){r(new t(this.blob,this.sliceOffset,this.sliceLength,this.slice,e-this.sliceOffset,n,this.littleEndian))}else{t.get(this.blob,e,n,r,this.littleEndian)}},littleEndian:function(){this.littleEndian=true},bigEndian:function(){this.littleEndian=false},getUint8:function(e){return this.view.getUint8(e)},getInt8:function(e){return this.view.getInt8(e)},getUint16:function(e,t){return this.view.getUint16(e,t!==undefined?t:this.littleEndian)},getInt16:function(e,t){return this.view.getInt16(e,t!==undefined?t:this.littleEndian)},getUint32:function(e,t){return this.view.getUint32(e,t!==undefined?t:this.littleEndian)},getInt32:function(e,t){return this.view.getInt32(e,t!==undefined?t:this.littleEndian)},getFloat32:function(e,t){return this.view.getFloat32(e,t!==undefined?t:this.littleEndian)},getFloat64:function(e,t){return this.view.getFloat64(e,t!==undefined?t:this.littleEndian)},readByte:function(){return this.view.getInt8(this.index++)},readUnsignedByte:function(){return this.view.getUint8(this.index++)},readShort:function(e){var t=this.view.getInt16(this.index,e!==undefined?e:this.littleEndian);this.index+=2;return t},readUnsignedShort:function(e){var t=this.view.getUint16(this.index,e!==undefined?e:this.littleEndian);this.index+=2;return t},readInt:function(e){var t=this.view.getInt32(this.index,e!==undefined?e:this.littleEndian);this.index+=4;return t},readUnsignedInt:function(e){var t=this.view.getUint32(this.index,e!==undefined?e:this.littleEndian);this.index+=4;return t},readFloat:function(e){var t=this.view.getFloat32(this.index,e!==undefined?e:this.littleEndian);this.index+=4;return t},readDouble:function(e){var t=this.view.getFloat64(this.index,e!==undefined?e:this.littleEndian);this.index+=8;return t},tell:function(){return this.index},remaining:function(){return this.byteLength-this.index},seek:function(t){if(t<0){e("negative index")}if(t>this.byteLength){e("index greater than buffer size")}this.index=t},advance:function(t){var n=this.index+t;if(n<0){e("advance past beginning of buffer")}if(n>this.byteLength){e("advance past end of buffer")}this.index=n},getUnsignedByteArray:function(e,t){return new Uint8Array(this.buffer,e+this.viewOffset,t)},readUnsignedByteArray:function(e){var t=new Uint8Array(this.buffer,this.index+this.viewOffset,e);this.index+=e;return t},getBit:function(e,t){var n=this.view.getUint8(e);return(n&1<<t)!==0},getUint24:function(e,t){var n,r,i;if(t!==undefined?t:this.littleEndian){n=this.view.getUint8(e);r=this.view.getUint8(e+1);i=this.view.getUint8(e+2)}else{i=this.view.getUint8(e);r=this.view.getUint8(e+1);n=this.view.getUint8(e+2)}return(i<<16)+(r<<8)+n},readUint24:function(e){var t=this.getUint24(this.index,e);this.index+=3;return t},getASCIIText:function(e,t){var n=new Uint8Array(this.buffer,e+this.viewOffset,t);return String.fromCharCode.apply(String,n)},readASCIIText:function(e){var t=new Uint8Array(this.buffer,this.index+this.viewOffset,e);this.index+=e;return String.fromCharCode.apply(String,t)},getUTF8Text:function(e,t){function n(){throw new Error("Illegal UTF-8")}var r=e;var i=e+t;var s;var o="";var u,a,f,l;while(r<i){var u=this.view.getUint8(r);if(u<128){o+=String.fromCharCode(u);r+=1}else if(u<194){n()}else if(u<224){if(r+1>=i){n()}a=this.view.getUint8(r+1);if(a<128||a>191){n()}s=((u&31)<<6)+(a&63);o+=String.fromCharCode(s);r+=2}else if(u<240){if(r+2>=i){n()}a=this.view.getUint8(r+1);if(a<128||a>191){n()}f=this.view.getUint8(r+2);if(f<128||f>191){n()}s=((u&15)<<12)+((a&63)<<6)+(f&63);o+=String.fromCharCode(s);r+=3}else if(u<245){if(r+3>=i){n()}a=this.view.getUint8(r+1);if(a<128||a>191){n()}f=this.view.getUint8(r+2);if(f<128||f>191){n()}l=this.view.getUint8(r+3);if(l<128||l>191){n()}s=((u&7)<<18)+((a&63)<<12)+((f&63)<<6)+(l&63);s-=65536;o+=String.fromCharCode(55296+((s&1047552)>>>10));o+=String.fromCharCode(56320+(s&1023));r+=4}else{n()}}return o},readUTF8Text:function(e){try{return this.getUTF8Text(this.index,e)}finally{this.index+=e}},getID3Uint28BE:function(e){var t=this.view.getUint8(e)&127;var n=this.view.getUint8(e+1)&127;var r=this.view.getUint8(e+2)&127;var i=this.view.getUint8(e+3)&127;return t<<21|n<<14|r<<7|i},readID3Uint28BE:function(){var e=this.getID3Uint28BE(this.index);this.index+=4;return e},readNullTerminatedLatin1Text:function(e){var t="";var n=unescape("%u0402%u0403%u201A%u0453%u201E%u2026%u2020%u2021%u20AC%u2030%u0409%u2039%u040A%u040C%u040B%u040F"+"%u0452%u2018%u2019%u201C%u201D%u2022%u2013%u2014%u0000%u2122%u0459%u203A%u045A%u045C%u045B%u045F"+"%u00A0%u040E%u045E%u0408%u00A4%u0490%u00A6%u00A7%u0401%u00A9%u0404%u00AB%u00AC%u00AD%u00AE%u0407"+"%u00B0%u00B1%u0406%u0456%u0491%u00B5%u00B6%u00B7%u0451%u2116%u0454%u00BB%u0458%u0405%u0455%u0457");var r=function(e){if(e>=192&&e<=255)return String.fromCharCode(e-192+1040);if(e>=128&&e<=191)return n.charAt(e-128);return String.fromCharCode(e)};for(var i=0;i<e;i++){var s=this.view.getUint8(this.index+i);if(s===0){i++;break}t+=r(s)}this.index+=i;return t},readNullTerminatedUTF8Text:function(e){for(var t=0;t<e;t++){if(this.view.getUint8(this.index+t)===0){break}}var n=this.readUTF8Text(t);if(t<e){this.advance(1)}return n},readNullTerminatedUTF16Text:function(e,t){if(t==null){var n=this.readUnsignedShort();e-=2;if(n===65279){t=false}else{t=true}}var r="";for(var i=0;i<e;i+=2){var s=this.getUint16(this.index+i,t);if(s===0){i+=2;break}r+=String.fromCharCode(s)}this.index+=i;return r}};this.get=t.get};
-
-function parse_audio_metadata(blob,metadataCallback,errorCallback){var BlobView=new BlobViewer(), filename=blob.name;errorCallback=errorCallback||function(e){console.warn(e);};if(filename){if(filename.slice(0,5)==='DCIM/'&&filename.slice(-4).toLowerCase()==='.3gp'){errorCallback('skipping 3gp video file');return;}
-if(filename.slice(-4).toLowerCase()==='.m4v'){errorCallback('skipping m4v video file');return;}}
-if(blob.size<128){errorCallback('file is empty or too small');return;}
-var TITLE='title';var ARTIST='artist';var ALBUM='album';var TRACKNUM='tracknum';var IMAGE='picture';var YEAR='year';var GENRE='genre';var genres_list=['Blues','Classic Rock','Country','Dance','Disco','Funk','Grunge','Hip-Hop','Jazz','Metal','New Age','Oldies','Other','Pop','R&B','Rap','Reggae','Rock','Techno','Industrial','Alternative','Ska','Death Metal','Pranks','Soundtrack','Euro-Techno','Ambient','Trip-Hop','Vocal','Jazz+Funk','Fusion','Trance','Classical','Instrumental','Acid','House','Game','Sound Clip','Gospel','Noise','AlternRock','Bass','Soul','Punk','Space','Meditative','Instrumental Pop','Instrumental Rock','Ethnic','Gothic','Darkwave','Techno-Industrial','Electronic','Pop-Folk','Eurodance','Dream','Southern Rock','Comedy','Cult','Gangsta Rap','Top 40','Christian Rap','Pop / Funk','Jungle','Native American','Cabaret','New Wave','Psychedelic','Rave','Showtunes','Trailer','Lo-Fi','Tribal','Acid Punk','Acid Jazz','Polka','Retro','Musical','Rock & Roll','Hard Rock','Folk','Folk-Rock','National Folk','Swing','Fast Fusion','Bebob','Latin','Revival','Celtic','Bluegrass','Avantgarde','Gothic Rock','Progressive Rock','Psychedelic Rock','Symphonic Rock','Slow Rock','Big Band','Chorus','Easy Listening','Acoustic','Humour','Speech','Chanson','Opera','Chamber Music','Sonata','Symphony','Booty Bass','Primus','Porn Groove','Satire','Slow Jam','Club','Tango','Samba','Folklore','Ballad','Power Ballad','Rhythmic Soul','Freestyle','Duet','Punk Rock','Drum Solo','A Cappella','Euro-House','Dance Hall','Goa','Drum & Bass','Club-House','Hardcore','Terror','Indie','BritPop','Negerpunk','Polsk Punk','Beat','Christian Gangsta Rap','Heavy Metal','Black Metal','Crossover','Contemporary Christian','Christian Rock','Merengue','Salsa','Thrash Metal','Anime','JPop','Synthpop','Abstract','Art Rock','Baroque','Bhangra','Big Beat','Breakbeat','Chillout','Downtempo','Dub','EBM','Eclectic','Electro','Electroclash','Emo','Experimental','Garage','Global','IDM','Illbient','Industro-Goth','Jam Band','Krautrock','Leftfield','Lounge','Math Rock','New Romantic','Nu-Breakz','Post-Punk','Post-Rock','Psytrance','Shoegaze','Space Rock','Trop Rock','World Music','Neoclassical','Audiobook','Audio Theatre','Neue Deutsche Welle','Podcast','Indie Rock','G-Funk','Dubstep','Garage Rock','Psybient']
-var RATED='rated';var PLAYED='played';var ID3V2TAGS={TIT2:TITLE,TT2:TITLE,TPE1:ARTIST,TP1:ARTIST,TALB:ALBUM,TAL:ALBUM,TRCK:TRACKNUM,TRK:TRACKNUM,APIC:IMAGE,PIC:IMAGE,POPM:RATED,POP:RATED,PCNT:PLAYED,CNT:PLAYED,TORY:YEAR,TDOR:YEAR,TYER:YEAR,TYE:YEAR,TDRC:YEAR,TCON:GENRE,TCO:GENRE};var OGGTAGS={title:TITLE,artist:ARTIST,album:ALBUM,tracknumber:TRACKNUM};var MP4TAGS={'\xa9alb':ALBUM,'\xa9art':ARTIST,'\xa9ART':ARTIST,'aART':ARTIST,'\xa9nam':TITLE,'trkn':TRACKNUM,'covr':IMAGE,'Year':YEAR};var MP4Types={'M4A ':true,'M4B ':true,'mp41':true,'mp42':true,'isom':true,'iso2':true};var MP4Codecs={'mp4a':true,'samr':true,'sawb':true,'sawp':true,'alac':true};var metadata={};metadata[ARTIST]=metadata[ALBUM]=metadata[TITLE]=metadata[YEAR]='';metadata[RATED]=metadata[PLAYED]=0;if(filename){var p1=filename.lastIndexOf('/');var p2=filename.lastIndexOf('.');if(p2===-1){p2=filename.length;}
-metadata[TITLE]=filename.substring(p1+1,p2);}
-var headersize=Math.min(64*1024,blob.size);BlobView.get(blob,0,headersize,function(header,error){if(error){errorCallback(error);return;}
-try{var magic=header.getASCIIText(0,12);if(magic.substring(0,9)==='LOCKED 1 '){handleLockedFile(blob);return;}
-if(magic.substring(0,3)==='ID3'){parseID3v2Metadata(header);}else if(magic.substring(0,4)==='OggS'){parseOggMetadata(header);}else if(magic.substring(4,8)==='ftyp'){if(checkMP4Type(header,MP4Types)){parseMP4Metadata(header);return;}
-else{errorCallback('Unknown MP4 file type');}}else if((header.getUint16(0,false)&0xFFFE)===0xFFFA){BlobView.get(blob,blob.size-128,128,function(footer,error){if(error){errorCallback(error);return;}
-try{var magic=footer.getASCIIText(0,3);if(magic==='TAG'){parseID3v1Metadata(footer);}else{metadataCallback(metadata);}}
-catch(e){errorCallback(e);}});}else{errorCallback('Unplayable music file');}}
-catch(e){console.error('parseAudioMetadata:',e,e.stack);errorCallback(e);}});function parseID3v1Metadata(footer){var title=footer.getASCIIText(3,30);var artist=footer.getASCIIText(33,30);var album=footer.getASCIIText(63,30);var p=title.indexOf('\0');if(p!==-1){title=title.substring(0,p);}
-p=artist.indexOf('\0');if(p!==-1){artist=artist.substring(0,p);}
-p=album.indexOf('\0');if(p!==-1){album=album.substring(0,p);}
-metadata[TITLE]=title||undefined;metadata[ARTIST]=artist||undefined;metadata[ALBUM]=album||undefined;var b1=footer.getUint8(125);var b2=footer.getUint8(126);if(b1===0&&b2!==0){metadata[TRACKNUM]=b2;}
-metadataCallback(metadata);}
-function parseID3v2Metadata(header){header.index=3;var id3version=header.readUnsignedByte();if(id3version>4){console.warn('mp3 file with unknown metadata version');metadataCallback(metadata);return;}
-var id3revision=header.readUnsignedByte();var id3flags=header.readUnsignedByte();var has_extended_header=((id3flags&0x40)!==0);var length=header.readID3Uint28BE();header.getMore(header.index,length,parseID3);function parseID3(id3){if(has_extended_header){id3.advance(id3.readUnsignedInt());}
-while(id3.index<id3.byteLength){var tagid,tagsize,tagflags;if(id3.getUint8(id3.index)===0){break;}
-switch(id3version){case 2:tagid=id3.readASCIIText(3);tagsize=id3.readUint24();tagflags=0;break;case 3:tagid=id3.readASCIIText(4);tagsize=id3.readUnsignedInt();tagflags=id3.readUnsignedShort();break;case 4:tagid=id3.readASCIIText(4);tagsize=id3.readID3Uint28BE();tagflags=id3.readUnsignedShort();break;}
-var nexttag=id3.index+tagsize;var tagname=ID3V2TAGS[tagid];if(!tagname){id3.index=nexttag;continue;}
-if((tagflags&0xFF)!==0){console.warn('Skipping',tagid,'tag with flags',tagflags);id3.index=nexttag;continue;}
-try{var tagvalue=null;switch(tagid){case'TIT2':case'TT2':case'TPE1':case'TP1':case'TALB':case'TAL':case'TORY':case'TDOR':case'TYER':case'TYE':case'TDRC':tagvalue=readText(id3,tagsize);break;case'TRCK':case'TRK':case'PCNT':case'CNT':tagvalue=parseInt(readText(id3,tagsize));break;case'APIC':case'PIC':tagvalue=readPic(id3,tagsize,tagid);break;case'TCON':case'TCO':tagvalue=readText(id3,tagsize)||'';tagvalue=new String(tagvalue).replace(/^\(?([0-9]+)\)?$/,function(match,genre_index){return genres_list[parseInt(genre_index)]});break;case'POPM':case'POP':tagvalue=readText(id3,tagsize,0);if(isNaN(parseInt(tagvalue))){tagvalue=id3.readUnsignedByte();}
-if(tagvalue==0){tagvalue=0;}else if(tagvalue<64){tagvalue=1;}else if(tagvalue<128){tagvalue=2;}else if(tagvalue<192){tagvalue=3;}else if(tagvalue<255){tagvalue=4;}else{tagvalue=5;}}
-if(tagvalue){metadata[tagname]=tagvalue;}}
-catch(e){console.warn('Error parsing mp3 metadata tag',tagid,':',e);}
-id3.index=nexttag;}
-metadataCallback(metadata);}
-function readPic(view,size,id){var start=view.index;var encoding=view.readUnsignedByte();var mimetype;if(id==='PIC'){mimetype=view.readASCIIText(3);if(mimetype==='JPG'){mimetype='image/jpeg';}
-else if(mimetype==='PNG'){mimetype='image/png';}}
-else{mimetype=view.readNullTerminatedLatin1Text(size-1);}
-var kind=view.readUnsignedByte();var desc=readText(view,size-(view.index-start),encoding);var picstart=view.sliceOffset+view.viewOffset+view.index;var piclength=size-(view.index-start);return blob.slice(picstart,picstart+piclength,mimetype);}
-function readText(view,size,encoding){if(encoding===undefined){encoding=view.readUnsignedByte();size=size-1;}
-switch(encoding){case 0:return view.readNullTerminatedLatin1Text(size);case 1:return view.readNullTerminatedUTF16Text(size,undefined);case 2:return view.readNullTerminatedUTF16Text(size,false);case 3:return view.readNullTerminatedUTF8Text(size);default:throw Error('unknown text encoding');}}}
-function parseOggMetadata(header){function sum(x,y){return x+y;}
-var p1_num_segments=header.getUint8(26);var p1_segment_lengths=header.getUnsignedByteArray(27,p1_num_segments);var p1_length=Array.reduce(p1_segment_lengths,sum,0);var p2_header=27+p1_num_segments+p1_length;var p2_num_segments=header.getUint8(p2_header+26);var p2_segment_lengths=header.getUnsignedByteArray(p2_header+27,p2_num_segments);var p2_length=Array.reduce(p2_segment_lengths,sum,0);var p2_offset=p2_header+27+p2_num_segments;header.getMore(p2_offset,p2_length,function(page,error){if(error){errorCallback(error);return;}
-var first_byte=page.readByte();var valid=false;switch(first_byte){case 3:valid=page.readASCIIText(6)==='vorbis';break;case 79:valid=page.readASCIIText(7)==='pusTags';break;}
-if(!valid){errorCallback('malformed ogg comment packet');return;}
-var vendor_string_length=page.readUnsignedInt(true);page.advance(vendor_string_length);var num_comments=page.readUnsignedInt(true);var seen_fields={};for(var i=0;i<num_comments;i++){if(page.remaining()<4){break;}
-var comment_length=page.readUnsignedInt(true);if(comment_length>page.remaining()){break;}
-var comment=page.readUTF8Text(comment_length);var equal=comment.indexOf('=');if(equal!==-1){var tag=comment.substring(0,equal).toLowerCase().replace(' ','');var propname=OGGTAGS[tag];if(propname){var value=comment.substring(equal+1);if(seen_fields.hasOwnProperty(propname)){metadata[propname]+=' '+value;}
-else{metadata[propname]=value;seen_fields[propname]=true;}}}}});metadataCallback(metadata);}
-function checkMP4Type(header,types){var majorbrand=header.getASCIIText(8,4);if(majorbrand in types){return true;}
-else{var index=16;var size=header.getUint32(0);while(index<size){var compatiblebrand=header.getASCIIText(index,4);index+=4;if(compatiblebrand in types){return true;}}
-return false;}}
-function parseMP4Metadata(header){findMoovAtom(header);function findMoovAtom(atom){try{var offset=atom.sliceOffset+atom.viewOffset;var size=atom.readUnsignedInt();var type=atom.readASCIIText(4);if(size===0){size=atom.blob.size-offset;}
-else if(size===1){size=atom.readUnsignedInt()*4294967296+atom.readUnsignedInt();}
-if(type==='moov'){atom.getMore(offset,size,function(moov){try{parseMoovAtom(moov,size);metadataCallback(metadata);}
-catch(e){errorCallback(e);}});}
-else{if(offset+size+16<=atom.blob.size){atom.getMore(offset+size,16,findMoovAtom);}
-else{metadataCallback(metadata);}}}
-catch(e){errorCallback(e);}}
-function parseMoovAtom(data,end){data.advance(8);while(data.index<end){var size=data.readUnsignedInt();var type=data.readASCIIText(4);var nextindex=data.index+size-8;if(type==='udta'){parseUdtaAtom(data,end);data.index=nextindex;}
-else if(type==='trak'){data.advance(-8);var mdia=findChildAtom(data,'mdia');if(mdia){var minf=findChildAtom(mdia,'minf');if(minf){var vmhd=searchChildAtom(minf,'vmhd');if(vmhd){}
-var smhd=searchChildAtom(minf,'smhd');if(smhd){var stbl=findChildAtom(minf,'stbl');if(stbl){var stsd=findChildAtom(stbl,'stsd');if(stsd){stsd.advance(20);var codec=stsd.readASCIIText(4);if(!(codec in MP4Codecs)){throw'Unsupported format in MP4 container: '+codec;}}}}}}
-data.index=nextindex;}
-else{data.advance(size-8);}}}
-function findChildAtom(data,atom){var start=data.index;var length=data.readUnsignedInt();data.advance(4);while(data.index<start+length){var size=data.readUnsignedInt();var type=data.readASCIIText(4);if(type===atom){data.advance(-8);return data;}
-else{data.advance(size-8);}}
-return null;}
-function searchChildAtom(data,atom){var start=data.index;var target=findChildAtom(data,atom);data.index=start;return target;}
-function parseUdtaAtom(data,end){while(data.index<end){var size=data.readUnsignedInt();var type=data.readASCIIText(4);if(type==='meta'){parseMetaAtom(data,data.index+size-8);data.index=end;return;}
-else{data.advance(size-8);}}}
-function parseMetaAtom(data,end){data.advance(4);while(data.index<end){var size=data.readUnsignedInt();var type=data.readASCIIText(4);if(type==='ilst'){parseIlstAtom(data,data.index+size-8);data.index=end;return;}
-else{data.advance(size-8);}}}
-function parseIlstAtom(data,end){while(data.index<end){var size=data.readUnsignedInt();var type=data.readASCIIText(4);var next=data.index+size-8;var tagname=MP4TAGS[type];if(tagname){try{var value=getMetadataValue(data,next,type);metadata[tagname]=value;}
-catch(e){console.warn('skipping',type,':',e);}}
-data.index=next;}}
-function getMetadataValue(data,end,tagtype){while(data.index<end){var size=data.readUnsignedInt();var type=data.readASCIIText(4);if(type!=='data'){data.advance(size-8);continue;}
-var datatype=data.readUnsignedInt()&0xFFFFFF;data.advance(4);var datasize=size-16;if(tagtype==='trkn'){data.advance(2);return data.readUnsignedShort();}
-switch(datatype){case 1:return data.readUTF8Text(datasize);case 13:return blob.slice(data.sliceOffset+data.viewOffset+data.index,data.sliceOffset+data.viewOffset+data.index+datasize,'image/jpeg');case 14:return blob.slice(data.sliceOffset+data.viewOffset+data.index,data.sliceOffset+data.viewOffset+data.index+datasize,'image/png');default:throw Error('unexpected type in data atom');}}
-throw Error('no data atom found');}}
-function handleLockedFile(locked){ForwardLock.getKey(function(secret){ForwardLock.unlockBlob(secret,locked,callback,errorCallback);function callback(unlocked,unlockedMetadata){parseAudioMetadata(unlocked,function(metadata){metadata.locked=true;if(unlockedMetadata.vendor){metadata.vendor=unlockedMetadata.vendor;}
-if(!metadata[TITLE]){metadata[TITLE]=unlockedMetadata.name;}
-metadataCallback(metadata);},errorCallback);}});}}
+function parse_audio_metadata(e,n,t){function a(e){var t={}
+t[v]=e.getASCIIText(3,30)||g[v],t[T]=e.getASCIIText(33,30),t[I]=e.getASCIIText(63,30),t[f]=e.getASCIIText(93,4),t[m]=e.getASCIIText(97,30)||g[m]
+for(var a in t){var r=t[a].indexOf("\x00")
+g[a]=-1!==r?t[a].substring(0,r):t[a]}g[h]=0===e.getUint8(125)?e.getUint8(126):g[h]||0,g[p]=R[e.getUint8(127)]||"",n(g)}function r(t){function a(e){for(c&&e.advance(e.readUnsignedInt());e.index<e.byteLength;){var t,a,s
+if(0===e.getUint8(e.index))break
+switch(o){case 2:t=e.readASCIIText(3),a=e.readUint24(),s=0
+break
+case 3:t=e.readASCIIText(4),a=e.readUnsignedInt(),s=e.readUnsignedShort()
+break
+case 4:t=e.readASCIIText(4),a=e.readID3Uint28BE(),s=e.readUnsignedShort()}var d=e.index+a,l=P[t]
+if(l)if(0===(255&s)){try{var u=null
+switch(t){case"TIT2":case"TT2":case"TPE1":case"TP1":case"TALB":case"TAL":case"TORY":case"TDOR":case"TYER":case"TYE":case"TDRC":u=i(e,a)
+break
+case"TRCK":case"TRK":case"PCNT":case"CNT":u=parseInt(i(e,a))
+break
+case"APIC":case"PIC":u=r(e,a,t)
+break
+case"TCON":case"TCO":u=i(e,a)||"",u=new String(u).replace(/^\(?([0-9]+)\)?$/,function(e,n){return R[parseInt(n)]})
+break
+case"POPM":case"POP":u=i(e,a,0),isNaN(parseInt(u))&&(u=e.readUnsignedByte()),u=0==u?0:64>u?1:128>u?2:192>u?3:255>u?4:5}u&&(g[l]=u)}catch(f){console.warn("Error parsing mp3 metadata tag",t,":",f)}e.index=d}else console.warn("Skipping",t,"tag with flags",s),e.index=d
+else e.index=d}n(g)}function r(n,t,a){var r,o=n.index,s=n.readUnsignedByte()
+if("PIC"===a)switch(n.readASCIIText(3)){case"JPG":r="image/jpeg"
+break
+case"PNG":r="image/png"}else r=n.readNullTerminatedLatin1Text(t-1)
+var c=(n.readUnsignedByte(),i(n,t-(n.index-o),s),n.sliceOffset+n.viewOffset+n.index),d=t-(n.index-o)
+return e.slice(c,c+d,r)}function i(e,n,t){switch(void 0===t&&(t=e.readUnsignedByte(),n-=1),t){case 0:return e.readNullTerminatedLatin1Text(n)
+case 1:return e.readNullTerminatedUTF16Text(n,void 0)
+case 2:return e.readNullTerminatedUTF16Text(n,!1)
+case 3:return e.readNullTerminatedUTF8Text(n)
+default:throw Error("unknown text encoding")}}t.index=3
+var o=t.readUnsignedByte()
+if(o>4)return console.warn("mp3 file with unknown metadata version"),void n(g)
+var s=(t.readUnsignedByte(),t.readUnsignedByte()),c=0!==(64&s),d=t.readID3Uint28BE()
+t.getMore(t.index,d,a)}function i(a){function r(e,n){var t=e.getUint8(26+n),a=e.getUnsignedByteArray(27+n,t),r=Array.reduce(a,i,0)
+return{numberSegments:t,segmentLengths:a,sectionLength:27+n+t+r,offsetLength:27+n+t,length:r}}function i(e,n){return e+n}switch(a.getASCIIText(28,4)){case"Opus":case"FLA":case"vor":break
+default:return t("malformed ogg comment packet")}BlobView.get(e,0,e.size,function(e,i){if(i)return void t(i)
+for(var o={string:"",length:0,total:0},s={0:r(a,0)},c=0;s[c];){c++
+try{s[c]=r(e,s[c-1].sectionLength)
+var d=s[c].offsetLength
+if(1===c){var f=e.getInt8(d)
+switch(d+=4,f){case 79:d+=1
+case 3:d+=3}var v=e.getUint32(d,!0)
+d+=4+v,o.total=e.getInt8(d),d+=4}for(;o.total>0;o.total--){0===o.length&&(o.length=e.getUint32(d,!0),d+=4)
+var T=s[c].sectionLength-d
+if(o.length>T){o.string+=e.getUTF8Text(d,T),o.length-=T
+break}o.string+=e.getUTF8Text(d,o.length)
+var I=o.string.split("="),h=B[I[0].toUpperCase()]
+h&&I[1]&&(g[h]=I[1]),d+=o.length,o.length=0,o.string=""}if(!o.total)break}catch(m){console.warn(m)
+break}}if(g[k]){var p=l(g[k]),x=new Blob([p])
+u(x)}else n(g)})}function o(e){function t(e){switch(e.block_type){case 4:i(e.view),s=!0
+break
+case 6:g.picture=new Blob([e.view.buffer]),c=!0}return!s||!c}function a(e){return r(e).then(function(e){t(e)&&!e.last?(e.view.advance(e.length-e.view.index),a(e.view)):g[k]?u(g[k]):n(g)})}function r(e){return new Promise(function(n,t){var a=e.readUnsignedByte(),r=128===(128&a),i=127&a,o=e.readUint24(!1)
+e.getMore(e.viewOffset+e.index,o+4,function(e,a){return a?void t(a):void n({last:r,block_type:i,length:o,view:e})})})}function i(e){var n=e.readUnsignedInt(!0)
+e.advance(n)
+for(var t=e.readUnsignedInt(!0),a=0;t>a;a++)try{var r=o(e)
+r&&(g[r.field]=r.value)}catch(i){console.warn("Error parsing vorbis comment",i)}}function o(e){var n=e.readUnsignedInt(!0),t=e.readUTF8Text(n),a=t.indexOf("=")
+if(-1===a)throw new Error("missing delimiter in comment")
+var r=t.substring(0,a).toUpperCase().replace(" ",""),i=B[r]
+if(i){var o=t.substring(a+1)
+return{field:i,value:o}}return null}e.seek(4)
+var s=!1,c=!1
+a(e)}function s(e,n){var t=e.getASCIIText(8,4)
+if(t in n)return!0
+for(var a=16,r=e.getUint32(0);r>a;){var i=e.getASCIIText(a,4)
+if(a+=4,i in n)return!0}return!1}function c(a){function r(e){try{var a=e.sliceOffset+e.viewOffset,o=e.readUnsignedInt(),s=e.readASCIIText(4)
+0===o?o=e.blob.size-a:1===o&&(o=4294967296*e.readUnsignedInt()+e.readUnsignedInt()),"moov"===s?e.getMore(a,o,function(e){try{i(e,o),n(g)}catch(a){t(a)}}):a+o+16<=e.blob.size?e.getMore(a+o,16,r):n(g)}catch(c){t(c)}}function i(e,n){for(e.advance(8);e.index<n;){var t=e.readUnsignedInt(),a=e.readASCIIText(4),r=e.index+t-8
+if("udta"===a)c(e,n),e.index=r
+else if("trak"===a){e.advance(-8)
+var i=o(e,"mdia")
+if(i){var d=o(i,"minf")
+if(d){var l=(s(d,"vmhd"),s(d,"smhd"))
+if(l){var u=o(d,"stbl")
+if(u){var g=o(u,"stsd")
+if(g){g.advance(20)
+var f=g.readASCIIText(4)
+if(!(f in E))throw"Unsupported format in MP4 container: "+f}}}}}e.index=r}else e.advance(t-8)}}function o(e,n){var t=e.index,a=e.readUnsignedInt()
+for(e.advance(4);e.index<t+a;){var r=e.readUnsignedInt(),i=e.readASCIIText(4)
+if(i===n)return e.advance(-8),e
+e.advance(r-8)}return null}function s(e,n){var t=e.index,a=o(e,n)
+return e.index=t,a}function c(e,n){for(;e.index<n;){var t=e.readUnsignedInt(),a=e.readASCIIText(4)
+if("meta"===a)return d(e,e.index+t-8),void(e.index=n)
+e.advance(t-8)}}function d(e,n){for(e.advance(4);e.index<n;){var t=e.readUnsignedInt(),a=e.readASCIIText(4)
+if("ilst"===a)return l(e,e.index+t-8),void(e.index=n)
+e.advance(t-8)}}function l(e,n){for(;e.index<n;){var t=e.readUnsignedInt(),a=e.readASCIIText(4),r=e.index+t-8,i=y[a]
+if(i)try{var o=u(e,r,a)
+g[i]=o}catch(s){console.warn("skipping",a,":",s)}e.index=r}}function u(n,t,a){for(;n.index<t;){var r=n.readUnsignedInt(),i=n.readASCIIText(4)
+if("data"===i){var o=16777215&n.readUnsignedInt()
+n.advance(4)
+var s=r-16
+if("trkn"===a)return n.advance(2),n.readUnsignedShort()
+switch(o){case 1:return n.readUTF8Text(s)
+case 13:return e.slice(n.sliceOffset+n.viewOffset+n.index,n.sliceOffset+n.viewOffset+n.index+s,"image/jpeg")
+case 14:return e.slice(n.sliceOffset+n.viewOffset+n.index,n.sliceOffset+n.viewOffset+n.index+s,"image/png")
+default:throw Error("unexpected type in data atom")}}else n.advance(r-8)}throw Error("no data atom found")}r(a)}function d(e){ForwardLock.getKey(function(a){function r(e,a){parseAudioMetadata(e,function(e){e.locked=!0,a.vendor&&(e.vendor=a.vendor),e[v]||(e[v]=a.name),n(e)},t)}ForwardLock.unlockBlob(a,e,r,t)})}function l(e,n){function t(e){return e>64&&91>e?e-65:e>96&&123>e?e-71:e>47&&58>e?e+4:43===e?62:47===e?63:0}for(var a,r,i=e.replace(/[^A-Za-z0-9\+\/]/g,""),o=i.length,s=n?Math.ceil((3*o+1>>2)/n)*n:3*o+1>>2,c=new Uint8Array(s),d=0,l=0,u=0;o>u;u++)if(r=3&u,d|=t(i.charCodeAt(u))<<18-6*r,3===r||o-u===1){for(a=0;3>a&&s>l;a++,l++)c[l]=d>>>(16>>>a&24)&255
+d=0}return c}function u(e){BlobView.get(e,0,e.size,function(e,a){if(a)return void t(a)
+var r,i,o,s,c,d={}
+d.APIC=e.readUnsignedInt(),r=e.readUnsignedInt(),i=e.readASCIIText(r),o=e.readUnsignedInt(),d.name=e.readASCIIText(o),d.width=e.readUnsignedInt(),d.height=e.readUnsignedInt(),d.depth=e.readUnsignedInt(),d.index=e.readUnsignedInt(),s=e.readUnsignedInt(),c=e.readUnsignedByteArray(s),g[k]=new Blob([c],{type:i})
+for(var l in d)g[k][l]=d[l]
+n(g)})}var g={},f="year",v="title",T="artist",I="album",h="tracknum",m="comment",p="genre",k="picture",x="rated",C="played"
+if(g[x]=g[C]=0,t=t||function(e){console.warn(e)},e.size<128)return void t("file is empty or too small")
+if(e.name){var A=(e.name.match(/[^\.]+$/)||["*"])[0],U=e.name.lastIndexOf("/"),b=e.name.lastIndexOf("."+A)||e.name.length,w=e.name.substring(0,U),S=e.name.substring(U+1,b)
+switch(g[v]=S.replace(/\_/g," ").replace(/^\d*(?:\s-|\.)?\s/,"").replace(/\s(?:\[|\(|\{).+(?:\)|\]|\})/,""),g[m]=(S.match(/(?:\[|\(|\{).+(?:\)|\]|\})/)||[""])[0],g[h]=Number((S.match(/^\d*/)||[0])[0]),A){case"3gp":if("DCIM/"!==w)break
+case"m4v":return void t("skipping "+A+" video file")}}var R=["Blues","Classic Rock","Country","Dance","Disco","Funk","Grunge","Hip-Hop","Jazz","Metal","New Age","Oldies","Other","Pop","R&B","Rap","Reggae","Rock","Techno","Industrial","Alternative","Ska","Death Metal","Pranks","Soundtrack","Euro-Techno","Ambient","Trip-Hop","Vocal","Jazz+Funk","Fusion","Trance","Classical","Instrumental","Acid","House","Game","Sound Clip","Gospel","Noise","AlternRock","Bass","Soul","Punk","Space","Meditative","Instrumental Pop","Instrumental Rock","Ethnic","Gothic","Darkwave","Techno-Industrial","Electronic","Pop-Folk","Eurodance","Dream","Southern Rock","Comedy","Cult","Gangsta Rap","Top 40","Christian Rap","Pop / Funk","Jungle","Native American","Cabaret","New Wave","Psychedelic","Rave","Showtunes","Trailer","Lo-Fi","Tribal","Acid Punk","Acid Jazz","Polka","Retro","Musical","Rock & Roll","Hard Rock","Folk","Folk-Rock","National Folk","Swing","Fast Fusion","Bebob","Latin","Revival","Celtic","Bluegrass","Avantgarde","Gothic Rock","Progressive Rock","Psychedelic Rock","Symphonic Rock","Slow Rock","Big Band","Chorus","Easy Listening","Acoustic","Humour","Speech","Chanson","Opera","Chamber Music","Sonata","Symphony","Booty Bass","Primus","Porn Groove","Satire","Slow Jam","Club","Tango","Samba","Folklore","Ballad","Power Ballad","Rhythmic Soul","Freestyle","Duet","Punk Rock","Drum Solo","A Cappella","Euro-House","Dance Hall","Goa","Drum & Bass","Club-House","Hardcore","Terror","Indie","BritPop","Negerpunk","Polsk Punk","Beat","Christian Gangsta Rap","Heavy Metal","Black Metal","Crossover","Contemporary Christian","Christian Rock","Merengue","Salsa","Thrash Metal","Anime","JPop","Synthpop","Abstract","Art Rock","Baroque","Bhangra","Big Beat","Breakbeat","Chillout","Downtempo","Dub","EBM","Eclectic","Electro","Electroclash","Emo","Experimental","Garage","Global","IDM","Illbient","Industro-Goth","Jam Band","Krautrock","Leftfield","Lounge","Math Rock","New Romantic","Nu-Breakz","Post-Punk","Post-Rock","Psytrance","Shoegaze","Space Rock","Trop Rock","World Music","Neoclassical","Audiobook","Audio Theatre","Neue Deutsche Welle","Podcast","Indie Rock","G-Funk","Dubstep","Garage Rock","Psybient"],P={TIT2:v,TT2:v,TPE1:T,TP1:T,TALB:I,TAL:I,TRCK:h,TRK:h,APIC:k,PIC:k,POPM:x,POP:x,PCNT:C,CNT:C,TORY:f,TDOR:f,TYER:f,TYE:f,TDRC:f,TCON:p,TCO:p},y={"©alb":I,"©art":T,"©ART":T,aART:T,"©nam":v,trkn:h,covr:k,Year:f},B={DATE:f,TITLE:v,ARTIST:T,ALBUM:I,TRACKNUMBER:h,COMMENTS:m,COMMENT:m,GENRE:p,METADATA_BLOCK_PICTURE:k},O={"M4A ":!0,"M4B ":!0,mp41:!0,mp42:!0,isom:!0,iso2:!0},E={mp4a:!0,samr:!0,sawb:!0,sawp:!0,alac:!0},M=Math.min(65536,e.size)
+BlobView.get(e,0,M,function(l,u){if(u)return void t(u)
+try{var f=l.getASCIIText(0,12)
+if("LOCKED 1 "===f.substring(0,9))return void d(e)
+if("ID3"===f.substring(0,3))r(l)
+else if("OggS"===f.substring(0,4))i(l)
+else if("fLaC"===f.substring(0,4))o(l)
+else if("ftyp"===f.substring(4,8)){if(s(l,O))return void c(l)
+t("Unknown MP4 file type")}else 65530===(65534&l.getUint16(0,!1))?BlobView.get(e,e.size-128,128,function(e,r){if(r)return void t(r)
+try{var i=e.getASCIIText(0,3)
+"TAG"===i?a(e):n(g)}catch(o){t(o)}}):t("Unplayable music file")}catch(v){console.error("parseAudioMetadata:",v,v.stack),t(v)}})}
+var BlobView=function(){function e(e){throw Error(e)}function t(e,t,n,i,r,a,s){this.blob=e,this.sliceOffset=t,this.sliceLength=n,this.slice=i,this.viewOffset=r,this.viewLength=a,this.littleEndian=s,this.view=new DataView(i,r,a),this.buffer=i,this.byteLength=a,this.byteOffset=r,this.index=0}return t.get=function(n,i,r,a,s){0>i&&e("negative offset"),0>r&&e("negative length"),i>n.size&&e("offset larger than blob size"),i+r>n.size&&(r=n.size-i)
+var o=n.slice(i,i+r),d=new FileReader
+d.readAsArrayBuffer(o),d.onloadend=function(){var e=null
+d.result&&(e=new t(n,i,r,d.result,0,r,s||!1)),a(e,d.error)}},t.prototype={constructor:t,getMore:function(e,n,i){e>=this.sliceOffset&&e+n<=this.sliceOffset+this.sliceLength?i(new t(this.blob,this.sliceOffset,this.sliceLength,this.slice,e-this.sliceOffset,n,this.littleEndian)):t.get(this.blob,e,n,i,this.littleEndian)},littleEndian:function(){this.littleEndian=!0},bigEndian:function(){this.littleEndian=!1},getUint8:function(e){return this.view.getUint8(e)},getInt8:function(e){return this.view.getInt8(e)},getUint16:function(e,t){return this.view.getUint16(e,void 0!==t?t:this.littleEndian)},getInt16:function(e,t){return this.view.getInt16(e,void 0!==t?t:this.littleEndian)},getUint32:function(e,t){return this.view.getUint32(e,void 0!==t?t:this.littleEndian)},getInt32:function(e,t){return this.view.getInt32(e,void 0!==t?t:this.littleEndian)},getFloat32:function(e,t){return this.view.getFloat32(e,void 0!==t?t:this.littleEndian)},getFloat64:function(e,t){return this.view.getFloat64(e,void 0!==t?t:this.littleEndian)},readByte:function(){return this.view.getInt8(this.index++)},readUnsignedByte:function(){return this.view.getUint8(this.index++)},readShort:function(e){var t=this.view.getInt16(this.index,void 0!==e?e:this.littleEndian)
+return this.index+=2,t},readUnsignedShort:function(e){var t=this.view.getUint16(this.index,void 0!==e?e:this.littleEndian)
+return this.index+=2,t},readInt:function(e){var t=this.view.getInt32(this.index,void 0!==e?e:this.littleEndian)
+return this.index+=4,t},readUnsignedInt:function(e){var t=this.view.getUint32(this.index,void 0!==e?e:this.littleEndian)
+return this.index+=4,t},readFloat:function(e){var t=this.view.getFloat32(this.index,void 0!==e?e:this.littleEndian)
+return this.index+=4,t},readDouble:function(e){var t=this.view.getFloat64(this.index,void 0!==e?e:this.littleEndian)
+return this.index+=8,t},tell:function(){return this.index},remaining:function(){return this.byteLength-this.index},seek:function(t){0>t&&e("negative index"),t>this.byteLength&&e("index greater than buffer size"),this.index=t},advance:function(t){var n=this.index+t
+0>n&&e("advance past beginning of buffer"),n>this.byteLength&&e("advance past end of buffer"),this.index=n},getUnsignedByteArray:function(e,t){return new Uint8Array(this.buffer,e+this.viewOffset,t)},readUnsignedByteArray:function(e){var t=new Uint8Array(this.buffer,this.index+this.viewOffset,e)
+return this.index+=e,t},getBit:function(e,t){var n=this.view.getUint8(e)
+return 0!==(n&1<<t)},getUint24:function(e,t){var n,i,r
+return(void 0!==t?t:this.littleEndian)?(n=this.view.getUint8(e),i=this.view.getUint8(e+1),r=this.view.getUint8(e+2)):(r=this.view.getUint8(e),i=this.view.getUint8(e+1),n=this.view.getUint8(e+2)),(r<<16)+(i<<8)+n},readUint24:function(e){var t=this.getUint24(this.index,e)
+return this.index+=3,t},getASCIIText:function(e,t){var n=new Uint8Array(this.buffer,e+this.viewOffset,t)
+return String.fromCharCode.apply(String,n)},readASCIIText:function(e){var t=new Uint8Array(this.buffer,this.index+this.viewOffset,e)
+return this.index+=e,String.fromCharCode.apply(String,t)},getUTF8Text:function(e,t){function n(){throw new Error("Illegal UTF-8")}for(var i,r,a,s,o,d=e,u=e+t,c="";u>d;){var r=this.view.getUint8(d)
+128>r?(c+=String.fromCharCode(r),d+=1):194>r?n():224>r?(d+1>=u&&n(),a=this.view.getUint8(d+1),(128>a||a>191)&&n(),i=((31&r)<<6)+(63&a),c+=String.fromCharCode(i),d+=2):240>r?(d+2>=u&&n(),a=this.view.getUint8(d+1),(128>a||a>191)&&n(),s=this.view.getUint8(d+2),(128>s||s>191)&&n(),i=((15&r)<<12)+((63&a)<<6)+(63&s),c+=String.fromCharCode(i),d+=3):245>r?(d+3>=u&&n(),a=this.view.getUint8(d+1),(128>a||a>191)&&n(),s=this.view.getUint8(d+2),(128>s||s>191)&&n(),o=this.view.getUint8(d+3),(128>o||o>191)&&n(),i=((7&r)<<18)+((63&a)<<12)+((63&s)<<6)+(63&o),i-=65536,c+=String.fromCharCode(55296+((1047552&i)>>>10)),c+=String.fromCharCode(56320+(1023&i)),d+=4):n()}return c},readUTF8Text:function(e){try{return this.getUTF8Text(this.index,e)}finally{this.index+=e}},getID3Uint28BE:function(e){var t=127&this.view.getUint8(e),n=127&this.view.getUint8(e+1),i=127&this.view.getUint8(e+2),r=127&this.view.getUint8(e+3)
+return t<<21|n<<14|i<<7|r},readID3Uint28BE:function(){var e=this.getID3Uint28BE(this.index)
+return this.index+=4,e},readNullTerminatedLatin1Text:function(e){for(var t="",n=unescape("%u0402%u0403%u201A%u0453%u201E%u2026%u2020%u2021%u20AC%u2030%u0409%u2039%u040A%u040C%u040B%u040F%u0452%u2018%u2019%u201C%u201D%u2022%u2013%u2014%u0000%u2122%u0459%u203A%u045A%u045C%u045B%u045F%u00A0%u040E%u045E%u0408%u00A4%u0490%u00A6%u00A7%u0401%u00A9%u0404%u00AB%u00AC%u00AD%u00AE%u0407%u00B0%u00B1%u0406%u0456%u0491%u00B5%u00B6%u00B7%u0451%u2116%u0454%u00BB%u0458%u0405%u0455%u0457"),i=function(e){return e>=192&&255>=e?String.fromCharCode(e-192+1040):e>=128&&191>=e?n.charAt(e-128):String.fromCharCode(e)},r=0;e>r;r++){var a=this.view.getUint8(this.index+r)
+if(0===a){r++
+break}t+=i(a)}return this.index+=r,t},readNullTerminatedUTF8Text:function(e){for(var t=0;e>t&&0!==this.view.getUint8(this.index+t);t++);var n=this.readUTF8Text(t)
+return e>t&&this.advance(1),n},readNullTerminatedUTF16Text:function(e,t){if(null==t){var n=this.readUnsignedShort()
+e-=2,t=65279===n?!1:!0}for(var i="",r=0;e>r;r+=2){var a=this.getUint16(this.index+r,t)
+if(0===a){r+=2
+break}i+=String.fromCharCode(a)}return this.index+=r,i}},{get:t.get}}()
