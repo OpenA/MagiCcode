@@ -7,7 +7,7 @@
 // @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.7.0
+// @version 		1.8.0
 // @grant   		none
 // ==/UserScript==
 
@@ -27,9 +27,11 @@
 		replace: function(el, nodes) { $nodeUtil('replace', el, nodes) },
 		remove: function(el, nodes) { $nodeUtil('remove', el, nodes) }
 	}
-	function $each(el, Fn) {
-		el = typeof el === 'string' ? document.querySelectorAll(el) : el;
-		Array.prototype.slice.call(el, 0).forEach(Fn)
+	function $each(arr, Fn) {
+		arr = typeof arr === 'string' ? document.querySelectorAll(arr) : arr;
+		Array.prototype.slice.call(arr, 0).forEach(function(el, i) {
+			Fn(el, (i + 1 === arr.length))
+		})
 	}
 	function $setup(el, attr, events) {
 		if (el) {
@@ -157,6 +159,8 @@
 		if (localStorage.getItem('oEmbedAPI') == 'false') {
 			sessionStorage.setItem('LinksCache', '{}');
 		}
+		if (localStorage.getItem('Keywords') && localStorage.getItem('Keywords').indexOf('Nametrip') >= 0)
+			localStorage.removeItem('Keywords');
 		if (!User || !User.tokens[0] || User.modified) {
 			var apiReq = new XMLHttpRequest();
 				apiReq.open('GET', '/api/user.json', true);
@@ -174,19 +178,16 @@
 		}
 	} catch(e) {
 		console.error(e)
-	} finally {
-		localStorage.removeItem('EmbedIn');
-		localStorage.removeItem('VideoSize');
 	}
 })();
 
 function MagicExtension() {
 	var HM = {
 		zIndex: 1, UnreadCount: 0, DragableObj: null, Played: null, LastKey: null,
-		ThreadListener: {}, LoadedPosts: {}, VActive: [], RepliesMap: {}, URL: ParseUrl(),
+		ThreadListener: {}, LoadedPosts: {}, VActive: [], URL: ParseUrl(),
 		APIKey: _z.localS.get('APIKey', '9cccaccb6ddc490a97bcd2ba6c282191'),
 		LinksMap: JSON.parse(_z.sessionS.get('LinksCache', '{}')),
-		UserStyle: JSON.parse(_z.localS.get('UserStyle', JSON.stringify(''))),
+		UserStyle: JSON.parse(_z.localS.get('UserStyle', '""')),
 		oEmbedAPI: _z.localS.get('oEmbedAPI', true),
 		maXrating: _z.localS.get('maXrating', 'SFW'),
 		FormStyle: _z.localS.get('FormStyle', 1),
@@ -199,9 +200,8 @@ function MagicExtension() {
 		AttachPopups: _z.localS.get('AttachPopups', true),
 		RemoveFileName: _z.localS.get('RemoveFileName', false),
 		DiscloseTextSpoilers: _z.localS.get('DiscloseTextSpoilers', false),
-		Keywords: JSON.parse(_z.localS.get('Keywords', JSON.stringify({Nametrip:{},Title:{},Words:{},conceal:false}))),
-		User: JSON.parse(_z.localS.get('User', '{}'))
-	},
+		Keywords: JSON.parse(_z.localS.get('Keywords', '{}')),
+		User: JSON.parse(_z.localS.get('User', '{}')) },
 	AspectSize = {
 		W: [360, 480, 720, 854],
 		H: [270, 360, 480, 576]},
@@ -216,8 +216,148 @@ function MagicExtension() {
 					return key;
 				}
 			}
-		}
-	},
+		}},
+	RepliesLinks = {
+		ReplyNodes: new Array(0),
+		generate: function() {
+			for (var n = 0; n < this['ReplyNodes'].length; n++) {
+				var cid = this['ReplyNodes'][n].id.split('_')[1];
+				if (this[cid]) {
+					for (var i = 0; i < this[cid].length; i++) {
+						var relink, Id = this[cid][i];
+						if (!this['ReplyNodes'][n].querySelector('.celrly[href$="#i'+ Id[2] +'"]')) {
+							relink = _z.setup('a', {'id': 'cvl-'+ Id[0] +'-'+ (!Id[1] ? Id[2] : Id[1]) +'-'+ Id[2], 'class': 'reply-link celrly',
+								'href': '/'+ Id[0] +'/res/'+ (!Id[1] ? Id[2] : Id[1]) +'.xhtml#i'+ Id[2], 'text':
+								'\n>>'+ (Id[3] ? '❪'+ Id[0].toUpperCase() +'❫' : '') + Id[2] });
+							relink.hidden = (document.getElementById('post_'+ Id[2]) || {hidden:false}).hidden;
+							_z.before(this['ReplyNodes'][n].lastElementChild, relink);
+						}
+					}
+				}
+			}
+		}},
+	Disepath = {
+		bank: {},
+		naval: function(arg, val, $P) {
+			for (var idx = 0, $O = this.bank[arg] || []; idx < $O.length; idx++) {
+				 var word = escapeRegExp($O[idx].word), matp = new RegExp(
+					$O[idx].type == '#' ? '('+ word +')' : $O[idx].type +'[\\s]*{[^}]*('+ word +'(?:::)?)[^}]*}').exec(val) || [];
+				if (!matp[1] || matp[1] !== $O[idx].word) {
+					switch ($O[idx].meth) {
+						case 'rep':
+							var $parent = $O[idx].stub.parentNode;
+							_z.before($parent, $O[idx].stub);
+							_z.remove([$parent.nextElementSibling, $parent]);
+							break;
+						case 'hid':
+							var map$ = $O[idx].node.getAttribute('patch-id').split('_');
+							$O[idx].stub.parentNode.classList.remove('autohidden');
+							$O[idx].stub.remove();
+							$O[idx].node.hidden = false;
+							_z.each('.celrly[href="/'+ map$[0] +'/res/'+ map$[1] +'.xhtml#i'+ map$[2] +'"]', function(crly) { crly.hidden = false });
+						if (arg === 0) 
+							getDataResponse('/api/thread/'+ map$[0] +'/'+ map$[1] +'/unhide.json', function(status, sText, flag, xhr) {});
+					}
+					delete this.bank[arg][idx];
+					this.bank[arg].splice(idx, 1);
+				}
+			}
+			this.eval(arg, val, $P);
+		},
+		eval: function(arg, val, $P) {
+			if (val === undefined)
+				return;
+			try {
+				var rXkey = '(\\w*)[\\s]*{[\\s\\n]*([^}]+)[\\s\\n]*}|(#(?:\\w*)?\\/?\\d*)',
+					rXval = /^(?:\*(.+)\*|\*(.+)|(.+)\*|(.+)\:\:(.+))$/,
+					rXpts =	/^[\s\n]*|[\s\n]*\|[\s\n]*|[\s\n]*$/g,
+					xlass = {
+						other: ['replypost', 'oppost'][arg],
+						title: 'replytitle',
+						name : 'postername',
+						trip : 'postertrip',
+						text : 'message', '#': 'cyan-light' }, $this = this,
+					ABС = 'ABCDEFGHIJKLMNOPQRSTUVWXYZАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ',
+					tlc = 'translate(normalize-space(.), "'+ ABС +'", "'+ ABС.toLowerCase() +'")';
+				for (var i = 0, mat$ = val.match(new RegExp(rXkey, 'g')) || []; i < mat$.length; i++) {
+					 var m = new RegExp(rXkey).exec(mat$[i]) || [];
+					if (m[1] && m[2]) {
+						for (var j = 0, keys = m[2].split(rXpts); j < keys.length; j++) {
+							if (!keys[j])
+								continue;
+							 var k$ = rXval.exec(keys[j]) || [];
+							if (k$[4] && k$[5]) {
+								_$VAST('rep', './/*[@class="'+ xlass[m[1]] +'"]//text()[contains('+ tlc +','+ cleanStringForXpath(k$[4].toLowerCase()) +
+									') and not(parent::code or parent::*[@class="text-original" or @class="text-modifed" or @class="text-styled"])]', k$, m[1]);
+							} else {
+								var s = cleanStringForXpath((k$[1] || k$[2] || k$[3] || keys[j]).toLowerCase()),
+									f = k$[1] ? 'contains('+ tlc +', '+ s +')' :
+										k$[2] ? 'substring('+ tlc +', string-length(.) - string-length('+ s +') +1) = '+ s:
+										k$[3] ? 'starts-with('+ tlc +', '+ s +')' : tlc +' = '+ s;
+									_$VAST('hid', './/*[@class="'+ xlass[m[1]] +'" and '+ f +' and not(ancestor::*[contains(@class, "autohide-info") or contains(@class, "'+
+										xlass.other +'")])]/ancestor::*[@class="'+ ['thread', 'reply" or @class="copyedpost" or @class="storedpost'][arg] +'"]', keys[j], m[1]);
+							}
+						}
+					} else if (m[3] && !$P.classList.contains(xlass.other)) {
+						var k$ = m[3].slice(1).split('/'),
+							f = $P.getAttribute('patch-id').split('_');
+						if ((k$[0] === f[0] || k$[0] === f[1]) && k$[1] === f[2] || k$[0] === f[2]) {
+							_$VAST('hid', ['parent::*[@class="thread"]', 'descendant::*[@class="reply" or @class="copyedpost" or @class="storedpost"]'][arg], m[3], '#');
+						}
+					}
+				}
+			} catch(err) {
+				console.error(err)
+			}
+			function _$VAST(meth, xpath, word, type) {
+				for (var n = 0, result = getElementByXpath(xpath, 7, $P); n < result.snapshotLength; n++) {
+					 var stub, target$ = result.snapshotItem(n);
+					switch (meth) {
+						case 'rep':
+							var cin = escapeRegExp(word[4]), f,
+								sm = word[5].match(/^(.*)@\[([^\]]+)\]$/),
+								twod = sm ? sm[1] : word[5],
+								md = twod.match(/^(.*)?(\$1)(.*)?$/);
+								word = word[0];
+							if (md) {
+								var S = KeyCodes.balance(cin);
+								cin = md[1] || md[3] ? S[0] +'([^'+ S[1] +']*)'+ S[1] : '('+ cin +')';
+							}
+							f = new RegExp(cin, 'gi')
+							_z.after(target$, [
+								_z.setup('span', {'class': 'text-original'}),
+								_z.setup('span', {'class': 'text-modifed', 'html': target$.textContent.replace(f,
+									(sm && sm[2] ? '<span class="text-styled" style="'+ sm[2] +'">'+ twod +'</span>' : twod))})
+							]);
+							target$.nextElementSibling.appendChild(target$);
+							stub = target$;
+							break;
+						case 'hid':
+							var map$ = $P.getAttribute('patch-id').split('_');
+							if (HM.Keywords.conceal) {
+								$P.hidden = true;
+								_z.each('.celrly[href="/'+ map$[0] +'/res/'+ map$[1] +'.xhtml#i'+ map$[2] +'"]', function(crly) { crly.hidden = true });
+								if ($P.classList.contains('new')) {
+									markAsRead($P);
+								}
+							}
+							stub = _z.setup('div', {'id': 'autohidden-'+ target$.id, 'class': 'autohide-info '+ ['thr-h', 'rp-h'][arg], 'html': '<label class="'+ xlass[type] +' t-sec">'+
+								word +'</label>\n<i class="s-inf">('+ LC.hidden[2][lng] + LC.hidden[arg][lng] +')</i>\n<span class="s-inf">No.'+ map$[2] +'</span>'});
+							_z.prepend(
+								_z.setup(target$, {'class': target$.className +' autohidden'}), stub);
+						if (arg === 0)
+							getDataResponse('/api/thread/'+ map$[0] +'/'+ map$[1] +'/hide.json', function(status, sText, flag, xhr) {});
+					}
+					($this.bank[arg] || ($this.bank[arg] = new Array(0))).push({
+						meth: meth,
+						type: type,
+						word: word,
+						stub: stub,
+						node: $P
+					});
+				}
+			}
+		}},
 	AlbumArts = {
 		makeCover: function(dataImage, artist, album) {
 			var aId = getKeyByValue(this, dataImage) || ((artist || makeRandId(4)) +' — '+ (album || makeRandId(4))).hashCode();
@@ -233,8 +373,7 @@ function MagicExtension() {
 				}))
 			}
 			return 'album_'+ aId;
-		}
-	},
+		}},
 	Megia = {
 		'audio': new Harmony(),
 		'image': new MagicPicture(),
@@ -286,15 +425,17 @@ function MagicExtension() {
 		txtspoils: ["Disclose text spoilers", "Раскрывать текстовые спойлеры"],
 		broken_link: ["Broken and useless URL Link", "Нерабочая и абсолютно бесполезная ссылка"],
 		allw: ["allowed", "раскрытых"],
+		line: [" line", " строк"],
+		page: [" page", " страниц"],
 		remv: ["Remove", "Убрать"],
 		clos: ["Close", "Закрыть"],
 		all: [" All", " все"],
 		add: ["Add", "Добавить"],
 		to: ['to', 'в'],
 		hidden: [
-			['Hidden ', 'Cкрытый '],
 			['Thread', 'тред'],
-			['Post', 'пост']
+			['Post', 'пост'],
+			['Hidden ', 'Cкрытый ']
 		],
 		tm: {
 			's': ['sec', 'cек'],
@@ -331,7 +472,10 @@ function MagicExtension() {
 			["(Thu)", "(Чт)"],
 			["(Fri)", "(Пт)"],
 			["(Sat)", "(Cб)"]
-		]
+		],
+		get: function(key, n, l) {
+			return this[key][l] + (n === 1 ? this.few['ru'][l] : n < 5 ? this.few['u-d'][l] : this.few['en'][l]);
+		}
 	},
 	
 	UrlCache = JSON.parse(_z.sessionS.get('LinksCache', '{}')), stopCloseReact = false,
@@ -576,7 +720,7 @@ function MagicExtension() {
 				'ANY_UNORDERED_NODE_TYPE',
 				'FIRST_ORDERED_NODE_TYPE'],
 			V = TYPE[value] || TYPE[TYPE.indexOf(value)] || TYPE[0];
-		return (node || document).evaluate(path, (node || document.body), null, XPathResult[V], null);
+		return document.evaluate(path, (node || document.body), null, XPathResult[V], null);
 	}
 	
 	function cleanStringForXpath(str) {
@@ -673,10 +817,10 @@ function MagicExtension() {
 		function g() {
 			for (var j = 0, b; j < str.length; j++){
 				b = 0.02519603282416938 * (a += str.charCodeAt(j));
-				a = b >>> 0;
+				a =  b >>> 0;
 				b = (b - a) * a;
-				a = b >>> 0;
-				a += (b - a) * 0x100000000;
+				a =  b >>> 0;
+				a+= (b - a) * 0x100000000;
 			}
 			return (a >>> 0) * 2.3283064365386963e-10;
 		}
@@ -788,9 +932,7 @@ function MagicExtension() {
 				if (Thread['Posts'].length === 0) {
 					_z.setup(WarningMsg, {'class': undefined, 'text': xhtml});
 				} else {
-					Thread.querySelector('.abbrev a[onclick^="Truncate"]').parentNode.remove();
 					_z.each(Thread['Posts'], handlePost);
-					genReplyMap(Thread['Posts']);
 					_z.replace(WarningMsg, Thread);
 				}
 			});
@@ -801,7 +943,7 @@ function MagicExtension() {
 					last_date = Math.round(new Date(posts.last().querySelector('.posterdate').id).getTime() / 1000) - (60 * 60),
 					last_id = extractStringNumbers(posts.last().id)[0],
 					nstr = function(num) {
-						return num +' '+ LC.hidden[2][lng] + (num === 0 || num >= 5 ? LC.few['u-b'][lng] : num === 1 ? '' : LC.few['u-a'][lng]) +'/'+ LC.tm['h'][lng];
+						return num +' '+ LC.hidden[1][lng] + (num === 0 || num >= 5 ? LC.few['u-b'][lng] : num === 1 ? '' : LC.few['u-a'][lng]) +'/'+ LC.tm['h'][lng];
 					}
 				for (i = posts.length - 1; posts[i]; i--) {
 					if (Math.round(new Date(posts[i].querySelector('.posterdate').id).getTime() / 1000) > last_date) {
@@ -917,7 +1059,7 @@ function MagicExtension() {
 								temp_post = _z.setup('div', {'html': el[i]}).firstElementChild
 								handlePost(temp_post);
 								temp_post.classList.add('new');
-								Thread.appendChild(temp_post);
+								_z.after(Thread['Posts'].last(), temp_post);
 							}
 							Tinycon.setBubble(HM.UnreadCount);
 							MListen['SpeedCount'].innerHTML = speedMether(Thread['Posts'])[0];
@@ -935,7 +1077,7 @@ function MagicExtension() {
 						}
 						if (e) {
 							MListen['PostsCount'].innerHTML = (Thread['BumpLimit'] ? SageIcon : '') + posts_count + LC.omit[lng] + (Count.mod > 0 ? '<span class="parensis">\n+'+ Count.mod + LC.pmod[lng] +'\n</span>' : '');
-							genReplyMap(Thread['Posts']);
+							RepliesLinks.generate();
 						}
 					}
 				} catch(err) {
@@ -992,7 +1134,7 @@ function MagicExtension() {
 							}
 						}
 						Tinycon.setBubble(HM.UnreadCount);
-						genReplyMap(Thread['Posts']);
+						RepliesLinks.generate();
 						Count.set({dif: 0, new: 0, del: 0, mod: (
 							posts_count !== Thread['Posts'].length && jsonPosts.length === Thread['Replys'].length ? Thread['Posts'].length - posts_count : 0
 						)});
@@ -1019,15 +1161,14 @@ function MagicExtension() {
 				durab: new Array(0)},
 			ChLC = {
 				wsec: ['Wait a Second...', 'Секунду...'],
-				postdel: ["Post is deleted.", "Пост удалён."]},
+				body: _z.setup('td', {'class': 'p-del stub', 'text': ["Post is deleted.", "Пост удалён."][lng]})},
 			Timrs = {
 				clear: function(name) {
 					clearTimeout(this[name])},
 				set: function(name, Fn) {
 					this.clear(name);
 					this[name] = setTimeout(Fn, 300)}
-			},
-			post_stub = _z.setup('td', {'class': 'die stub', 'text': ChLC.postdel[lng]});
+			};
 		this.closeLastPopup = RemoveAllRefs;
 		this.MagicPostView  = MagicPostView;
 		this.MagicHighlight = MagicHighlight;
@@ -1055,18 +1196,23 @@ function MagicExtension() {
 				try {
 					var L = _a.id.split('-'), brd = L[1], tid = L[2], pid = L[3], op = tid === pid, patch_id = brd +'_'+ tid +'_'+ pid,
 						id = brd +'-'+ pid, map = (_p.getAttribute('patch-id')||'').split('_'),
-						lpth = '[href="/'+ map[0] +'/res/'+map[1]+'.xhtml#i'+map[2]+'"]',
-						post = HM.LoadedPosts[patch_id] || document.getElementById('post_'+ pid), loading,
-						reftab = document.getElementById('ref-'+ id), binded = function (el) {
-							var load = (el.querySelector('.reply:not(.autohidden)') || el).cloneNode(true)
-							_z.remove(load.querySelectorAll('form.edit, .magic-picture'))
-							if (HM.AttachPopups && load.classList[1] !== 'stub') {
+						lpth = '[href="/'+ map[0] +'/res/'+ map[1] +'.xhtml#i'+ map[2] +'"]', loading,
+						reftab = document.getElementById('ref-'+ id), binded = function (post, load_first) {
+							var load = post.stored ? post.body : post.body.cloneNode(true),
+								stub = load.classList.contains('stub') || load.classList.contains('autohidden');
+								_z.remove(load.querySelectorAll('form.edit, .magic-picture'));
+							if (HM.AttachPopups && !stub) {
 								BindCloseRef(reftab);
 							} else {
 								BindRemoveRef(_a, reftab);
 							}
-							_z.replace(loading, _z.setup(load, {'id': 'load-'+ id, 'class': el.cast}));
-							_z.each(reftab.querySelectorAll('a'+ lpth), add_mapping);
+							_z.replace(loading, _z.setup(load, {'id': 'load-'+ id, 'class': post.stored}));
+							if (post.stored && load_first) {
+								RepliesLinks.generate();
+								set_style(_a, reftab);
+								document.body.appendChild(reftab);
+							}
+							_z.each(load.querySelectorAll('.locked:not('+lpth+'), a'+lpth+':not(.locked)'), add_mapping);
 						}
 					if (reftab) {
 						if (reftab.attached) {
@@ -1082,10 +1228,10 @@ function MagicExtension() {
 							'click': PDownListener, 'mouseover': MagicPostView});
 						reftab.formBinding = function(el) {this.firstElementChild.firstElementChild.firstElementChild.appendChild(el)}
 						loading = reftab.querySelector('.loading');
-						if (post) {
-							binded(post);
+						if (HM.LoadedPosts[patch_id]) {
+							binded(HM.LoadedPosts[patch_id]);
 						} else if (HM.URL.thread == tid) {
-							binded(post_stub);
+							binded(ChLC);
 						} else {
 							getDataResponse('/api/post/'+ brd +'/'+ tid +'/'+ pid +'.xhtml',
 							function(status, sText, xhtml, xhr) {
@@ -1098,22 +1244,20 @@ function MagicExtension() {
 									}
 									return _z.replace(loading, ErrorMSG);
 								} else if (['Specified element does not exist.', 'Post is deleted.'].isThere(xhtml)) {
-									node = post_stub;
+									node = HM.LoadedPosts[patch_id] = ChLC;
 								} else {
-									node = _z.setup('td', {'id': 'load-'+ id, 'html': xhtml});
-									node.cast = 'stored';
+									node = _z.setup('td', {'patch-id': brd +'_'+ tid +'_'+ pid, 'html': xhtml});
+									node.stored = 'storedpost';
 									handlePost(node);
-									genReplyMap([node]);
 								}
-								binded(node);
-								set_style(_a, reftab);
+								binded(node, true);
 							});
 						}
 						document.body.appendChild(reftab);
 					}
 					set_style(_a, reftab);
-				} catch(e) {
-					console.error(e)
+				} catch(err) {
+					console.error(err)
 				}
 			});
 			_a.onmouseleave = function(e) {
@@ -1125,11 +1269,10 @@ function MagicExtension() {
 				mapp.classList[fn]('mapped');
 				mapp.classList[fn]('locked');
 		}
-
 		function set_style(_lnk, _rtab) {
 			var clientR = _lnk.getBoundingClientRect(),
 				offsetX = clientR.left + pageXOffset + _lnk.offsetWidth / 2,
-				offsetY = clientR.top + pageYOffset,
+				offsetY = clientR.top  + pageYOffset,
 				clientX = document.documentElement.clientWidth,
 				clientY = document.documentElement.clientHeight,
 				isLeft = offsetX < clientX / 3, Yd = _rtab.offsetHeight / 3,
@@ -1434,15 +1577,14 @@ function MagicExtension() {
 			return rX;
 		}
 	}
-	function loadMediaContainer(e) {
-		var embc, cont, last, vsize,
-			$btn = (!e.target.href ? e.target.parentNode : e.target),
-			href = escapeUrl($btn.href),
+	function loadMediaContainer(media) {
+		var embc, cont, last,
+			href = escapeUrl(media['URL']),
 			hash = href.hashCode(),
 			th = HM.LinksMap[hash], Id = th.Type +'_'+ hash,
 			wTYPES = ['pdf', 'docs'].isThere(th.Type) && th.Embed != 'Pbin',
-			pcont = _z.route($btn, jumpCont);
-		if ($btn.classList.contains('w-open') || wTYPES || HM.EmbedField == 0) {
+			pcont = media['NODE'] ? _z.route(media['NODE'], jumpCont) : null;
+		if (!pcont || wTYPES || HM.EmbedField == 0) {
 			last = mEl['ContentWindow'].lastElementChild;
 			if (last.id != 'content_'+ hash) {
 				embc = th.Embed.allReplace({'(visual=)true': '1$false', 'notracklist%3Dtrue': 'notracklist%3Dfalse', 
@@ -1463,12 +1605,12 @@ function MagicExtension() {
 			if (th.Embed === 'Pbin') {
 				if (!Megia[hash])
 					Megia[hash] = new MagicEmbeds(true)
-				if ($btn.previousElementSibling.id === Id) {
+				if (media['NODE'].previousElementSibling.id === Id) {
 					Megia[hash]['Container'].remove();
 				} else {
 					cont = _z.setup(Megia[hash].makePlayer(href, th.Embed), {'class': th.Type +'-container', 'id': Id}, null);
 					_z.setup(Megia[hash]['Frame'], {'class': 'full-size'}, null);
-					_z.before($btn, cont)
+					_z.before(media['NODE'], cont)
 				}
 			} else {
 				if (pcont.querySelector('#'+ Id)) {
@@ -1480,9 +1622,8 @@ function MagicExtension() {
 				}
 			}
 		}
-		if (th.Type === 'video' && !$btn.classList.contains('w-open'))
+		if (pcont && th.Type === 'video')
 			HM.VActive = [pcont, cont];
-		return _z.fall(e);
 	}
 	function jumpCont(el) {
 		var pb = el.querySelector('.postbody');
@@ -1510,10 +1651,10 @@ function MagicExtension() {
 									dataArr = [map.board, map.thread, map.pid, (diffb ? targ.board : '')];
 								_z.replace(link, _z.setup('a', {'class': 'reply-link', 'href': '/'+ targ.board +'/res/'+ targ.thread +'.xhtml#i'+ pid,
 									'id': 'rl-'+ targ.board +'-'+ targ.thread +'-'+ pid, 'text': '>>'+ (diffb ? targ.board +'/' : '') + pid}));
-								if (!HM.RepliesMap[reply_id])
-									HM.RepliesMap[reply_id] = new Array(0);
-								if (!JSON.stringify(HM.RepliesMap[reply_id]).isThere(JSON.stringify(dataArr)))
-									HM.RepliesMap[reply_id].push(dataArr);
+								if (!RepliesLinks[reply_id])
+									RepliesLinks[reply_id] = new Array(0);
+								if (!JSON.stringify(RepliesLinks[reply_id]).isThere(JSON.stringify(dataArr)))
+									RepliesLinks[reply_id].push(dataArr);
 							}
 						} else if (link.href.isThere("/deleted/") || link.href.isThere("/utils/")) {
 							HM.LinksMap[link.href.hashCode()] = {Embed: 'iframe', Type: 'pdf'};
@@ -1550,12 +1691,13 @@ function MagicExtension() {
 												_Attrs['id'] = 'ma-play';
 												_Attrs['class'] = 'ma-button btn-link';
 											Megia.audio.addTrack({
-												frontend: {button: link},
+												frontend: link.previousElementSibling,
 												duration: inf[1],
 												artist: alt[0],
 												album: 'Unknown',
 												title: alt[1],
-												url: href
+												url: href,
+												button: link
 											});
 									}
 								}
@@ -1583,12 +1725,13 @@ function MagicExtension() {
 												_Attrs['class'] = 'ma-button btn-link';
 												_Attrs['title'] = HM.LinksMap[hash]['Title'] = UrlCache[hash]['Title'] = EXT.toUpperCase() +', '+ dur +', '+ art +' — '+ ttl;
 											Megia.audio.addTrack({
-												frontend: {button: link},
+												frontend: link.previousElementSibling,
 												duration: dur,
 												artist: art,
 												album: 'Unknown',
 												title: ttl,
-												url: href
+												url: href,
+												button: link
 											});
 											break;
 										case 'video':
@@ -1631,6 +1774,8 @@ function MagicExtension() {
 												HM.LinksMap[hash]['Type'] = UrlCache[hash]['Type'] = type;
 											}
 										}
+										_z.setup(link, _Attrs);
+										_z.sessionS.set('LinksCache', JSON.stringify(UrlCache));
 									});
 								}
 							switch (true) {
@@ -1690,9 +1835,9 @@ function MagicExtension() {
 				}
 		});
 	}
-	function handleElements(node) {
+	function handleElements(node, map) {
 		_z.each((node || document).querySelectorAll(
-			'.postername:not(.t-sec), .postertrip:not(.t-sec), .reply_, .file .thumb:not([alt="illegal"])'
+			'.postername:not(.t-sec), .postertrip:not(.t-sec), .reply_, .file .thumb:not([alt="illegal"]), .abbrev'
 		), function(el) {
 			switch (el.classList[0]) {
 				case 'postername':
@@ -1705,6 +1850,19 @@ function MagicExtension() {
 						date.remove();
 					}
 					break;
+				case 'abbrev':
+					var trunc = el.querySelector('a[onclick^="Truncate"]'),
+						repls = el.querySelector('.replylinks');
+					if (trunc)
+						trunc.parentNode.remove();
+					if (!repls) {
+						repls = _z.setup('div', {'id': 'rln_'+ map.board +'-'+ map.pid, 'class': 'replylinks', 'html': '<span class="rl-inf">'+  LC.repl[lng] + LC.few['u-c'][lng] +':&nbsp;\n</span>'})
+						RepliesLinks['ReplyNodes'].push(repls);
+						el.appendChild(repls);
+					}
+					_z.setup(el.querySelector('a[onclick^="ExpandThread"]'), {'class': 'excat-button', 'id': 'thread-expand', 'onclick': undefined});
+					_z.setup(el.querySelector('a[onclick^="GetFullText"]'), {'class': 'Get-Full-Text', 'onclick': undefined});
+					break;
 				case 'reply_':
 					_z.replace(el, _z.setup('span', {'class': 'reply-button line-sect txt-btn', 'title': LC.repl[lng]}))
 					break;
@@ -1716,17 +1874,15 @@ function MagicExtension() {
 						dl = fileinfo.querySelector('a'),
 						name = getPageName(dl.href),
 						hash = dl.href.hashCode(),
-						fext = dl.href.fext();
+						fext = dl.href.fext(),
 						a = el.parentNode.tagName !== 'A' ? (function(){
 							var nA = _z.setup('a', {'href': dl.href, 'target': "_blank"});
 							el.parentNode.appendChild(nA); nA.appendChild(el);
 							return nA;
-						})() : el.parentNode;
-					switch (true) {
-						case (fext === 'pdf'):
-							HM.LinksMap[hash] = {Embed: 'iframe', Type: 'pdf'};
-							break;
-						case Files.video.isThere(fext):
+						})() : el.parentNode,
+						file_id = a.parentNode.id.split('_');
+					switch (Files.matchType(fext)) {
+						case 'video':
 							HM.LinksMap[hash] = {Embed: Files.video.indexOf(fext) > 4 ? 'flash' : 'html5', Type: 'video'};
 							if (el.getAttribute('src') === '/thumb/generic/sound.png') {
 								em.className = 'magic-info';
@@ -1734,12 +1890,11 @@ function MagicExtension() {
 							} else
 								params['contextmenu'] = 'image-context';
 							break;
-						case Files.image.isThere(fext):
-							var WH = (/(\d+×\d+)/).exec(em.textContent),
-								fid = el.parentNode.parentNode.id.split('_');
-							params = {'id': 'thmb_'+ hash, 'class': 'iview thumb', 'image-size': WH[1], 'contextmenu': 'image-context', 'edit-tool': '/utils/image/edit/'+fid[2]+'/'+fid[1], 'onclick': undefined};
+						case 'image':
+							params = {'id': 'thmb_'+ hash, 'class': 'iview thumb', 'image-size': em.textContent.match(/\d+×\d+/)[0],
+								'lowsrc': el.getAttribute('src'), 'contextmenu': 'image-context', 'onclick': undefined};
 							break;
-						case Files.audio.isThere(fext):
+						case 'audio':
 							var time = em.textContent.match(/\d+\:\d+/),
 								meta = (/kHz[\s\n]*((.*)[\s\n]*\s—[\s\n]*(.*))[\s\n]*\s\/[\s\n]*(.*)[\s\n]*\s\[/).exec(em.textContent);
 								em.className = 'magic-info';
@@ -1750,66 +1905,91 @@ function MagicExtension() {
 								artist: meta[2],
 								album: meta[3],
 								title: (meta[4] === 'Unknown' ? name.replace('.'+fext, '').replace(/---/g, ' — ').replace(/-/g, ' ') : meta[4]),
-								url: dl.href
+								url: dl.href,
+								id: file_id[2] +'@'+ hash,
+								button: a
 							});
 							break;
+						case 'pdf':
+							HM.LinksMap[hash] = {Embed: 'iframe', Type: 'pdf'};
+							break;
+						case 'arch':
+							el.src = '/src/png/1405/archive-icon.png';
 						default:
 							if (clickFn && clickFn.isThere('open_url')) {
 								var emb = (/open_url\('([^']+)/).exec(clickFn)[1];
-								if (Files.arch.isThere(fext))
-									el.src = '/src/png/1405/archive-icon.png';
 								HM.LinksMap[hash] = {Embed: emb, Type: emb.isThere('text') ? 'docs' : 'pdf'};
+							} else {
+								HM.LinksMap[hash] = {Embed: dl.href, Type: 'docs'};
 							}
 					}
 					_z.setup(dl, {'class': 'download-link', 'download': name, 'title': name});
 					_z.setup(el, params);
 			}
 			function makeMagicPlayer(clss, id, a, el) {
-				var magicPlayer = _z.setup('div', {'id': id, 'class': 'magic-audio thumb '+ clss, 'html': '<div class="ma-controls"></div>'});
-					magicPlayer.button = _z.setup(a, {'id': 'ma-play', 'class': (clss === 'movie' ? 'cm' : 'ma') +'-button'});
-				_z.after(a, magicPlayer); _z.append(magicPlayer.firstElementChild, a); el.remove();
+				var magicPlayer = _z.setup('div', {'id': id, 'class': 'magic-media thumb '+ clss, 'html': '<div class="ma-controls"></div>'});
+				_z.after(a, magicPlayer); _z.append(magicPlayer.firstElementChild,
+					_z.setup(a, {'id': 'ma-play', 'class': (clss === 'movie' ? 'cm' : 'ma') +'-button'})
+				); el.remove();
 				return magicPlayer;
 			}
 		});
 	}
-	function handlePost(post) {
-		var reflink = _z.setup(post.querySelector('.reflink > a[href*="/res/"]'), {'onclick': undefined}),
-			url = ParseUrl(reflink.href),
-			patchId = url.board +'_'+ url.thread +'_'+ url.pid,
-			delbox = post.getElementsByClassName('delete_checkbox')[0],
-			pMenu = _z.setup('ul', {'class': 'dropdown line-sect', 'html': '<li class="dropdown-toggle"><label class="postermenu dropdown-label el-li"></label><ul class="dropdown-menu"><li class="edit-post dropdown-item el-li">Редактировать</li><li class="mod-report dropdown-item el-li">Пожаловаться</li><li class="hide-post dropdown-item el-li">Скрыть</li><li class="delete-post dropdown-item el-li">Удалить<span class="chek-to-del dropdown-input line-sect"></span></li></ul></li>'});
-		HM.LoadedPosts[patchId]              = _z.setup(post,   {'patch-id': patchId}, {'click': PDownListener, 'mouseover': Chanabira.MagicPostView});
-		HM.LoadedPosts[patchId].delete_input = _z.setup(delbox, {'checked': false   });
-		HM.LoadedPosts[patchId].formBinding  = function(el) { _z.after(this, el) }
-		if (delbox) {
-			_z.replace(delbox.parentNode, pMenu);
-			mEl['DeleteOverlay'].appendChild(delbox);
-		}
-		_z.setup(post.querySelector('.abbrev a[onclick^="GetFullText"]'), {'class': 'Get-Full-Text', 'onclick': undefined});
-		handleLinks(post, url);
-		handleElements(post);
-	}
-	function genReplyMap(posts) {
-		_z.each(posts, function(post) {
-			var cid = post.getAttribute('patch-id').split('_');
-				cid = cid[0] +'-'+ cid[2];
-			if (HM.RepliesMap[cid]) {
-				if (!post.repliesNode) {
-					post.repliesNode = _z.setup('div', {'class': 'replylinks', 'html': '<span class="rl-inf">'+  LC.repl[lng] + LC.few['u-c'][lng] +':&nbsp;\n</span>'});
-					post.getElementsByClassName('abbrev')[0].appendChild(post.repliesNode);
-				}
-				for (var i = 0; i < HM.RepliesMap[cid].length; i++) {
-					var relink, Id = HM.RepliesMap[cid][i];
-					if (!post.repliesNode.querySelector('.celrly[href$="#i'+ Id[2] +'"]')) {
-						relink = _z.setup('a', {'id': 'cvl-'+ Id[0] +'-'+ (!Id[1] ? Id[2] : Id[1]) +'-'+ Id[2], 'class': 'reply-link celrly',
-							'href': '/'+ Id[0] +'/res/'+ (!Id[1] ? Id[2] : Id[1]) +'.xhtml#i'+ Id[2], 'text':
-							'\n>>'+ (Id[3] ? '❪'+ Id[0].toUpperCase() +'❫' : '') + Id[2] });
-						relink.hidden = (document.getElementById('post_'+ Id[2]) || {hidden:false}).hidden;
-						_z.before(post.repliesNode.lastElementChild, relink);
-					}
-				}
+	function handlePost(post, last_n) {
+		try {
+			var reflink = _z.setup(post.querySelector('.reflink > a[href*="/res/"]'), {'onclick': undefined}),
+				url = ParseUrl(reflink.href), userMenu, modMenu, op = url.pid === url.thread ? 0 : 1,
+				patchId = url.board +'_'+ url.thread +'_'+ url.pid,
+				delbox = post.getElementsByClassName('delete_checkbox')[0],
+				userpan = post.querySelector('label[onmousedown^="get_userpan"]');
+			
+			HM.LoadedPosts[patchId]              = post.stored ? post : _z.setup(post,   {'patch-id': patchId}, {'click': PDownListener, 'mouseover': Chanabira.MagicPostView});
+			HM.LoadedPosts[patchId].delete_input = _z.setup(delbox, {'checked': false   });
+			HM.LoadedPosts[patchId].formBinding  = function(el) { _z.after(this, el) };
+			HM.LoadedPosts[patchId].body         = post.querySelector('#reply'+ url.pid) || post;
+			if (delbox) {
+				userMenu = _z.setup('ul', {'class': 'dropdown line-sect', 'html':
+					'<li class="dropdown-toggle">'+
+						'<label class="dropdown-label el-li postermenu"></label>'+
+						'<ul class="dropdown-menu">'+
+							'<li class="dropdown-item el-li" id="usermenu_edit">Редактировать</li>'+
+							'<li class="dropdown-item el-li" id="usermenu_report">Пожаловаться</li>'+
+							'<li class="dropdown-item el-li" id="usermenu_hide">Скрыть</li>'+
+							'<li class="dropdown-item el-li" id="usermenu_delete">Удалить<span class="dropdown-input li-in" id="chkx-del_selected"></span></li>'+
+						'</ul>'+
+					'</li>'});
+				_z.replace(delbox.parentNode, userMenu);
+				mEl['DeleteOverlay'].appendChild(delbox);
 			}
-		});
+			if (userpan) {
+				var uids = (/(\d+),\s(\d+),\s\'([\d\w]+)\',\s(\w+),\s(\w+)/).exec(userpan.getAttribute('onmousedown')) || [];
+				modMenu  = _z.setup('ul', {'class': 'dropdown line-sect', 'html':
+					'<li class="dropdown-toggle">'+
+						'<label class="dropdown-label el-li modermenu">M</label>'+
+						'<ul class="dropdown-menu" id="modmenu-'+ uids[1] +'">'+
+							'<li class="dropdown-item el-li" id="modmenu_open" admin_req="/admin/post/'+ uids[1] +'/edit.xhtml">Редактировать</li>'+
+							'<li class="dropdown-item el-li" id="modmenu_xreq_upd" admin_req="/show.json">Раскрыть<span class="dropdown-input li-in cyan-light inactive" id="str-bump_inactive">+ бамп</span></li>'+
+							'<li class="dropdown-item el-li" id="modmenu_xreq_upd" admin_req="/hide.json">Скрыть</li>'+
+							'<div class="dropdown-br">Удалить</div>'+
+							'<li class="dropdown-item el-li" id="modmenu_xreq_reset" admin_req="/delete-images">Изображения</li>'+
+							'<li class="dropdown-item el-li" id="modmenu_xreq_reset" admin_req="/reset-name">Имя</li>'+
+							'<div class="dropdown-br">Информация о</div>'+
+							'<li class="dropdown-item el-li" id="modmenu_open" admin_req="/admin/session/'+ uids[3] +'">Cессии</li>'+
+							'<li class="dropdown-item el-li" id="modmenu_open" admin_req="/admin/thread/'+ uids[2] +'.xhtml">Треде</li>'+
+							'<li class="dropdown-item el-li" id="modmenu_open" admin_req="/admin/post/'+ uids[1] +'.xhtml">Посте</li>'+
+						'</ul>'+
+					'</li>'});
+				_z[userMenu ? 'after' : 'prepend']((userMenu || userpan), modMenu);
+				_z.setup(userpan, {'onmousedown': undefined});
+			}
+			handleLinks(post, url);
+			handleElements(post, url);
+			Disepath.eval(op, HM.Keywords[op], post);
+			if (last_n)
+				RepliesLinks.generate();
+		} catch(e) {
+			console.error(e)
+		}
 	}
 	
 	/*** Base64Binary ***/
@@ -1951,7 +2131,6 @@ function MagicExtension() {
 				rmv: ["Remove", "Убирать"],
 				fnm: ["File Name", "имя файла"],
 				send: ['Sending', 'Отправка'],
-				line: [" line", " строк"],
 				ten: ['Ten', 'Десять'],
 				fiv: ['Five', 'Пять'],
 				via: ['via', 'по'],
@@ -2119,9 +2298,6 @@ function MagicExtension() {
 					case 'dumb_file_field':
 						yukiAddFile(e.target);
 						break;
-					case 'file_rating_sel':
-						e.target.className = e.target.querySelector('option:checked').className;
-						break;
 					case 'yuki-RemoveExif':
 					case 'yuki-RemoveFileName':
 						setupOptions(e.target, e.target.id.split('-')[1], 'local');
@@ -2266,24 +2442,25 @@ function MagicExtension() {
 				
 				var YF = this, Id = makeRandId(6), Class = (Type == 'audio' ? 'artwork' : Type == 'video' ? 'movie' : 'default'),
 					f_size = bytesMagnitude(this.blob.size), f_ext = this.upload_name.fext(), Media = (Type == 'audio' || Type == 'video'),
-					yf_remove = '<div class="yf_remove">[\n<a id="yf-remove" class="yuki_clickable">'+ LCY['rmv'][lng].toLowerCase() +'</a>\n]</div>\n',
-					rating_sel = '<select class="rating_SFW" id="file_rating_sel"><option class="rating_SFW">SFW</option><option class="rating_R15">R-15</option><option class="rating_R18">R-18</option><option class="rating_R18G">R-18G</option></select>';
+					yf_remove = '[\n<a id="yf-remove" class="yuki_clickable">'+ LCY['rmv'][lng].toLowerCase() +'</a>\n]',
+					rating_sel = '<span class="br-word line-sect"><label id="yf-rate" class="sfw"></label><ul class="rating-select"><li class="rating-option sfw" id="yfr_SFW"></li><li id="yfr_R-15" class="rating-option r15"></li><li class="rating-option r18" id="yfr_R-18"></li><li class="rating-option r18g" id="yfr_R-18G"></li></ul></span>';
 					
-				this['frontend'] = _z.setup('div', {'id': 'yuki-file-'+ Id, 'class': 'yukiFile '+ Class, 'html': (Media ? '<div class="magic-info">'+ yf_remove +
-					f_ext.toUpperCase() +', <span id="yf-size" class="yf_info">'+ f_size +'</span><span id="yf-length" class="yf_info"></span>\n<div id="yf-name" class="yf_info">'+
-					this.upload_name +'</div></div><div class="magic-audio"><div class="ma-controls"><a class="w-open" id="yf-play"></a></div>'+ rating_sel +'</div>' :
-					yf_remove +'<img id="yf-preview" class="yf_preview" src="'+ (this.dataURL || '#transparent') +'"><div id="yf-name" class="yf_info">'+
-					this.upload_name +'</div><span id="yf-size" class="yf_info">'+ f_size +'</span><span id="yf-length" class="yf_info"></span>' + rating_sel)},
-					{'change': function(e) {
-						if (e.target.type === 'select-one') {
-							YF.rating = e.target.value;
-						}
-					},'click': function(e) {
+				this['frontend'] = _z.setup('div', {'id': 'yuki-file-'+ Id, 'class': 'yukiFile '+ Class, 'html': (Media ? '<div class="magic-info"><div>'+
+					yf_remove +'</div><span id="yf-ext" class="br-word virguled">'+ f_ext.toUpperCase() +'</span><span id="yf-size" class="br-word virguled">'+
+					f_size +'</span><span id="yf-info" class="br-word"></span>'+ rating_sel +'\n<div id="yf-name" class="br-word">'+
+					this.upload_name +'</div></div><div class="magic-media"><div class="ma-controls"><a id="yf-play"></a></div></div>' : '<div class="br-word">'+
+					yf_remove +'</div><img id="yf-preview" class="yf_preview" src="'+ (this.dataURL || '#transparent') +'"><div id="yf-name" class="br-word">'+
+					this.upload_name +'</div><span id="yf-size" class="br-word virguled">'+ f_size +'</span><span id="yf-info" class="br-word"></span>' + rating_sel)
+				}, {'click': function(e) {
 						switch (e.target.id) {
 							case 'yf-pause':
 							case 'yf-play':
 								switch (Type) {
-									case 'video': loadMediaContainer(e); break;
+									case 'video':
+										loadMediaContainer({
+											'URL': e.target.href
+										});
+										break;
 									case 'audio':
 										var A = e.target.id.split('-')[1];
 										YuPlayer.set(A, YF['Media']);
@@ -2297,6 +2474,9 @@ function MagicExtension() {
 									YF['FileName'].textContent = YF.upload_name = (makeRandId(32) +'.'+ YF.upload_name.fext());
 								}
 								break;
+							case 'yf-rate':
+								e.target.parentNode.classList.toggle('active');
+								break;
 							case 'yf-remove':
 								var idx = fileList.indexOf(YF);
 								YF.frontend.remove();
@@ -2307,18 +2487,26 @@ function MagicExtension() {
 									delete YuPlayer.playlist[adx];
 									YuPlayer.playlist.splice(adx, 1);
 								}
+								break;
+							default:
+								if (e.target.classList[0] === 'rating-option') {
+									YF['rating'] = e.target.id.split('_')[1];
+									YF['FileRate'].className = e.target.classList[1];
+									YF['FileRate'].parentNode.classList.toggle('active');
+								}
 						}
 					}
 				});
 				this['Preview'] = _z.setup((YF['frontend'].querySelector('#yf-preview') || 'img'), {}, {'load':
 					function(e) {
 						if (Type === 'image')
-							YF['FileInfo'].textContent = '| '+ this.naturalWidth +'×'+ this.naturalHeight;
+							_z.setup(YF['FileInfo'], {'class': 'br-word virguled', 'text': this.naturalWidth +'×'+ this.naturalHeight});
 					}
 				});
 				this['FileName'] = YF['frontend'].querySelector('#yf-name');
 				this['FileSize'] = YF['frontend'].querySelector('#yf-size');
-				this['FileInfo'] = YF['frontend'].querySelector('#yf-length');
+				this['FileInfo'] = YF['frontend'].querySelector('#yf-info');
+				this['FileRate'] = YF['frontend'].querySelector('#yf-rate');
 				this['rating'] = 'SFW';
 				fileList.push(this);
 				Yu['FilesPlaceholder'].appendChild(this['frontend']);
@@ -2376,7 +2564,7 @@ function MagicExtension() {
 				case 'text':
 					// Read in the text file as a UTF-8 encoding text.
 					getFileReaderData('Text', f, function(text) {
-						var canvas = _z.setup('canvas', {'class': 'yf_preview _text', 'width': 150, 'height': 150}),
+						var canvas = _z.setup('canvas', {'class': 'yf_preview _text', 'width': 150, 'height': 170}),
 							context = canvas.getContext("2d"),
 							lines = text.split("\n");
 							context.font = "10px serif";
@@ -2386,8 +2574,7 @@ function MagicExtension() {
 						}
 						_z.replace(theFile['Preview'], canvas);
 						theFile['Preview'] = canvas;
-						theFile['FileInfo'].textContent = '| '+ lines.length +' '+ LCY.line[lng] + (lines.length === 1 ?
-							LC.few['ru'][lng] : lines.length < 5 ? LC.few['u-d'][lng] : LC.few['en'][lng]);
+						_z.setup(theFile['FileInfo'], {'class': 'br-word virguled', 'text': lines.length +' '+ LC.get('line', lines.length, lng)});
 					});
 					break;
 				case 'audio':
@@ -2395,49 +2582,81 @@ function MagicExtension() {
 					var fileURL = _blobURL(f);
 						theFile['MediaButton'] = _z.setup(theFile['frontend'].querySelector('#yf-play'), {'href': fileURL});
 				default:
-					switch (true) {
-						case (Files.audio.isThere(f_ext)):
+					switch (Files.matchType(f_ext)) {
+						case 'audio':
 							function nextAudio() {
 								theFile['FileInfo'].textContent = theFile['duration'];
-								YuPlayer.playnext(this, theFile['MediaButton']) }
-							function durationLoad() {
+								YuPlayer.playnext(this) }
+							function audioLoad() {
 								theFile['duration'] = timerCalc(this.duration);
-								theFile['FileInfo'].textContent = ', '+ theFile['duration'] }
-							function updateTime() {
-								theFile['FileInfo'].textContent = timerCalc(this.currentTime) +'/'+ theFile['duration'] }
-							function mediaBind() {
+								_z.setup(theFile['FileInfo'], {'class': 'br-word virguled', 'text': theFile['duration'] });
 								YuPlayer.playlist.push(this) }
+							function updatTime() {
+								theFile['FileInfo'].textContent = timerCalc(this.currentTime) +'/'+ theFile['duration'] }
 							function btnChange(e) {
-								theFile['MediaButton'].id = 'yf-'+ (e.type === 'play' ? 'pause' : 'play')}
+								theFile['MediaButton'].id = 'yf-'+ (e.type === 'play' ? 'pause' : 'play') }
 							parse_audio_metadata(f, function(metadata) {
 								if ("picture" in metadata) {
 									getFileReaderData('dataurl', metadata.picture, function(dataImage) {
 										theFile['frontend'].id = AlbumArts.makeCover(dataImage, metadata.artist, metadata.album);
 									});
-								} });
+								}});
 							theFile['Media'] = _z.setup(new Audio(fileURL), {}, {
-								'loadedmetadata': durationLoad, 'canplay': mediaBind,
-								'timeupdate'    : updateTime  , 'ended'  : nextAudio,
-								'pause'         : btnChange   , 'play'   : btnChange, 
-								'error'         : function(e) {
+								'loadedmetadata': audioLoad, 'play' : btnChange, 
+								'timeupdate'    : updatTime, 'ended': nextAudio,
+								'pause'         : btnChange, 'error': function(e) {
 									theFile['Media'] = new AV.Player.fromFile(f);
-									theFile['Media'].on('end'     , nextAudio   );
-									theFile['Media'].on('progress', updateTime  );
-									theFile['Media'].on('duration', durationLoad);
+									theFile['Media'].on('end'     , nextAudio);
+									theFile['Media'].on('progress', updatTime);
+									theFile['Media'].on('duration', audioLoad);
 									theFile['Media'].onPlayerAction = btnChange;
 									theFile['Media'].preload();
-									mediaBind.bind(theFile['Media'])();
-								} });
+								}});
 							break;
-						case (['pdf'].isThere(f_ext)):
-							theFile['Preview'].src = '/thumb/pdf/1406/140217014000620s.jpg';
+						case 'video':
+							_z.setup('video', {'class': 'magic-media video', 'src': fileURL}, {'loadedmetadata': function(){
+								_z.setup(theFile['FileInfo'], {'class': 'br-word virguled', 'text': this.videoWidth +'×'+ this.videoHeight +', '+ timerCalc(this.duration)})
+								this.currentTime = 1;
+								_z.replace(theFile['frontend'].lastElementChild, this);
+								theFile['Preview'] = this;
+							}, 'error': function() {
+								HM.LinksMap[fileURL.hashCode()] = {Embed: (Files.video.indexOf(f_ext) > 4 ? 'flash' : 'html5'), Type: 'video'}
+							}});
 							break;
-						case (Files.video.isThere(f_ext)):
-							HM.LinksMap[fileURL.hashCode()] = {Embed: (Files.video.indexOf(f_ext) > 4 ? 'flash' : 'html5'), Type: 'video'}
-							break;
-						case (Files.arch.isThere(f_ext)):
+						case 'arch':
 							theFile['Preview'].src = '/src/png/1405/archive-icon.png';
 							break;
+						case 'pdf':
+							function thumbnailPDF() {
+								PDFJS.getDocument(_blobURL(f)).then(function(pdf) {
+									pdf.getPage(1).then(function(page) {  //1 is the page number we want to retrieve
+										var viewport = page.getViewport(0.5);
+										var canvas = _z.setup('canvas', {'class': 'yf_preview _text', 'width': viewport.width, 'height': viewport.height});
+										var ctx = canvas.getContext('2d');
+										page.render({
+											canvasContext: ctx,
+											viewport: viewport
+										}).then(function(){
+											//set to draw behind current content
+											ctx.globalCompositeOperation = "destination-over";
+											//draw background / rect on entire canvas
+											ctx.fillRect(0,0,canvas.width,canvas.height);
+										});
+										_z.replace(theFile['Preview'], canvas);
+										theFile['Preview'] = canvas;
+										_z.setup(theFile['FileInfo'], {'class': 'br-word virguled', 'text': page.pageInfo.view[2].toFixed(0) +'×'+
+											page.pageInfo.view[3].toFixed(0) +', '+ pdf.pdfInfo.numPages +' '+ LC.get('page', pdf.pdfInfo.numPages, lng)
+										});
+									});
+								});
+							}
+							if (typeof PDFJS === 'undefined') {
+								document.body.appendChild(
+									_z.setup('script', {'type': 'application/javascript', 'src': '//mozilla.github.io/pdf.js/build/pdf.js'}, {'load': thumbnailPDF})
+								);
+							} else {
+								thumbnailPDF();
+							}
 					}
 			}
 		}
@@ -2457,8 +2676,8 @@ function MagicExtension() {
 					blob.name = getPageName(f_url);
 					makeYukiFile(blob);
 				}
-			} catch(e) {
-				console.error(e);
+			} catch(err) {
+				console.error(err);
 			}
 		}
 		function submitProcess(st) {
@@ -2466,100 +2685,104 @@ function MagicExtension() {
 			Yu['Submit'].parentNode.classList.toggle('process');
 		}
 		function yukiPleasePost(e) {
-			var form = e.target, formData = serializeArray(form),
-				ajaxPost = new XMLHttpRequest(), fd = new FormData(),
-				action = form.action +'?X-Progress-ID='+ _t() * 10000;
-			for (var i = 0; i < formData.length; i++) {
-				fd.append(formData[i].name, formData[i].value);
-			};
-			switch (form.id) {
-				case 'yuki-replyForm': Fn = function() {
+			try {
+				var form = e.target, formData = serializeArray(form),
+					ajaxPost = new XMLHttpRequest(), fd = new FormData(),
+					action = form.action +'?X-Progress-ID='+ _t() * 10000;
+				for (var i = 0; i < formData.length; i++) {
+					fd.append(formData[i].name, formData[i].value);
+				};
+				switch (form.id) {
+					case 'yuki-replyForm': Fn = function() {
+							if (this.readyState !== 4)
+								return;
+							if (this.status === 304) {
+								Yu['ErrorMassage'].textContent = 'Не получилось отправить пост.\n'+
+									'Попробуйте чуть попозже ещё разок или перезагрузить страницу.'+
+									'〔\n'+ this.statusText +'\n〕';
+								submitProcess(false);
+							} else {
+								var rText = this.responseText,
+									errPost = rText.match(/\/error\/post\/\d+/),
+									newThread = rText.match(/\/\w*\/(?:res\/)?\w+\.xhtml/);
+								if (errPost) {
+									getDataResponse(errPost, function(status, sText, err, xhr) {
+										var msg = (/<td colspan='\d+' class='post-error'>(.+)<\/td>/).exec(err);
+										Yu['ErrorMassage'].textContent = msg[1];
+										if (LCY.cerr[LC.lng[lng]].isThere(msg[1].split(' ').pop()))
+											Yu['Captcha'].hidden = false;
+										return submitProcess(false);
+									});
+								} else if (newThread && Yu['TargetThread'].value == 0) {
+									document.location.href = newThread;
+								} else {
+									if (Yu['ReplyForm'].classList[0] !== 'global')
+										Yu['ReplyForm'].remove();
+									Yu['ReplyText'].value = '';
+									Yu['ErrorMassage'].textContent = '';
+									Yu['FilesPlaceholder'].innerHTML = '';
+									Yu['Captcha'].hidden = true;
+									submitProcess(false);
+									Yum.afterSubmitAction();
+									if (Yu['ReplyText'].safe_text)
+										_z.sessionS.set('SafeText', JSON.stringify(Yu['ReplyText'].value));
+									if (HM.ThreadListener[Yum.tid]) {
+										if (fileList.length === 0) {
+											HM.ThreadListener[Yum.tid].updateThread(true, false);
+										} else {
+											setTimeout(function(){
+												HM.ThreadListener[Yum.tid].updateThread(true, false);
+											}, 1500);
+										}
+									}
+									fileList = [];
+								}
+							}
+						}
+						for (var i = 0; i < fileList.length; i++) {
+							if (HM.RemoveExif && fileList[i].blob.type == 'image/jpeg' && fileList[i]['jpegStripped'] && fileList[i].dataURL) {
+								fileList[i].blob = dataURLtoBlob(jpegStripExtra(fileList[i].dataURL), fileList[i].blob.type)
+							}
+							fd.append('file_'+ (i + 1), fileList[i].blob, fileList[i].upload_name);
+							fd.append('file_'+ (i + 1) +'_rating', fileList[i].rating);
+						};
+						fd.append('post_files_count', fileList.length)
+						submitProcess(true);
+						break;
+					case 'delete_form': Fn = function() {
 						if (this.readyState !== 4)
 							return;
 						if (this.status === 304) {
-							Yu['ErrorMassage'].textContent = 'Не получилось отправить пост.\n'+
-								'Попробуйте чуть попозже ещё разок или перезагрузить страницу.'+
-								'〔\n'+ this.statusText +'\n〕';
-							submitProcess(false);
+							console.warn('304 ' + this.statusText);
 						} else {
-							var rText = this.responseText,
-								errPost = rText.match(/\/error\/post\/\d+/),
-								newThread = rText.match(/\/\w*\/(?:res\/)?\w+\.xhtml/);
-							if (errPost) {
-								getDataResponse(errPost, function(status, sText, err, xhr) {
-									var msg = (/<td colspan='\d+' class='post-error'>(.+)<\/td>/).exec(err);
-									Yu['ErrorMassage'].textContent = msg[1];
-									if (LCY.cerr[LC.lng[lng]].isThere(msg[1].split(' ').pop()))
-										Yu['Captcha'].hidden = false;
-									return submitProcess(false);
-								});
-							} else if (newThread && Yu['TargetThread'].value == 0) {
-								document.location.href = newThread;
+							var del_checks = document.querySelectorAll('.delete_checkbox:checked');
+							if (this.responseURL === action) {
+								var msg = (/<center><h2>(.+)<\/h2><\/center>/).exec(this.responseText);
+									mEl['WarningMsg'].textContent = msg[1];
+									document.body.appendChild(mEl['WarningMsg']);
 							} else {
-								if (Yu['ReplyForm'].classList[0] !== 'global')
-									Yu['ReplyForm'].remove();
-								Yu['ReplyText'].value = '';
-								Yu['ErrorMassage'].textContent = '';
-								Yu['FilesPlaceholder'].innerHTML = '';
-								Yu['Captcha'].hidden = true;
-								submitProcess(false);
-								Yum.afterSubmitAction();
-								if (Yu['ReplyText'].safe_text)
-									_z.sessionS.set('SafeText', JSON.stringify(Yu['ReplyText'].value));
-								if (HM.ThreadListener[Yum.tid]) {
-									if (fileList.length === 0) {
-										HM.ThreadListener[Yum.tid].updateThread(true, false);
-									} else {
-										setTimeout(function(){
-											HM.ThreadListener[Yum.tid].updateThread(true, false);
-										}, 1500);
-									}
+								if (del_checks.length === 1) {
+									document.getElementById('post_'+ del_checks[0].name).className = 'postdeleted';
+									del_checks[0].remove();
+								} else if (HM.URL.thread) {
+									setTimeout(function() {
+										HM.ThreadListener[HM.URL.thread].updateThread(false, true);
+									}, 2000)
 								}
-								fileList = [];
 							}
+							_z.each(del_checks, function(chkbx){ chkbx.checked = false });
+							_z.each('#chkx-del_selected.selected', function(ctd_sel){ ctd_sel.classList.remove('selected') });
 						}
-					}
-					for (var i = 0; i < fileList.length; i++) {
-						if (HM.RemoveExif && fileList[i].blob.type == 'image/jpeg' && fileList[i]['jpegStripped'] && fileList[i].dataURL) {
-							fileList[i].blob = dataURLtoBlob(jpegStripExtra(fileList[i].dataURL), fileList[i].blob.type)
-						}
-						fd.append('file_'+ (i + 1), fileList[i].blob, fileList[i].upload_name);
-						fd.append('file_'+ (i + 1) +'_rating', fileList[i].rating);
-					};
-					fd.append('post_files_count', fileList.length)
-					submitProcess(true);
-					break;
-				case 'delete_form': Fn = function() {
-					if (this.readyState !== 4)
-						return;
-					if (this.status === 304) {
-						console.warn('304 ' + this.statusText);
-					} else {
-						var del_checks = document.querySelectorAll('.delete_checkbox:checked');
-						if (this.responseURL === action) {
-							var rText = this.responseText,
-								msg = (/<center><h2>(.+)<\/h2><\/center>/).exec(rText),
-								warn = _z.setup(WarningMsg, {'text': msg[1], 'style': 'width:100%;padding:5px;top:0;display:block;text-align:center;background-color:#fefefe;position:fixed;'});
-								document.body.appendChild(warn);
-						} else {
-							if (del_checks.length === 1) {
-								document.getElementById('post_'+ del_checks[0].name).className = 'postdeleted';
-								del_checks[0].remove();
-							} else if (HM.URL.thread) {
-								setTimeout(function() {
-									HM.ThreadListener[HM.URL.thread].updateThread(false, true);
-								}, 2000)
-							}
-						}
-						_z.each(del_checks, function(chkbx){ chkbx.checked = false });
-						_z.each('.chek-to-del.selected', function(ctd_sel){ ctd_sel.classList.remove('selected') });
 					}
 				}
+				ajaxPost.onreadystatechange = Fn;
+				ajaxPost.open('POST', action, true);
+				ajaxPost.send(fd);
+			} catch(err) {
+				console.error(err)
+			} finally {
+				_z.fall(e)
 			}
-			ajaxPost.onreadystatechange = Fn;
-			ajaxPost.open('POST', action, true);
-			ajaxPost.send(fd);
-			return _z.fall(e);
 		}
 		function makeReplyForm(map, params) {
 			Yu['TargetThread'].value = Yum.tid = map[1]; Yum.brd = map[0];
@@ -2580,7 +2803,8 @@ function MagicExtension() {
 					break;
 				case 'edit':
 					Yu['ReplyText'].value = params.text;
-					el$('[name="name"]').value = params.name;
+					if (Names.get(Yum.brd) !== params.name)
+						el$('[name="name"]').value = params.name;
 					el$('[name="subject"]').value = params.subj;
 					Yum.afterSubmitAction = params.afterSubmitAction;
 					for (var i = 0, len = params.files.length - fileList.length; i < len; i++) {
@@ -2706,32 +2930,31 @@ function MagicExtension() {
 	
 	/****************** Harmony Audio Player *********************/
 	function Harmony(h) {
-		var HP = this, _Played = {}, _eST = 2, pModes = ['', 'RT', 'PL', 'RL'], MA = {
-			_pause: function() {
-				if ('audio' in _Played) {
-					_Played.audio.pause();
-					_Played.track.frontend.button.id = HP['PlayButton'].id = 'ma-play';
+		var HP = this, _Played = {}, _eST = 2, pModes = ['', 'RT', 'PL', 'RL'], ifront = {cover:{},button:{}},
+			MA = {
+				_pause: function() {
+					if ('audio' in _Played) {
+						_Played.audio.pause();
+						_Played.track.button.id = HP['PlayButton'].id = 'ma-play';
+					}
+					_z.each('#ma-pause', function(a) { a.id = 'ma-play' });
+				},
+				_play: function(track) {
+					this._pause();
+					if (track !== _Played.track) {
+						_infoUpdate(track.frontend.id, track.album, track.artist, !!track.previousElementSibling, !!track.nextElementSibling);
+						_Played = {
+							audio: _z.setup(_HTML5Audio, {'src': track.url}),
+							track: _z.setup(track, {'id': 'now_playing'})
+						}
+						if (!track.dataLoad) {
+							MAParser(track, ifront);
+						}
+					}
+					HP['PlayButton'].id = track.button.id = ifront.button.id = 'ma-pause';
+					_Played.audio.play();
 				}
-				_z.each('#ma-pause', function(a) { a.id = 'ma-play' });
 			},
-			_play: function(track, ifront) {
-				if (!ifront)
-					ifront = {cover:{},button:{}};
-				this._pause();
-				if (track !== _Played.track) {
-					_infoUpdate(track.frontend.id, track.album, track.artist, !!track.previousElementSibling, !!track.nextElementSibling);
-					_Played = {
-						audio: _z.setup(_HTML5Audio, {'src': track.url}),
-						track: _z.setup(track, {'id': 'now_playing'})
-					}
-					if (!track.dataLoad) {
-						MAParser(track, ifront);
-					}
-				}
-				HP['PlayButton'].id = track.frontend.button.id = ifront.button.id = 'ma-pause';
-				_Played.audio.play();
-			}
-		},
 		_HTML5Audio = _z.setup('audio', {}, {
 			'loadedmetadata': _durationLoad, 'ended': _switchTrack, 
 			'timeupdate'    : _timeUpdate  , 'error': function(e, _T_) {
@@ -2747,74 +2970,92 @@ function MagicExtension() {
 		this.pause = MA._pause;
 		this.play = function(button, cover) {
 			var Id = button.getAttribute('track-id');
-			if (Id in MA) {
-				MA._play(MA[Id], {button: button, cover: cover});
-			}
-		}
-		this.addTrack = function(mdObj) { try {
-			var musicTrack = _z.setup('li', {'class': 'tracklist-item', 'html': '<a href="'+ mdObj.url +
-				'" class="tracktitle hp-info" style="max-width: 255px;"></a><span class="tracktime">- -:- -</span>'}),
-				mTid = mdObj.url.hashCode() +'@'+ makeRandId(3);
-			Object.defineProperty(musicTrack, 'duration', {
-				get: function()    { return this.lastElementChild.textContent },
-				set: function(txt) {        this.lastElementChild.textContent = txt }
-			});
-			Object.defineProperty(musicTrack, 'title', {
-				get: function()    { return this.firstElementChild.textContent },
-				set: function(txt) {
-					this.firstElementChild.textContent = txt;
-					if (txt.length > 37)
-						this.firstElementChild.setAttribute('title', txt) }
-			});
-			Object.defineProperty(musicTrack, 'artist', {
-				get: function()    { return this['__artist'] },
-				set: function(txt) {
-					this['__artist'] = txt;
-					if (this === _Played.track)
-						HP['TrackArtist'].textContent = txt }
-			});
-			Object.defineProperty(musicTrack, 'album', {
-				get: function()    { return this['__album'] },
-				set: function(txt) {
-					this['__album'] = txt;
-					if (this === _Played.track)
-						HP['TrackAlbum'].textContent = txt }
-			});
-			mdObj.frontend.button.setAttribute('track-id', mTid);
-			MA[mTid] = musicTrack;
-			for (var key in mdObj) {
-				musicTrack[key] = mdObj[key]
-			}
-			HP['TrackList'].appendChild(musicTrack);
-			}catch(err){console.error(err)}
-		}
-		this['Player'] = _z.setup('table', {'id': 'magic-audio-player', 'html': '<tbody class="magic-audio-min artwork line-sect"><tr class="hp-play-btn line-sect" id="ma-play"></tr></tbody><tbody class="hp-inf-ctrl line-sect"><tr style="height: 10px;"><th><div class="album hp-info">。。。</div></th></tr><tr style="height: 10px;"><td><div class="artist hp-info">. . .</div></td></tr><tr style="height: 8px;"><td style="font-size: 10px;"><div class="title hp-info"></div></td></tr><tr style="height: 24px;"><td><div class="hp-controls"></div><div style="transform: rotate(180deg); visibility: hidden;" class="forvardarrow hp-controls" id="hp-previous"></div><div style="visibility: hidden;" class="forvardarrow hp-controls" id="hp-next"></div><div class="hp-controls"></div><div class="playmode hp-controls">PL</div></td></tr><tr style="height: 10px;"><td style="line-height: 10px;"><label class="duration line-sect"><div class="thumb line-sect" style="left: 0%;" id="hp_progbar"></div></label><label id="timeoffset">- -:- -</label></td></tr></tbody><tbody><tr><td><div class="tracklist-scrollbox"><ol class="o-track-list"></ol></div><div id="hp_dropbox_layer" class="hidout"><div style="margin: 40px 30px;">Support media files:\n'+ Files.audio.join(' ').toUpperCase() +'</div></div></td></tr></tbody>'}, {'click': function(e){ try {
-			switch (e.target.classList[0]) {
-				case 'tracklist-item': MA._play(e.target); break;
-				case 'tracktitle': MA._play(e.target.parentNode); break;
-				case 'hp-play-btn':
-					MA['_'+ e.target.id.split('-')[1]](_Played.track || HP['TrackList'].firstElementChild);
-					break;
-				case 'forvardarrow':
-					MA._play(_Played.track[e.target.id.split('-')[1] +'ElementSibling']);
-					break;
-				case 'playmode':
-					_eST++;
-					if (_eST > 3)
-						_eST = 0;
-					e.target.textContent = pModes[_eST]
-					break;
-				case 'duration':
-					if (_Played.audio) {
-						var stmp = e.target.getBoundingClientRect(),
-							recm = e.pageX - Math.floor(stmp.x),
-							tset = (_Played.audio.duration / 100) * (recm * 100 / stmp.width);
-						_Played.audio.currentTime = tset;
-						_timeUpdate.bind(_Played.audio)();
+			_z.each('a.ma-button[track-id="'+ Id +'"]', function(el) {
+				if (el !== MA[Id].button) {
+					ifront = {
+						button: el,
+						cover: el.parentNode.parentNode
 					}
+				}
+			});
+			if (Id in MA) {
+				MA._play(MA[Id]);
 			}
-			} catch(err) {console.error(err)} finally {
-			_z.fall(e);}
+		}
+		this.addTrack = function(mdObj) {
+			try {
+				if (mdObj.id && mdObj.id in MA)
+					return;
+				var musicTrack = _z.setup('li', {'class': 'tracklist-item', 'html': '<a href="'+ mdObj.url +
+					'" class="tracktitle hp-info" style="max-width: 255px;"></a><span class="tracktime">- -:- -</span>'}),
+					mTid = mdObj.id || makeRandId(3) +'@'+ mdObj.url.hashCode();
+				Object.defineProperty(musicTrack, 'duration', {
+					get: function()    { return this.lastElementChild.textContent },
+					set: function(txt) {        this.lastElementChild.textContent = txt }
+				});
+				Object.defineProperty(musicTrack, 'title', {
+					get: function()    { return this.firstElementChild.textContent },
+					set: function(txt) {
+						this.firstElementChild.textContent = txt;
+						if (txt.length > 37)
+							this.firstElementChild.setAttribute('title', txt) }
+				});
+				Object.defineProperty(musicTrack, 'artist', {
+					get: function()    { return this['__artist'] },
+					set: function(txt) {
+						this['__artist'] = txt;
+						if (this === _Played.track)
+							HP['TrackArtist'].textContent = txt }
+				});
+				Object.defineProperty(musicTrack, 'album', {
+					get: function()    { return this['__album'] },
+					set: function(txt) {
+						this['__album'] = txt;
+						if (this === _Played.track)
+							HP['TrackAlbum'].textContent = txt }
+				});
+				mdObj.button.setAttribute('track-id', mTid);
+				
+				MA[mTid] = musicTrack;
+				for (var key in mdObj) {
+					musicTrack[key] = mdObj[key]
+				}
+				HP['TrackList'].appendChild(musicTrack);
+			} catch(err) {
+				console.error(err);
+			}
+		}
+		this['Player'] = _z.setup('table', {'id': 'magic-audio-player', 'html': '<tbody class="magic-audio-min artwork line-sect"><tr class="hp-play-btn line-sect" id="ma-play"></tr></tbody><tbody class="hp-inf-ctrl line-sect"><tr style="height: 10px;"><th><div class="album hp-info">。。。</div></th></tr><tr style="height: 10px;"><td><div class="artist hp-info">. . .</div></td></tr><tr style="height: 8px;"><td style="font-size: 10px;"><div class="title hp-info"></div></td></tr><tr style="height: 24px;"><td><div class="hp-controls"></div><div style="transform: rotate(180deg); visibility: hidden;" class="forvardarrow hp-controls" id="hp-previous"></div><div style="visibility: hidden;" class="forvardarrow hp-controls" id="hp-next"></div><div class="hp-controls"></div><div class="playmode hp-controls">PL</div></td></tr><tr style="height: 10px;"><td style="line-height: 10px;"><label class="duration line-sect"><div class="thumb line-sect" style="left: 0%;" id="hp_progbar"></div></label><label id="timeoffset">- -:- -</label></td></tr></tbody><tbody><tr><td><div class="tracklist-scrollbox"><ol class="o-track-list"></ol></div><div id="hp_dropbox_layer" class="hidout"><div style="margin: 40px 30px;">Support media files:\n'+ Files.audio.join(' ').toUpperCase() +'</div></div></td></tr></tbody>'}, {'click': function(e){
+			try {
+				switch (e.target.classList[0]) {
+					case 'tracklist-item': MA._play(e.target); break;
+					case 'tracktitle': MA._play(e.target.parentNode); break;
+					case 'hp-play-btn':
+						MA['_'+ e.target.id.split('-')[1]](_Played.track || HP['TrackList'].firstElementChild);
+						break;
+					case 'forvardarrow':
+						MA._play(_Played.track[e.target.id.split('-')[1] +'ElementSibling']);
+						break;
+					case 'playmode':
+						_eST++;
+						if (_eST > 3)
+							_eST = 0;
+						e.target.textContent = pModes[_eST]
+						break;
+					case 'duration':
+						if (_Played.audio) {
+							var stmp = e.target.getBoundingClientRect(),
+								recm = e.pageX - Math.floor(stmp.left),
+								tset = (_Played.audio.duration / 100) * (recm * 100 / stmp.width);
+							_Played.audio.currentTime = tset;
+							_timeUpdate.bind(_Played.audio)();
+						}
+				}
+			} catch(err) {
+				console.error(err)
+			} finally {
+				_z.fall(e)
+			}
 		}, 'dblclick': function(e) {
 			var $target = e.target;
 			switch ($target.classList[0]) {
@@ -2830,16 +3071,18 @@ function MagicExtension() {
 			_z.fall(e);
 		}, 'dragleave': function(e) {
 			_hide(HP['DropLayer']);
-		}, 'drop': function(e) {try {
-			_hide(HP['DropLayer']);
-			for (var i = 0, files = e.dataTransfer.files; i < files.length; i++) {
-				HP.addTrack({
-					frontend: {button:_z.setup('a')},
-					title: files[i].name,
-					file: files[i],
-					url: _blobURL(files[i])
-				})
-			}
+		}, 'drop': function(e) {
+			try {
+				_hide(HP['DropLayer']);
+				for (var i = 0, files = e.dataTransfer.files; i < files.length; i++) {
+					HP.addTrack({
+						frontend: _z.setup('div'),
+						button: _z.setup('a'),
+						title: files[i].name,
+						file: files[i],
+						url: _blobURL(files[i])
+					})
+				}
 			} catch(err) {
 				console.error(err)
 			} finally{
@@ -2906,7 +3149,7 @@ function MagicExtension() {
 					}
 			}
 		}
-		function MAParser(Track, ifront) {
+		function MAParser(Track) {
 			function callback(metadata) {
 				for (var key in metadata) {
 					switch (key) {
@@ -2945,7 +3188,7 @@ function MagicExtension() {
 			m_macro: ['Create Macro', 'Создать макро'],
 			fnd_src_wth: ["find source with", "искать оригинал в"]
 		}
-		this['ContextMenu'] = _z.setup('div', {'class': 'magic-image-context', 'class': 'dropdown-toggle', 'style': 'position:absolute;top:0;left:0;', 'html': '<ul class="dropdown-menu"><li class="dropdown-item i-fav el-li" id="icm-create-macro">'+ tLC.m_macro[lng] +'</li><div class="dropdown-br cyan-light">'+ tLC.fnd_src_wth[lng] +'</div><li id="icm-fsw-google" class="dropdown-item i-fav el-li">Google</li><li class="dropdown-item i-fav el-li" id="icm-fsw-iqdb">Iqdb</li><li class="dropdown-item i-fav el-li" id="icm-fsw-saucenao">SauceNAO</li><li class="dropdown-item i-fav el-li" id="icm-fsw-derpibooru">Derpibooru</li></ul><form enctype="multipart/form-data" target="_blank" action="https://derpibooru.org/search/reverse" method="post" hidden><input id="rs-url" name="url" value="" type="text"><input id="fuzziness" name="fuzziness" value="0.25" type="text"></form>'}, {'mousedown': nCR,
+		this['ContextMenu'] = _z.setup('div', {'class': 'magic-image-context', 'class': 'dropdown-toggle', 'style': 'position:absolute;top:0;left:0;', 'html': '<ul class="dropdown-menu"><li class="dropdown-item i-fav el-li" id="icm-create-macro">'+ tLC.m_macro[lng] +'</li><div class="dropdown-br">'+ tLC.fnd_src_wth[lng] +'</div><li id="icm-fsw-google" class="dropdown-item i-fav el-li">Google</li><li class="dropdown-item i-fav el-li" id="icm-fsw-iqdb">Iqdb</li><li class="dropdown-item i-fav el-li" id="icm-fsw-saucenao">SauceNAO</li><li class="dropdown-item i-fav el-li" id="icm-fsw-derpibooru">Derpibooru</li></ul><form enctype="multipart/form-data" target="_blank" action="https://derpibooru.org/search/reverse" method="post" hidden><input id="rs-url" name="url" value="" type="text"><input id="fuzziness" name="fuzziness" value="0.25" type="text"></form>'}, {'mousedown': nCR,
 			'click': function(e) {
 				switch (e.target.id) {
 					case 'icm-create-macro': window.open(this.editTool, '_blank'); break;
@@ -2973,6 +3216,14 @@ function MagicExtension() {
 				}
 			}
 		});
+		this['Posts'] = document.getElementsByClassName('post');
+		this['WarningMsg'] = _z.setup('strong', {'id': 'warning-massage', 'class': 'blink', 'style': 'width:100%;padding:5px;top:0;display:block;text-align:center;background-color:#fefefe;position:fixed;'});
+		this['WarningMsg'].dozZe = function(e) {
+			if (this.iterations >= 4) {
+				this.remove();
+				this.iterations = 0;
+			}
+		}
 		this['DeleteOverlay'] = _z.setup('div', {'id': 'delete-overlay'});
 		this['StatusPanel'] = _z.setup('div', {'id': 'status-panel', 'style': 'z-index:'+ HM.zIndex}, {'mousedown': stepZup});
 		this['ContentMarker'] = _z.setup('label', {'id': 'show-content-window', 'class': 'hidout'}, {'mousedown': nCR, 'click': function(e) {
@@ -2997,11 +3248,10 @@ function MagicExtension() {
 				cframe: ["Content Frame", "Положение видеоплеера"],
 				picview: ["Picture View", "Просмотр картинок"],
 				clipopup: ["Clipping Popup Posts", "Закреплять превью постов"],
-				hidby: {
-					'hr': ['Hide Posts and Threads', 'Скрытие постов и тредов'],
-					'nt': ['by Tripcode or Name', 'По имени или трипкоду'],
-					'tl': ['by Title', 'По заголовку'],
-					'rw': ['Replace Words', 'Замена слов']
+				sacral: {
+					'hr': ['Hiding and Words replacement', 'Скрытие и замены'],
+					'ft': ['for Threads', 'для Тредов'],
+					'fp': ['for Posts', 'для Постов']
 				},
 				emb: {
 					'title': ['Enable oEmbed API support', 'Включает поддержку встраивания контента для ссылок при помощи oEmbed API'],
@@ -3010,9 +3260,23 @@ function MagicExtension() {
 				}},
 			StyleSet = {
 				spoiler: _z.setup('style', {'text': '.spoiler, .spoiler * {color:inherit!important;}'}),
-				hinfostub: _z.setup('style', {'text': '.stub.hinfo:not(.stored), .autohidden + br, .autohidden + br + hr, .autohidden + .dummy-line + br, .autohidden + .dummy-line + br + hr{display:none;}'}),
+				hinfostub: _z.setup('style', {'text': '.autohidden, .autohidden + br + hr{display:none;}'}),
 				true: function(style) { document.body.appendChild(this[style]) },
-				false: function(style) { this[style].remove() }
+				false: function(style) { this[style].remove() },
+				'code_css': function() {
+					_z.setup(document.getElementById('user-css'), {'text': this.value});
+					_z.localS.set('UserStyle', JSON.stringify(this.value));
+				},
+				'code_scl': function() {
+					var $v = ['forThreads', 'forPosts'].indexOf(this.id.split('-')[1]);
+					if (HM.Keywords[$v] !== this.value) {
+						HM.Keywords[$v] = this.value;
+						for (var map_id in HM.LoadedPosts) {
+							Disepath.naval($v, this.value, HM.LoadedPosts[map_id]);
+						}
+						_z.localS.set('Keywords', JSON.stringify(HM.Keywords));
+					}
+				}
 			}
 			StyleSet[HM.DiscloseTextSpoilers ? true : false]('spoiler');
 			StyleSet[HM.Keywords.conceal ? true : false]('hinfostub');
@@ -3033,55 +3297,66 @@ function MagicExtension() {
 			(HM.DiscloseTextSpoilers ? ' checked' : '') +'><span class="checkarea super"></span></label></td><td class="s-sect">'+
 			LC.txtspoils[lng] +'</td></tr><tr><td class="f-sect"><label class="paperclip line-sect txt-btn'+
 			(HM.AttachPopups ? '"><input checked' : ' inactive"><input') +' id="gsx-AttachPopups" type="checkbox" hidden></label></td><td class="s-sect">'+
-			SLC.clipopup[lng] +'</td></tr></tbody>'});
-		this['HideBySets'] = _z.setup('table', {'html': '<tbody><tr><th><label class="view-eye yuki_clickable i-block'+
-			(HM.Keywords.conceal ? ' inactive' : '') +'"><input id="rhx-stampsConcealing" type="checkbox" hidden'+
-			(HM.Keywords.conceal ? ' checked' : '') +'></label></th><th class="s-sect">'+ SLC.hidby['hr'][lng] +
-			'</th></tr><tr><td class="o-sect"><label><input id="rhx-Nametrip" type="checkbox" hidden'+
-			(HM.Keywords['Nametrip'].apply ? ' checked' : '') +'><span class="checkarea"></span></label></td><td><div class="mhs-title font-s cyan-light">'+ SLC.hidby['nt'][lng] +
-			'</div><textarea id="txt-Nametrip" class="keywords-input font-s" placeholder="Saeki-fag, Saeki*, *fag, !Hyd5gFre, Saeki-fag::Anonymous"></textarea></td></tr><tr><td class="o-sect"><label><input id="rhx-Title" type="checkbox" hidden'+
-			(HM.Keywords['Title'].apply ? ' checked' : '') +'><span class="checkarea"></span></label></td><td><div class="mhs-title font-s cyan-light">'+ SLC.hidby['tl'][lng] +
-			'</div><textarea id="txt-Title" class="keywords-input font-s" placeholder="Путеводитель*, *ожиданий от*, Унылый тред, Rozen Maiden::$1@[color:Orchid; font-family:Georgia]"></textarea></td></tr><tr><td class="o-sect"><label><input id="rhx-Words" type="checkbox" hidden'+
-			(HM.Keywords['Words'].apply ? ' checked' : '') +'><span class="checkarea"></span></label></td><td><div class="mhs-title font-s cyan-light">'+ SLC.hidby['rw'][lng] +
-			'</div><textarea id="txt-Words" class="keywords-input font-s" placeholder="*Сап добрач*, белое::черное, зеленый::$1@[color:green], &quot;::“$1”"></textarea></td></tr></tbody>'});
-		this['UserStyle'] = _z.setup('table', {'html': '<tbody><tr><td><textarea class="usercode-input" id="code_css_ta" placeholder="/* User Style Code area */"></textarea></td></tr></tbody>'}, {
-			'input': function(e) {
-				var $Item = e.target, $V = $Item.value;
-				clearTimeout(this.applyEffect);
-				this.applyEffect = setTimeout(function() {
-					_z.setup(document.getElementById('user-css'), {'text': $V});
-					_z.localS.set('UserStyle', JSON.stringify($V));
-				}, 3000);
-			}
-		});
+			SLC.clipopup[lng] +'</td></tr></tbody>'}, {
+				'click': function(e) {
+					if (e.target.id === 'gsx-AspectRatio') {
+						switch (lastScrollElem) {
+							case 'video': _scrollTo('scbc'); break;
+							case 'scbc': _scrollTo('video'); break;
+							default:
+								if (Megia['video']['Container'].parentNode)
+									_scrollTo('video');
+								else if (Megia['scbc']['Container'].parentNode)
+									_scrollTo('scbc');
+						}
+					}
+				}
+			});
+		this['HideBySets'] = _z.setup('table', {'html': '<tbody><tr><th class="o-sect"><label class="view-eye yuki_clickable i-block'+
+			(HM.Keywords.conceal ? ' inactive' : '') +'"><input id="svx-stampsConcealing" type="checkbox" hidden'+
+			(HM.Keywords.conceal ? ' checked' : '') +'></label></th><th class="s-sect">'+ SLC.sacral['hr'][lng] +
+			'</th></tr><tr><td style="position: absolute; left: 0px;"><div id="svx-forThreads-'+ LC['lng'][lng] +'" class="svx-label chx-d">Т</div><div id="svx-forPosts-'+ LC['lng'][lng]+'" class="svx-label">'+ ['P', 'П'][lng] +'</div></td><td><textarea id="code_scl-forThreads" class="keywords-input font-s" placeholder="title { Оффициальный™* | *ожиданий от* | *тред. } text { *сап добрачь* } title { Rozen Maiden::$1@[color: Orchid; font-family: Georgia;] }">'+ (HM.Keywords[0] || '') +'</textarea><textarea id="code_scl-forPosts" class="keywords-input font-s" placeholder="name { Saeki-fag | Saeki* | *fag } trip { !Hyd5gFre } name { Saeki-fag::Anonymous } text { &quot;::“$1” }" hidden>'+ (HM.Keywords[1] || '') +'</textarea></td></tr></tbody>'}, {
+				'mousedown': function(e) {
+					if (e.target.classList[0] === 'svx-label') {
+						var $Id = e.target.id.split('-')[1],
+							riD = $Id === 'forThreads' ? 'forPosts' : 'forThreads';
+							e.target.classList.add('chx-d');
+						this.querySelector('#code_scl-'+ $Id).hidden = false;
+						this.querySelector('#code_scl-'+ riD).hidden = true;
+						this.querySelector('#svx-'+ riD + '-'+ LC['lng'][lng]).classList.remove('chx-d');
+					}
+				}
+			});
+		this['UserStyle'] = _z.setup('table', {'html': '<tbody><tr><td><textarea class="usercode-input" id="code_css-UserStyle" placeholder="/* User Style Code area */"></textarea></td></tr></tbody>'});
 		this['Panel'] = _z.setup('div', {'id': 'magic-panel'}, {'change': function(e) {
 			var $Item = e.target, $Id = $Item.id.split('-'), $V = $Item.value;
 			switch($Id[0]) {
-				case 'rhx':
+				case 'code_css':
+				case 'code_scl':
+					clearTimeout($Item.applyEffect);
+					StyleSet[$Id[0]].bind($Item)();
+					break;
+				case 'svx':
 					switch($Id[1]) {
 						case 'stampsConcealing':
 							HM.Keywords.conceal = $Item.checked;
 							if ($Item.checked) {
-								_z.each(document.getElementsByClassName('hinfo'), function(hs) {
-									var Id = _cid(hs.id);
-									(document.getElementById('post_'+ Id) || {}).hidden = true;
-									_z.each('.celrly[href$="#i'+Id+'"]', function(t_refl) {
-										t_refl.hidden = true;
+								for (var arg in Disepath.bank) {
+									_z.each(Disepath.bank[arg], function(bank) {
+										if (bank.meth === 'hid') {
+											var map$ = bank.node.getAttribute('patch-id').split('_');
+											bank.node.hidden = true;
+											_z.each('.celrly[href="/'+ map$[0] +'/res/'+ map$[1] +'.xhtml#i'+ map$[2] +'"]', function(vel) {
+												vel.hidden = true;
+											});
+										}
 									});
-								});
+								}
 							} else {
-								_z.each('.post[hidden], .celrly[hidden]', function(el) { el.hidden = false; });
+								_z.each('.post[hidden], .celrly[hidden]', function(hel) { hel.hidden = false; });
 							}
 							StyleSet[$Item.checked]('hinfostub');
 							$Item.parentNode.classList.toggle('inactive');
-							break;
-						default:
-							HM.Keywords[$Id[1]].apply = $Item.checked;
-							if ($Item.checked) {
-								wer(HM.Keywords[$Id[1]].keys, type);
-							} else {
-								cearWe($Id[1]);
-							}
 					}
 					_z.localS.set('Keywords', JSON.stringify(HM.Keywords));
 					break;
@@ -3134,47 +3409,20 @@ function MagicExtension() {
 					}
 					setupOptions($Item, $Id[1], 'local');
 			}
-		}, 'click': function(e) {
-			if (e.target.id === 'gsx-AspectRatio') {
-				switch (lastScrollElem) {
-					case 'video': _scrollTo('scbc'); break;
-					case 'scbc': _scrollTo('video'); break;
-					default:
-						if (Megia['video']['Container'].parentNode)
-							_scrollTo('video');
-						else if (Megia['scbc']['Container'].parentNode)
-							_scrollTo('scbc');
-				}
+		}, 'input': function(e) {
+			var $Item = e.target,
+				$Id = $Item.id.split('-');
+			if ($Id[0] in StyleSet) {
+				clearTimeout($Item.applyEffect);
+				$Item.applyEffect = setTimeout(StyleSet[$Id[0]].bind($Item), 3000);
 			}
 		}, 'mousedown': function(e) {
 			stepZup.bind(this)(e);
 			MSs['ButtonsPanel'].style['z-index'] = HM.zIndex;
 		}});
-		MSs['UserStyle'].querySelector('#code_css_ta').value = HM.UserStyle;
+		MSs['UserStyle'].querySelector('#code_css-UserStyle').value = HM.UserStyle;
 		el$('#gsx-maXrating').value = HM.maXrating;
 		el$('#gsx-PictureView').value = HM.PictureView;
-		for (var n = 0, Types = ['Nametrip', 'Title', 'Words']; n < Types.length; n++) {
-			_z.setup(this['HideBySets'].querySelector('#txt-'+ Types[n]), {'value': HM.Keywords[Types[n]].keys}, {
-				'blur': function(e) {
-					var type = this.id.split('-')[1];
-					if (HM.Keywords[type].keys !== this.value) {
-						HM.Keywords[type].keys = this.value;
-						if (HM.Keywords[type].apply) {
-							cearWe(type);
-							wer(this.value, type);
-						}
-						_z.localS.set('Keywords', JSON.stringify(HM.Keywords));
-					}
-					this.parentNode.className = 'turn-off';
-					this.style['height'] = '';
-				}, 'focus': function(e) {
-					this.style['height'] = '267px';
-					this.parentNode.className = 'turn-on';
-				}
-			});
-			if (HM.Keywords[Types[n]].apply)
-				wer(HM.Keywords[Types[n]].keys, Types[n])
-		}
 		this['MusicPlayer'] = Megia.audio['Player'];
 		this['ButtonsPanel'] = _z.setup('a', {
 				'id': 'magic-buttons-panel',
@@ -3206,101 +3454,12 @@ function MagicExtension() {
 			lastScrollElem = key;
 			Megia[key]['Container'].scrollIntoView({block: "start", behavior: "smooth"});
 		}
-		function cearWe(type) {
-			_z.each('.autohidden.by-'+ type, function(hel) {
-				var Id = _cid(hel.id);
-				document.getElementById('hidden-'+ Id).remove();
-				if (HM.Keywords.conceal) {
-					(document.getElementById('post_'+ Id) || {}).hidden = false;
-					_z.each('.celrly[href$="#i'+Id+'"]', function(t_refl) {
-						t_refl.hidden = false;
-					});
-				}
-				hel.classList.remove('autohidden');
-				hel.classList.remove('by-'+ type);
-			});
-			_z.each('.text-original.rw-'+ type, function(ot) {
-				var txt = ot.textContent;
-				ot.previousSibling.textContent = txt.slice(0, 1) === '\n' ? txt.slice(1, txt.length) : txt;
-				_z.remove([ot.nextElementSibling, ot]);
-			});
-		}
-	}
-	function wer(val, arg, np) {
-		var i, n, f, m, c, nodes, keys = val.split(', '),
-			ABС = 'ABCDEFGHIJKLMNOPQRSTUVWXYZАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ',
-			tlc = 'translate(., "'+ ABС +'", "'+ ABС.toLowerCase() +'")',
-			reg = /^(?:\*(.+)\*|\*(.+)|(.+)\*|(.+)\:\:(.+))$/,
-			Class = {
-				'Nametrip': ['postername', 'postertrip'],
-				'Title': ['replytitle'],
-				'Words': ['message'] }
-		for (i = 0; i < keys.length; i++) {
-			if (keys[i] === '')
-				continue;
-			m = reg.exec(keys[i]);
-			c = keys[i].slice(0, 1) === '!' && arg === 'Nametrip' ? 1 : 0;
-			if (m && m[4] && m[5]) {
-				nodes = getElementByXpath('//*[@class="'+ Class[arg][c] +'"]//text()[contains('+ tlc +','+ cleanStringForXpath(m[4].toLowerCase()) +') and not(parent::code or parent::*[contains(@class, "text-original") or contains(@class, "text-modifed") or @class="text-styled"])]', 7, np);
-				for (n = 0; n < nodes.snapshotLength; n++) {
-					var text = nodes.snapshotItem(n),
-						cin = escapeRegExp(m[4]),
-						sm = m[5].match(/^(.*)@\[([^\]]+)\]$/),
-						twod = (sm ? sm[1] : m[5]),
-						md = twod.match(/^(.*)?(\$1)(.*)?$/);
-					if (md) {
-						var S = KeyCodes.balance(cin);
-						cin = md[1] || md[3] ? S[0] +'([^'+ S[1] +']*)'+ S[1] : '('+ cin +')';
-					}
-					f = new RegExp(cin, 'gi')
-					_z.after(text, [
-						_z.setup('span', {'class': 'text-original rw-'+ arg, 'text': text.textContent}),
-						_z.setup('span', {'class': 'text-modifed rw-'+ arg, 'html': text.textContent.replace(f,
-							(sm && sm[2] ? '<span class="text-styled" style="'+ sm[2] +'">'+ twod +'</span>' : twod))})
-					]);
-					text.textContent = '';
-				}
-			} else {
-				f = m && m[1] ? 'contains('+ tlc +', '+ cleanStringForXpath(m[1].toLowerCase()) +')' :
-					m && m[2] ? 'substring('+ tlc +', string-length(.) - string-length('+ cleanStringForXpath(m[2]) +') +1) = '+ cleanStringForXpath(m[2].toLowerCase()):
-					m && m[3] ? 'starts-with('+ tlc +', '+ cleanStringForXpath(m[3].toLowerCase()) +')' : tlc +' = '+ cleanStringForXpath(keys[i].toLowerCase());
-				nodes = getElementByXpath('//*[@class="'+ Class[arg][c] +'" and '+ f +']/parent::*[not(contains(@class, "hinfo"))]/parent::*[not(contains(@class, "autohidden") or parent::*[contains(@class, "autohidden")])]', 7, np);
-				for (n = 0; n < nodes.snapshotLength; n++) {
-					var node = nodes.snapshotItem(n), x = 2,
-						sinf = ' class="sinf"', tag = 'td',
-						Id = extractStringNumbers(node.id)[0];
-					if (node.classList.contains('oppost')) {
-						node = node.parentNode; x = 1;
-						tag = 'label';
-						sinf = '';
-					}
-					if (HM.Keywords.conceal) {
-						(document.getElementById('post_'+ Id) || {}).hidden = true;
-						_z.each('.celrly[href$="#i'+ Id +'"]', function(t_refl) {
-							t_refl.hidden = true;
-						});
-						node.click();
-						Tinycon.setBubble(HM.UnreadCount);
-					}
-					node.className = node.className +' autohidden by-'+ arg;
-					node.insertAdjacentHTML('beforebegin', '<'+ tag +' id="hidden-'+ Id +'" class="'+ node.classList[0] +' stub hinfo"><label class="'+ Class[arg][c] +' t-sec font-s">'+
-						keys[i] +'</label>\n<i'+ sinf +'>('+ LC.hidden[0][lng] + LC.hidden[x][lng] +')</i>\n<span'+ sinf +'>No.'+ Id +'</span></'+ tag +'>');
-				}
-			}
-		}
 	}
 	
 	function insertListenerS(event) {
 		switch (event.animationName) {
 			case 'onReady':
 				switch (event.target.className) {
-					case 'reply':
-					case 'stored':
-						for (var n = 0, Types = ['Nametrip', 'Title', 'Words']; n < Types.length; n++) {
-							if (HM.Keywords[Types[n]].apply)
-								wer(HM.Keywords[Types[n]].keys, Types[n], event.target)
-						}
-						break;
 					case 'footer': try {
 						_z.append(document.head, [
 							_z.setup('style', {'id': 'user-css', 'text': HM.UserStyle})
@@ -3308,11 +3467,10 @@ function MagicExtension() {
 						var locationThread = document.getElementById('thread_'+ HM.URL.thread),
 							hideinfodiv = document.getElementById('hideinfodiv'),
 							delForm = document.getElementById('delete_form'),
-							rules = document.getElementsByClassName('rules')[0],
-							posts = document.getElementsByClassName('post');
+							rules = document.getElementsByClassName('rules')[0];
+							Megia.settings = new MagicSettings();
 						
-						_z.each(posts, handlePost); 
-						genReplyMap(posts);
+						_z.each(mEl['Posts'], handlePost);
 						if (hideinfodiv) {
 							_z.after(hideinfodiv, Nagato['OpenTopForm']);
 							Nagato['BoardRulesSect'].appendChild(rules)
@@ -3328,12 +3486,11 @@ function MagicExtension() {
 						} else {
 							if (hideinfodiv)
 								_z.before(delForm.querySelector('.pages'), Nagato['OpenBottomForm']);
-							_z.each('.thread:not(.stub)', function(thread) {
+							_z.each('.thread:not(.autohide-info)', function(thread) {
 								if (!thread.querySelector('img[src="/images/sticky.png"]')) {
 									var CiD = _cid(thread.id);
 									HM.ThreadListener[CiD] = new MagicThreadListener(thread)
-									_z.after(thread, HM.ThreadListener[CiD]['DummyLine']);
-									_z.setup(thread.querySelector('.abbrev a[onclick^="ExpandThread"]'), {'class': 'excat-button', 'id': 'thread-expand', 'onclick': undefined});
+									thread.appendChild(HM.ThreadListener[CiD]['DummyLine']);
 								}
 							});
 						}
@@ -3342,7 +3499,7 @@ function MagicExtension() {
 						}
 						_z.append(document.body, [
 							mEl['ContentWindow'], mEl['ContentMarker'], mEl['ContextMenu'], mEl['StatusPanel'],
-							new MagicSettings()['ButtonsPanel']
+							Megia.settings['ButtonsPanel']
 						]);
 					} catch(e) {
 						console.error(e)
@@ -3353,99 +3510,148 @@ function MagicExtension() {
 	
 	function PDownListener(e) {
 		try {
-			var Phis = this, patchId = this.getAttribute('patch-id'), Map = patchId.split('_'), RPForm, _Params;
+			var $Params, $Post = this, patchId = this.getAttribute('patch-id'), $Map = patchId.split('_');
 			if (this.classList.contains('new'))
 				markAsRead(this);
 			switch (e.target.classList[0]) {
 				case 'reply-link': Chanabira.MagicHighlight(e); break;
 				case 'ma-button':
 					Megia.audio[e.target.id.split('-')[1]](e.target, e.target.parentNode.parentNode);
-					_z.fall(e);
 					break;
-				case 'cm-button': loadMediaContainer(e); break;
-				case 'delete-post': delPost(this); break;
-				case 'postermenu':
-					e.target.parentNode.classList.toggle('active');
-					e.target.nextElementSibling.style['z-index'] = document.querySelectorAll('.active > .postermenu').length;
-					break;
-				case 'chek-to-del':
-					e.target.classList.toggle('selected');
-					HM.LoadedPosts[patchId].delete_input.checked = e.target.classList.contains('selected');
-					break;
+				case 'cm-button':
 				case 'mview':
-					loadMediaContainer({target:e.target.parentNode})
-					_z.fall(e);
+					loadMediaContainer({
+						'URL': e.target.classList[0] === 'mview' ? e.target.parentNode.href : e.target.href,
+						'NODE': e.target.classList[0] === 'mview' ? e.target.parentNode : e.target
+					});
+					break;
+				case 'dropdown-label':
+					e.target.parentNode.classList.toggle('active');
+					e.target.nextElementSibling.style['z-index'] = document.querySelectorAll('.active > .dropdown-label').length;
+					break;
+				case 'dropdown-item':
+					var $Id = e.target.id.split('_');
+					switch ($Id[0]) {
+						case 'usermenu':
+							switch ($Id[1]) {
+								case 'delete': delPost(this); break;
+								case 'hide':
+									var $v = $Map[1] === $Map[2] ? 0 : 1, p_m = '#'+ $Map[0] +'/'+ $Map[2],
+										tA = Megia.settings['HideBySets'].querySelectorAll('textarea');
+									HM.Keywords[$v] = tA[$v].value = tA[$v].value + (tA[$v].value.length > 0 ? ' ' : '' ) + p_m;
+									Disepath.eval($v, p_m, HM.LoadedPosts[patchId]);
+									_z.localS.set('Keywords', JSON.stringify(HM.Keywords));
+									break;
+								case 'report':
+									if (!HM.ReportForm) {
+										HM.ReportForm = new Yuki(false);
+										findModThread(0)
+									}
+									var $Form = HM.ReportForm.getForm(['d', HM.ReportForm['TargetThread'].value, ($Map[0] === 'd' ? '' : $Map[0] +'/') + $Map[2]], {
+										type: 'report',
+										textContent: ['Mod Thread', 'Модераторам тред'][lng] });
+									changeForms($Form, 'popup');
+									break;
+								case 'edit':
+									if (!HM.LoadedPosts[patchId].edit_form)
+										HM.LoadedPosts[patchId].edit_form = new Yuki(false);
+									var $params = {
+											type: 'edit',
+											name: (this.querySelector('.postertrip:not(.t-sec)') || this.querySelector('.postername:not(.t-sec)')).textContent,
+											subj: (this.querySelector('.replytitle:not(.t-sec)') || {textContent:''}).textContent,
+											text: textSource(this.querySelector('.message')),
+											files: this.getElementsByClassName('download-link'),
+											afterSubmitAction: delPost},
+										$form = HM.LoadedPosts[patchId].edit_form.getForm($Map, $params)
+									_z.after(this.querySelector('.cpanel + br'), $form);
+							}
+							break;
+						case 'modmenu':
+							var $meth = e.target.getAttribute('admin_req');
+							switch ($Id[1]) {
+								case 'xreq':
+									var post_id = e.target.parentNode.id.split('-')[1];
+									getDataResponse('/api/admin/post/'+ post_id + $meth, function(status, sText, json, xhr) {
+										if (status !== 200 || json.error) {
+											document.body.appendChild(
+												_z.setup(mEl['WarningMsg'], {'text': json.error ? json.error.message +' '+ json.error.code : status +' '+ sText})
+											)
+										} else if (json.result) {
+											setTimeout(function(){
+												switch ($Id[2]) {
+													case 'upd':
+														if ($meth.isThere('?bump=1')) {
+															HM.LoadedPosts[patchId]['delete_input'].remove();
+															HM.LoadedPosts[patchId].className = 'postdeleted';
+														}
+														HM.ThreadListener[$Map[1]].updateThread(true, false);
+													case 'reset':
+														updatePost(post_id);
+												}
+											}, 1500)
+										}
+									});
+									break;
+								case 'open':
+									window.open($meth);
+							}
+					}
+					break;
+				case 'dropdown-input':
+					var $Id = e.target.id.split('_'),
+						$Val = e.target.classList.contains($Id[1]);
+					switch ($Id[0]) {
+						case 'chkx-del': HM.LoadedPosts[patchId]['delete_input'].checked = !$Val; break;
+						case 'str-bump': e.target.parentNode.setAttribute('admin_req', '/show.json'+ ($Val ? '?bump=1' : '')); break;
+					}
+					e.target.classList.toggle($Id[1]);
 					break;
 				case 'iview':
-					Megia.image.makePicture(e.target);
-					_z.fall(e);
+					Megia.image.makePicture(e.target, HM.PictureView);
 					break;
 				case 'reply-button':
-					RPForm = Nagato.getForm(Map, {type: ['popup', 'reply'][HM.FormStyle], textContent: LC.hidden[1][lng], bound: this.formBinding.bind(this)})
+					var $form = Nagato.getForm($Map, {
+						type: ['popup', 'reply'][HM.FormStyle],
+						textContent: LC.hidden[1][lng],
+						bound: this.formBinding.bind(this) })
 					if (HM.FormStyle == '0') {
-						changeForms(RPForm, 'report');
+						changeForms($form, 'report');
 					} else {
-						this.formBinding(RPForm);
+						this.formBinding($form);
 					}
 					_scrollIfOverPage(this)
 					break;
-				case 'mod-report':
-					if (!HM.ReportForm) {
-						HM.ReportForm = new Yuki(false);
-						findModThread(0)
-					}
-					RPForm = HM.ReportForm.getForm(['d', HM.ReportForm['TargetThread'].value, (Map[0] === 'd' ? '' : Map[0] +'/') + Map[2]], {type: 'report', textContent: ['Mod Thread', 'Модераторам тред'][lng]})
-					changeForms(RPForm, 'popup');
-					break;
-				case 'edit-post':
-					var name = (this.querySelector('.postertrip:not(.t-sec)')
-							|| this.querySelector('.postername:not(.t-sec)')),
-						title = this.querySelector('.replytitle:not(.t-sec)'),
-						dlinks = this.getElementsByClassName('download-link'),
-						message = this.querySelector('.message'),
-						params = {type: 'edit', name: name.textContent, subj: (title ? title.textContent : ''), text: textSource(message), afterSubmitAction: delPost, files: dlinks};
-					if (!HM.LoadedPosts[patchId].edit_form)
-						HM.LoadedPosts[patchId].edit_form = new Yuki(false);
-					RPForm = HM.LoadedPosts[patchId].edit_form.getForm(Map, params)
-					_z.after(this.querySelector('.cpanel + br'), RPForm);
-					break;
-				case 'hide-post':
-					if (Map[1] == Map[2]) {
-						var thread = document.getElementById('thread_'+ Map[1])
-						getDataResponse('/api/thread/'+ Map[0] +'/'+ Map[1] +'/hide.json', function(status, sText, flag, xhr) {
-							_z.each([thread, thread.nextElementSibling, thread.nextElementSibling.nextElementSibling],
-								function(el) { el.hidden = flag; });
-						});
-					} else {
-						this.hidden = true;
-						_z.each('.celrly[href$="#i'+ Map[2] +'"]', function(t_refl) { t_refl.hidden = true; });
-					}
-					 break;
 				case 'Get-Full-Text':
-					_Params = {'class': 'Get-Short-Text', 'text': ['Short Text', 'Укороченная версия'][lng]};
+					$Params = {'class': 'Get-Short-Text', 'text': ['Short Text', 'Укороченная версия'][lng]};
 				case 'Get-Short-Text':
 					_z.each(this.getElementsByClassName('postbody'), function(pbody) {
 						pbody.classList.toggle('alternate');
 					});
-					_z.setup(e.target, (_Params || {'class': 'Get-Full-Text', 'text': ['Full Text', 'Полная версия'][lng]}));
-					_z.fall(e);
+					_z.setup(e.target, ($Params || {'class': 'Get-Full-Text', 'text': ['Full Text', 'Полная версия'][lng]}));
 					break;
 				case 'excat-button':
 					var eXcaT = e.target.id.split('-')[1];
-					HM.ThreadListener[Map[1]][eXcaT +'Thread'](e);
+					HM.ThreadListener[$Map[1]][eXcaT +'Thread'](e);
 					e.target.id = 'thread-'+ (eXcaT === 'expand' ? 'truncat' : 'expand');
-					_z.fall(e);
 					break;
-				case 'inj-refl':
-					var brd, form = document.getElementById('yuki-replyForm');
-					if (form) {
-						brd = form.getAttribute('action').split('/')[1];
-						wmarkText(document.getElementById('yuki-replyText'), '>>'+ (Map[0] !== brd ? Map[0] +'/' : '') + Map[2], '\x20');
-					}
-					_z.fall(e);
+				default:
+					return;
 			}
-		} catch(e) {
-			console.error(e)
+			_z.fall(e);
+		} catch(err) {
+			console.error(err);
+		}
+		function updatePost(post_id){
+			getDataResponse('/api/post/'+ post_id +'.xhtml', function(status, sText, xhtml, xhr) {
+				if (status === 200) {
+					var post = HM.LoadedPosts[patchId];
+						post.body.innerHTML = xhtml;
+						if ('delete_input' in post) {
+							post['delete_input'].remove();
+						}
+						handlePost(post, true);
+				}
+			})
 		}
 		function textSource(mNode) {
 			var	soucHTML = mNode.innerHTML, soucText, links = mNode.querySelectorAll('a:not(.reply-link)'),
@@ -3476,7 +3682,7 @@ function MagicExtension() {
 		}
 		function delPost(current) {
 			var delbox = HM.LoadedPosts[patchId].delete_input;
-			var form = _z.setup('form', {'id': 'delete_form', 'action': '/'+ Map[0] +'/delete', 'method': 'post', 'html':
+			var form = _z.setup('form', {'id': 'delete_form', 'action': '/'+ $Map[0] +'/delete', 'method': 'post', 'html':
 				'<input name="task" value="delete"><input name="password" value="'+ HM.User.password +'"><input name="'+ delbox.name +'" value="'+ delbox.value +'">'})
 			Nagato.submitForm({target: form})
 		}
@@ -3517,11 +3723,12 @@ function MagicExtension() {
 	function MagicPicture(h) {
 		var MP = this, Idx = 0, Size = {
 			original: [],
-			scaled: {},
+			scaled: [],
 			get: function(image, scaleMax, scaleMin) {
-				this.scaled = scaleSize(this.original, (scaleMax || document.body.clientWidth - image.parentNode.parentNode.getBoundingClientRect().x - 25), scaleMin, !scaleMax);
-				image.style['width'] = this.scaled.width +'px';
-				image.style['height'] = this.scaled.height +'px';
+				this.scaled = scaleSize(this.original, (scaleMax || document.body.clientWidth - image.parentNode.parentNode.parentNode.getBoundingClientRect().left - 25), scaleMin, !scaleMax);
+				this.ratio = this.scaled[2];
+				image.style['width'] = this.scaled[0].toFixed(4) +'px';
+				image.style['height'] = this.scaled[1].toFixed(4) +'px';
 			}
 		};
 		this['Gallery'] = document.getElementsByClassName('iview');
@@ -3530,16 +3737,10 @@ function MagicExtension() {
 					if (this.classList[1] === 'gallery-qview') {
 						var D = e.deltaY || e.deltaX,
 							Y = extractStringNumbers(this.style['top'] + this.style['left']),
-							R = Size.scaled.width > Size.scaled.height ? Size.scaled.width : Size.scaled.height;
+							R = Size.scaled[Size.ratio];
 							Size.get(this, parseInt(D < 0 ? R * 1.25 : R / 1.25, 10));
 							this.style['left'] = parseInt(e.clientX - (D < 0 ? (e.clientX - Y[1]) * 1.25 : (e.clientX - Y[1]) / 1.25), 10) +'px';
 							this.style['top'] = parseInt(e.clientY - (D < 0 ? (e.clientY - Y[0]) * 1.25 : (e.clientY - Y[0]) / 1.25), 10) +'px';
-						_z.fall(e);
-					}
-				},
-				'dblclick': function(e) {
-					if (this.classList[1] === 'gallery-qview') {
-						MP['Picture'].appendChild(jHolder)
 						_z.fall(e);
 					}
 				},
@@ -3559,7 +3760,9 @@ function MagicExtension() {
 								scrW = this.scrollWidth;
 								Size.changed = false;
 							if (scrH - e.offsetY < (scrH > 30 ? scrH / 10 : scrH) && scrW - e.offsetX < (scrW > 30 ? scrW / 10 : scrW)) {
-								Size.get(this, (Size.scaled.width > 500 || Size.scaled.height > 500 ? 500 : -0), 400);
+								var oRS = Size.original[Size.ratio],
+									sMx = Size.scaled[Size.ratio];
+								Size.get(this, (sMx > 500 ? 500 : -0), (sMx < 500 ? sMx * 2 : oRS));
 								Size.changed = true;
 							}
 					}
@@ -3575,36 +3778,37 @@ function MagicExtension() {
 				}
 			});
 		this.makePicture = function(thumb) {
-			var Id = thumb.id.split('_')[1], href = thumb.href || thumb.parentNode.href,
-				Pv = ['gallery', 'onpost', 'classic'][HM.PictureView];
+			var Id = thumb.id.split('_')[1],
+				Md = thumb.tagName === 'A' && HM.PictureView == 2 ? 3 : HM.PictureView,
+				Pv = ['gallery', 'onpost', 'classic', 'embed'][Md];
 				Idx = MP['Gallery'].indexOf(thumb);
 				Size.original = extractStringNumbers(thumb.getAttribute('image-size'));
 				switch(Pv) {
 					case 'classic':
 						if (thumb.classList.contains('expanded')) {
-							thumb.src = thumb.originalSrc;
+							thumb.src = thumb.lowsrc;
 							thumb.style = '';
 						} else {
-							thumb.originalSrc = thumb.src;
-							thumb.src = (thumb.parentNode.href || thumb.href);
+							thumb.src = thumb.parentNode.href || thumb.href;
 							Size.get(thumb, -0, 200);
 						}
 						thumb.classList.toggle('expanded')
 						break;
 					default:
+						MP['Picture'].src = thumb.parentNode.href || thumb.href;
 						_z.setup(MP['Picture'], {'id': 'mpic_'+ Id, 'class': 'magic-picture '+ Pv +'-qview'})
-						MP['Picture'].src = href;
 						switch (Pv) {
+							case 'embed':
 							case 'onpost':
 								Size.get(MP['Picture'], 500, 200);
-								MP['Picture'].style['background-image'] = 'url(\''+ href +'\')';
+								MP['Picture'].style['background-image'] = 'url(\''+ MP['Picture'].src +'\')';
 								break;
 							case 'gallery':
 								HM.zIndex++;
 								Size.get(MP['Picture'], window.innerWidth > window.innerHeight ? window.innerHeight : window.innerWidth, 200);
-								MP['Picture'].style['left'] = (Size.scaled.width >= window.innerWidth ? 0 : (window.innerWidth - Size.scaled.width) / 2) +'px';
-								MP['Picture'].style['top'] = (Size.scaled.height >= window.innerHeight ? 0 : (window.innerHeight - Size.scaled.height) / 2) +'px';
-								MP['Picture'].style['background-image'] = 'url(\''+ href +'\'), url(/src/svg/1511/alpha-cells.svg)';
+								MP['Picture'].style['left'] = (Size.scaled[0] >= window.innerWidth ? 0 : (window.innerWidth - Size.scaled[0]) / 2) +'px';
+								MP['Picture'].style['top'] = (Size.scaled[1] >= window.innerHeight ? 0 : (window.innerHeight - Size.scaled[1]) / 2) +'px';
+								MP['Picture'].style['background-image'] = 'url(\''+ MP['Picture'].src +'\'), url(/src/svg/1511/alpha-cells.svg)';
 								MP['Picture'].style['z-index'] = HM.zIndex;
 						}
 						if (thumb.parentNode.href) {
@@ -3614,9 +3818,9 @@ function MagicExtension() {
 				}
 		}
 		this.openPicture = function(n) {
-			if (Idx >= 0 && HM.PictureView !== '2') {
+			if (Idx >= 0 && HM.PictureView != 2) {
 				MP.makePicture(MP['Gallery'][Idx + n])
-				if (HM.PictureView == '1') {
+				if (HM.PictureView == 1) {
 					_scrollIfOverPage(_z.route(MP['Picture'], function(node) {
 						return ['reply', 'oppost'].isThere(node.classList[0]);
 					}));
@@ -3624,21 +3828,19 @@ function MagicExtension() {
 			}
 		}
 		function scaleSize(origS, sMax, sMin, md) {
-			var nW, nH, ratio = origS[1] / origS[0];
+			var whOut,
+				ratio = origS[1] / origS[0];
 			if (sMin && sMin > origS[0] && sMin > origS[1]) {
-				nW = ratio <= 1 ? sMin : sMin / ratio;
-				nH = ratio <= 1 ? sMin * ratio : sMin;
+				whOut = (ratio <= 1 ?
+					[sMin, sMin * ratio] : [sMin / ratio, sMin])
 			} else if (sMin && sMax > origS[0] && sMax > origS[1]) {
-				nW = origS[0];
-				nH = origS[1];
-			} else if (ratio <= 1 || md) {
-				nW = sMax;
-				nH = sMax * ratio;
+				whOut = origS;
 			} else {
-				nH = sMax;
-				nW = sMax / ratio;
+				whOut = (ratio <= 1 || md ?
+					[sMax, sMax * ratio] : [sMax / ratio, sMax])
 			}
-			return { width: nW, height: nH };
+				whOut.push(Math.floor(ratio))
+			return whOut;
 		}
 	}
 	
@@ -3694,7 +3896,7 @@ function MagicExtension() {
 				case 37:
 				case 39:
 					if (!['TEXTAREA', 'INPUT'].isThere(e.target.tagName))
-						Megia.image.openPicture(e.keyCode + 1 - 39)
+						Megia.image.openPicture(e.keyCode + 1 - 39, HM.PictureView);
 					break;
 				case 27:
 					Chanabira.closeLastPopup(e);
@@ -3759,14 +3961,14 @@ var mesShadows = /* hr shadow */ 'hr{border-style:none none solid!important;bord
 /* popup/error posts, settings panel sadows & dropdown menu */ '.reply,.popup{border:0 none transparent!important;}.active > .dropdown-label,.dropdown-menu,.popup,#magic-panel,.report{box-shadow:5px 5px 10px rgba(0,0,0,.4),inset 0 0 30px rgba(0,0,0,.1);}'+
 /* reply post sadows */ '.oppost.highlighted,.reply,.highlight{padding:2px 1em 2px 2px!important;box-shadow:inset 0 1px 30px -9px #fff,0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);}.line-sect.reply{padding:2px 4px!important;}'+
 /* new reply post sadows */ '.new .reply{box-shadow:inset 0 1px 30px -9px rgba(255, 85, 0, 0.8),0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);}'+
-/* post images/files & audio players shadows */ '.thumb,.magic-picture.onpost-qview,.yukiFile,.scbc-container,.prosto-pleer,.audio-container video,#status-panel{box-shadow:1px 2px 2px -1px rgba(0,0,0,.4),-1px 0 4px -1px rgba(0,0,0,.2),inset 0 0 30px rgba(0,0,0,.1)!important;}'+
+/* post images/files & audio players shadows */ '.thumb,.rating-select,.magic-picture.onpost-qview,.yukiFile,.scbc-container,.prosto-pleer,.audio-container video,#status-panel{box-shadow:1px 2px 2px -1px rgba(0,0,0,.4),-1px 0 4px -1px rgba(0,0,0,.2),inset 0 0 30px rgba(0,0,0,.1)!important;}'+
 /* error massage, theader & text input shadows */ '#yuki-errorMsg,.theader,.passvalid,input[type="text"],input[type="password"],input[type="number"],textarea,.docs-container,.message code pre{box-shadow:inset 0 1px 2px rgba(0,0,0,.3)!important;-webkit-border-radius:5px;border-style:none!important;}input[type="text"],input[type="number"],input[type="password"],textarea{-webkit-border-radius:3px!important;padding:4px!important;}'+
 /* input buttons style */ 'input[type="button"],input[type="submit"],.button{transition:all .3s ease;box-shadow:0 1px 3px -1px rgba(0,0,0,.5),0 0 2px rgba(0,0,0,.2) inset;padding:3px 6px;color:#999;border:0 none;background-color:#fff;}input[type="button"]:hover,input[type="submit"]:hover,.button:hover{background-color:rgba(255,255,255,.5);}input[type="button"]:active,input[type="submit"]:active,.button:active{box-shadow:0 0 2px rgba(255,255,255,.3),0 0 2px rgba(0,0,0,.2) inset;background-color:rgba(255,255,255,.2);}'+
 /* input checkbox style */ '.checkarea{box-shadow:inset 1px 1px 2px rgba(0,0,0,.3),0 0 2px #fff;border-radius:3px;padding:0 4px;background-color:#fff;font-size:14px;}.checkarea:before{content:"✗";color:transparent;}input[type="checkbox"]:checked + .checkarea:before{color:grey;}'+
-/* text shadows */ '.etch-text,.mapped,.mapped:hover{font-variant:small-caps;font-weight:bold;color:transparent!important;text-shadow:0 1px 1px rgba(255,255,255,.8),-1px 0 0 #666;}'+
+/* text shadows */ '.etch-text,.mapped,.mapped:hover,.active > .modermenu{font-variant:small-caps;font-weight:bold;color:transparent!important;text-shadow:0 1px 1px rgba(255,255,255,.8),-1px 0 0 #666;}'+
 /* video-container shadows */ '.video-container,.content-frame{box-shadow:0 0 2px rgba(0,0,0,.2),0 0 4px rgba(0,0,0,.4),0 9px 9px -8px rgba(0,0,0,.8);}'+
 /* yuki-form previews shadows */ '.yf_preview{box-shadow:0 4px 8px 0 rgba(0,0,0,.2);}';
-var mesAnimations = '.new .reply,form.reply{animation:pview .3s ease-out;-webkit-animation:pview .3s ease-out;}table.popup,.stored{animation:pview .2s linear;-webkit-animation:pview .2s linear;}\
+var mesAnimations = '.new .reply,form.reply{animation:pview .3s ease-out;-webkit-animation:pview .3s ease-out;}table.popup{animation:pview .2s linear;-webkit-animation:pview .2s linear;}\
 .content-frame{animation:slide .2s linear;-webkit-animation:slide .2s linear;}#shadow-box{animation:thaw 1s ease;-webkit-animation:thaw 1s ease;}\
 .magic-picture{animation:imageQView .3s ease-out;-webkit-animation:imageQView .3s ease-out;}.turn-on{animation:kinescope-on .4s ease;-webkit-animation:kinescope-on .4s ease;}.turn-off{animation:kinescope-off .2s ease-out;-webkit-animation:kinescope-off .2s ease-out;}\
 @keyframes kinescope-on {from {transform: scale(1, 0);} to {transform: scale(1, 1);}}@-webkit-keyframes kinescope-on {from {-webkit-transform: scale(.5, 0);} to {-webkit-transform: scale(1, 1);}}@keyframes kinescope-off {from {transform: scale(1, 2);} to {transform: scale(1, 1);}}@-webkit-keyframes kinescope-on {from {-webkit-transform: scale(1, 2);} to {-webkit-transform: scale(1, 1);}}\
@@ -3776,24 +3978,24 @@ var mesAnimations = '.new .reply,form.reply{animation:pview .3s ease-out;-webkit
 @keyframes pview{from {scale(0,0);opacity:0;}25%{transform:scale(.3,.3);opacity:.1;}50%{transform:scale(.9,.9);opacity:.3;}75%{transform:scale(1.02,1.02);opacity:.7;}100%{transform:scale(1,1);opacity:1;}}\
 @-webkit-keyframes pview{0%{-webkit-transform:scale(0,0);opacity:0;}25%{-webkit-transform:scale(.3,.3);opacity:.1;}50%{-webkit-transform:scale(.9,.9);opacity:.3;}75%{-webkit-transform:scale(1.02,1.02);opacity:.7;}100%{-webkit-transform:scale(1,1);opacity:1;}}';
 
-var MagicStyle = '.hidout,.hide.icon,.view_,.edit_,.search_iqdb,.search_google,#open-top-form + #postform_placeholder,#open-top-form + * + #postform_placeholder,#yuki-newThread-create,#yuki-targetInfo,#conn-push,.submit-button.process input,.pleer-container + br,.artwork select,.magic-info ~ *:not(.magic-audio),.autohidden,.autohidden + .dummy-line,.text-original, .reply-link[hidden] + .rl-inf, .magic-picture.onpost-qview + a,.submit-button span,form.edit ~ *:not(.abbrev),#delete-overlay,.popup .chek-to-del{display:none!important;}\
+var MagicStyle = '.hidout,.hide.icon,.view_,.edit_,.search_iqdb,.search_google,#open-top-form + #postform_placeholder,#open-top-form + * + #postform_placeholder,#yuki-newThread-create,#yuki-targetInfo,#conn-push,.submit-button.process input,.pleer-container + br,.autohide-info ~ *,.autohidden + br,.text-original,.rl-inf,.magic-picture.onpost-qview + a,.submit-button span,form.edit ~ *:not(.abbrev),#delete-overlay,.magic-info ~ *:not(.magic-media),.popup #chkx-del_selected{display:none!important;}\
 .unexpanded,.rated{max-width:200px!important;max-height:200px!important;}.expanded{width:100%;height:auto;}.hideinfo{margin:5px;}.sp-r.rate{color:darkred;}#yuki-dropBox tr,.f-sect,.hideinfo{text-align:center!important;}\
 .dpop,#wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}.artwork{background:url(/src/svg/1505/ma-artwork.svg)no-repeat scroll center center / 100% auto;}.movie{background:url(/src/svg/1505/cm-movie.svg)no-repeat scroll center center / 100% auto;}\
-.content-frame,.scbc-container,.mhs-title,#magic-panel,.active > #timer-update-sets,.yukiFile,.dropdown-menu,.message code,#status-panel{background-color:#fefefe;}.global #yuki-newThread-create,form.popup #yuki-targetInfo,.report #yuki-targetInfo,form.reply #conn-push,form.popup #conn-push{display:inline!important;}\
+.content-frame,.scbc-container,.mhs-title,#magic-panel,.active > .dropdown-label:not(.postermenu),.yukiFile,.dropdown-menu,.rating-select,.message code,#status-panel{background-color:#fefefe;}.global #yuki-newThread-create,form.popup #yuki-targetInfo,.report #yuki-targetInfo,form.reply #conn-push,form.popup #conn-push{display:inline!important;}\
 .yuki_clickable,.txt-btn,.wmark-button,.button,.el-li,.icon{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}\
 .replylinks,.button{line-height:2em;font-size:75%;clear:both;}#post-count,.txt-btn{color:#999;}.mapped,.mapped:hover{cursor:default;color:#666!important;}.hidup{top:-9999px!important;}\
-.footer:after,.stored:not(.stub):after,.new .reply:not(.stub):after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.cm-button,.btn-link{text-decoration:none;}.s-sect{text-align:left;padding-left:2em;color:#777;}\
+.footer:after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.cm-button,.btn-link{text-decoration:none;}.s-sect{text-align:left;padding-left:2em;color:#777;}\
 #yuki-captcha,#yuki-pass{width:295px;}#yuki-captcha-image{vertical-align:middle;margin:2px;}#yuki-dropBox{width:7em;height:18em;border:3px dashed rgba(99,99,99,.3);padding:2px;}\
-#convert-strike,.doubledash,.global #yuki-close-form,.dropdown-menu,.magic-picture.gallery-qview + a{visibility:hidden;}.sagearrow{background:url(/src/svg/1409/Sage.svg)no-repeat center bottom;position:relative;}.paperclip{background:url(/src/png/1411/attachpopup.png)no-repeat center;}\
+#convert-strike,.doubledash,.global #yuki-close-form,.dropdown-menu,.rating-select,.magic-picture.gallery-qview + a{visibility:hidden;}.sagearrow{background:url(/src/svg/1409/Sage.svg)no-repeat center bottom;position:relative;}.paperclip{background:url(/src/png/1411/attachpopup.png)no-repeat center;}\
 #yuki-errorMsg{text-align:center;color:#FFF;background-color:#E04000;}.wmark-button{color:#fefefe;text-shadow:0 1px 0 rgba(0,0,0,.4);}a:hover > .wmark-button{color:inherit;}.spoiler > .wmark-button{vertical-align:inherit;color:inherit;text-shadow:none;}\
-.rating_SFW{background:green;}.rating_R15{background:yellow;}.rating_R18{background:orange;}.rating_R18G{background:red;}.line-sect,.yukiFile,.cpop,.mpanel-btn,.postdeleted .doubledash{display:inline-block;}#warning-massage{color:#ff3428;}\
+.rating_SFW{background:green;}.rating_R15{background:yellow;}.rating_R18{background:orange;}.rating_R18G{background:red;}.line-sect,.yukiFile,.cpop,.mpanel-btn,.postdeleted .doubledash,.li-in{display:inline-block;}#warning-massage{color:#ff3428;}\
 .yukiFile,.yukiFileSets{font-size:66%;}.yukiFile{text-align:center;margin:5px;}.yukiFile.default{padding:2px;width:210px;-webkit-border-radius:5px;}.movie select{position:relative;top:118px;}\
-#yuki-files-placeholder > *{vertical-align:top;}.yf_preview{max-width:150px;margin:5px 0;}.yf_info{padding:0 2px;word-wrap:break-word;}\
-#yuki-replyForm{text-align:left;padding:4px 8px;}.selected:before{content:"✓ ";color:green;}.chek-to-del.selected:before{margin:5px;position:relative;bottom:2px;}.cpop{margin-left:.4em;}.checkarea.super{font-size:20px!important;}\
+#yuki-files-placeholder > *{vertical-align:top;}.yf_preview{max-width:150px;margin:5px 0;}.br-word{word-wrap:break-word;margin-top:3px;}.virguled:after{content:",";padding-right:2px;}\
+#yuki-replyForm{text-align:left;padding:4px 8px;}.selected:before{content:"✓ ";color:green;}#chkx-del_selected.selected:before{margin:5px;position:relative;bottom:2px;}.cpop{margin-left:.4em;}.checkarea.super{font-size:20px!important;}\
 #yuki-dropBox tr{display:block;}.droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em;}\
 #rf-cb-ty{background-image:url(/src/svg/1411/closepopup.svg);}#rf-cb-all{background-image:url(/src/svg/1411/closeallpopups.svg);}.dpop{float:right;background-image:url(/src/svg/1505/cmove.svg);cursor:move;}.sagearrow{cursor:default;}\
 .new .reply{background-color:rgba(212,115,94,.1);}\
-.cpop{width:14px;height:14px;}.dpop,.sagearrow,.paperclip,.view-eye,.chek-to-del{width:20px;height:20px;}.reply-button{margin-left:3px;width:23px;height:14px;background:url(/src/svg/1505/reply-arrow.svg)no-repeat center top;}\
+.cpop{width:14px;height:14px;}.dpop,.sagearrow,.paperclip,.view-eye,#chkx-del_selected{width:20px;height:20px;}.reply-button{margin-left:3px;width:23px;height:14px;background:url(/src/svg/1505/reply-arrow.svg)no-repeat center top;}\
 #magic-buttons-panel,#magic-panel,#status-panel,#yuki-replyForm.popup,#yuki-replyForm.report,.gallery-qview{position:fixed;}#magic-buttons-panel{right:1em;bottom:1em;}\
 .ta-inact::-moz-selection{background:rgba(99,99,99,.3);}.ta-inact::selection{background:rgba(99,99,99,.3);}#int-upd{bottom:2px;position:relative;}#allowed-posts a{text-decoration:none;text-shadow:none;font-weight:normal;font-size:14px;}\
 .mpanel-btn:hover,.mpanel-btn.active{opacity:1;filter:none;-webkit-filter:grayscale(0%);}#magic-panel tr{height:3em;}#vsize-textbox{color:#bbb;font-family:Trebuchet;}\
@@ -3801,21 +4003,21 @@ var MagicStyle = '.hidout,.hide.icon,.view_,.edit_,.search_iqdb,.search_google,#
 .postdeleted,.t-sec{opacity:.6;}.inactive{opacity:.4;}img[src="#transparent"]{opacity:0;}.wmark-button,.reply-button,.sagearrow,.duration{vertical-align:middle;}.content-window{position:fixed;left:0;top:0;z-index:2999}\
 .submit-button.process{font-size:13px;font-style:italic;color:#777;}@keyframes process{0%{width:0;}100%{width:1em;}}@-webkit-keyframes process{0%{width:0;}100%{width:1em;}}\
 .submit-button.process span{display:inline!important;}.process:after{content:"....";display:inline-block;overflow:hidden;animation:process 3s linear .1s infinite;-webkit-animation:process 3s linear .1s infinite;}\
-.magic-info,.sp-r{width:190px;background-color:rgba(255,255,255,.8);padding:5px;opacity:.6}.magic-info:hover,.sp-r:hover,.popup,.dropdown-menu{z-index:1;opacity:1;}.magic-info,.magic-info + br,.sp-r,.content-frame{position:absolute;}\
+.magic-info,.sp-r{width:190px;background-color:rgba(255,255,255,.8);padding:5px;opacity:.6}.magic-info:hover,.sp-r:hover,.popup,.dropdown-menu,.rating-select{z-index:1;opacity:1;}.magic-info,.magic-info + br,.sp-r,.content-frame{position:absolute;}\
 .video-container,.content-frame.video{background-color:#000;}.video-container,.scbc-container{margin:0 9px;display:inline-block!important;}\
 .magic-picture.gallery-qview{box-shadow:5px 5px 10px rgba(0,0,0,.4);}.content-frame{top:10%;left:12%;right:18%;bottom:20%;z-index:3000;}#shadow-box{position:absolute;background-color:rgba(33,33,33,.8);z-index:2999;}\
 .docs-container > iframe,.content-frame.docs > iframe,.full-size,#shadow-box,.content-window,.preview_img{width:100%;height:100%;}.content-frame.img{background-color:transparent;}\
 #close-content-window,#show-content-window{transition:.5s ease;opacity:.6;width:31px;height:31px;background-image:url(/src/svg/1505/close-circle.svg);cursor:pointer;position:absolute;top:20px;right:20px;z-index:3000;}\
-.docs-container,.content-frame.docs,.docs-container > iframe,.message code pre{padding:6px 8px;overflow:auto;resize:both;background-color:#fefefe;}.message code{border-radius:3px;padding:0 3px;}code,.chek-to-del{border:1px #CCC dashed;}.chek-to-del{float:right;cursor:default;}.content-frame.pdf{top:1%;left:17%;right:20%;bottom:1%;}\
+.docs-container,.content-frame.docs,.docs-container > iframe,.message code pre{padding:6px 8px;overflow:auto;resize:both;background-color:#fefefe;}.message code{border-radius:3px;padding:0 3px;}code,#chkx-del_selected{border:1px #CCC dashed;}.li-in{cursor:default;margin-left:5px;}.content-frame.pdf{top:1%;left:17%;right:20%;bottom:1%;}\
 #show-content-window{right:52%;position:fixed;background-image:url(/src/svg/1505/show-circle.svg);border-radius:100%;}#close-content-window:hover,#show-content-window:hover{opacity:1;}\
 #ma-play,#yf-play{background:url(/src/svg/1505/ma-play.svg)no-repeat scroll center;}#ma-pause,#yf-pause{background:url(/src/svg/1505/ma-pause.svg)no-repeat scroll center;}input:focus,select:focus,textarea:focus,button:focus{outline:none;}\
 .ma-controls,.ma-controls a{display:block;width:50px;height:50px;}.ma-controls{position:relative;top:37%;left:37%;border:2px solid #ddd;border-radius:100%;background-color:#333;opacity:.8;}\
-.font-s{font-size:12px;}.keywords-input{width:300px;height:55px;resize:none;}.o-sect{padding:0 1em;}.cyan-light{color:rgba(90,152,155,.8);}\
-.dummy-line{position:absolute;text-align:center;width:100%;}\
-.dropdown,.dropdown-menu{padding-left:0;list-style:outside none none;}.active > * {visibility:visible;}.active > .dropdown-label{border-radius:4px 4px 0 0;}.dropdown-label{padding:2px 4px;font-variant:small-caps;font-size:14px;}.dropdown-label + .dropdown-menu{border-top-left-radius:0;border-top-right-radius:0;}.dropdown-menu{border-radius:4px;position:absolute;color:#777;min-width:150px;font-size:14px;line-height:1.8;}\
-.dropdown-item,.dropdown-br{padding:0 10px;}.dropdown-item:hover,.tracklist-item:hover{background-color:rgba(0,0,0,.1);}.dropdown-br{font-size:12px;line-height:16px;border:1px solid #e1e1e1;}#timer-update-sets:before{content:"⟨ ";}#timer-update-sets:after{content:" ⟩";}#int-val{width:50px;margin:0 4px;}.red-light{color:red;text-shadow:0 0 4px red;}.cpanel > .reply-button{top:-1px;position:relative;}\
+.font-s{font-size:12px;}.keywords-input{width:300px;height:280px;resize:none;}.o-sect{padding:0 1em;}.cyan-light{color:rgba(90,152,155,.8);}\
+.dummy-line{position:absolute;text-align:center;width:100%;}.svx-label{line-height:200%;width:68px;text-align:center;cursor:default;}.svx-label:after{color:grey;font-size:12px;}#svx-forPosts-en:after{content:"osts"}#svx-forPosts-ru:after{content:"осты"}#svx-forThreads-en:after{content:"hreads"}#svx-forThreads-ru:after{content:"реды"}\
+.dropdown,.dropdown-menu,.rating-select{padding-left:0;list-style:outside none none;}.active > * {visibility:visible;}.active > .dropdown-label{border-radius:4px 4px 0 0;}.dropdown-label{padding:2px 4px;font-variant:small-caps;font-size:14px;}.dropdown-label + .dropdown-menu{border-top-left-radius:0;border-top-right-radius:0;}.dropdown-menu{border-radius:4px;position:absolute;color:#777;min-width:150px;font-size:14px;line-height:1.8;}.rating-select{text-align:left;font-size:12px;position:absolute;}\
+.dropdown-item,.rating-option,.dropdown-br{padding:0 10px;}.dropdown-item:hover,.tracklist-item:hover,.svx-label.chx-d{background-color:rgba(0,0,0,.1);}.dropdown-br{font-size:11px;line-height:16px;background-color:#f2f2f2;color:#b1a4a4;text-align:center;font-style:italic;}#timer-update-sets:before{content:"⟨ ";}#timer-update-sets:after{content:" ⟩";}#int-val{width:50px;margin:0 4px;}.red-light{color:red;text-shadow:0 0 4px red;}.cpanel > .reply-button{top:-1px;position:relative;}\
 .blink{-webkit-animation-name:blinker;-webkit-animation-duration:1s;-webkit-animation-timing-function:linear;-webkit-animation-iteration-count:infinite;animation-name:blinker;animation-duration:1s;animation-timing-function:linear;animation-iteration-count:infinite;}\
-.oppost.highlighted,.highlighted .reply{border-style:dashed!important;border-width:2px!important;border-color:#F50!important;}.postcontent,.postcontent > picture,.rl-inf,.f-left{float:left;}br + .postbody{clear:both;}.sinf{color:#666;font-size:.8em;}.onpost-qview:hover:before{content:"";display:inline-block;width:100%;height:100%;background:url(/src/svg/1511/fedge.svg) no-repeat bottom right / 10%;}.gallery-qview{background-color:rgba(255,255,255,.6);}.magic-picture{cursor:pointer;background-repeat:no-repeat,repeat;background-position:center,top left;background-size:contain,auto;display:inline-block;}.celrly:not([hidden]) + .celrly:before, .celrly + * + .celrly:before{content:",\t";color:#666!important;cursor:default;}.celrly:not([hidden]) ~ .rl-inf{display:inline!important;}.report{background-color:#FFE2D4;}\
+.oppost.highlighted,.highlighted .reply{border-style:dashed!important;border-width:2px!important;border-color:#F50!important;}.postcontent,.postcontent > picture,.rl-inf,.f-left{float:left;}br + .postbody{clear:both;}.rp-h > *{font-size:.8em;}.rp-h > .s-inf{color:#666;}.onpost-qview:hover:before{content:"";display:inline-block;width:100%;height:100%;background:url(/src/svg/1511/fedge.svg) no-repeat bottom right / 10%;}.gallery-qview{background-color:rgba(255,255,255,.6);}.magic-picture{cursor:pointer;background-repeat:no-repeat,repeat;background-position:center,top left;background-size:contain,auto;display:inline-block;}.celrly:not([hidden]) ~ .celrly:not([hidden]):before{content:",\t";color:#666!important;cursor:default;}.celrly:not([hidden]) ~ .rl-inf{display:inline!important;}.report{background-color:#FFE2D4;}\
 .view-eye{background:url(/src/png/1506/p-stub-hide.png)no-repeat scroll center;}.i-block{display:inline-block;}.postermenu{display:block;background:url(/src/svg/1508/new-dropdown-arrow.svg)no-repeat scroll bottom center / 18px;padding:9px;}.active > .postermenu{transform:rotate(180deg);-webkit-transform:rotate(180deg);box-shadow:none!important;background-position:top center;}\
 .turn-on{position:absolute;bottom:50px;}.i-fav:before{content:"";margin-right:5px;padding:8px;background:transparent no-repeat scroll center center / 16px;}#icm-fsw-google:before{background-image:url(/src/svg/1508/google_ico_monochrome.svg);}#icm-create-macro:before{background-image:url(/src/svg/1508/macroeditor_ico_monochrome.svg);}#icm-fsw-iqdb:before{background-image:url(/src/svg/1508/new-cube-icon-monochrome.svg);}#icm-fsw-saucenao:before{background-image:url(/src/svg/1508/soucenao_ico_monochrome.svg);}#icm-fsw-derpibooru:before{background-image:url(/src/svg/1508/trixie_cutie_mark_by_rildraw-d3khewr.svg);}\
 #status-panel{bottom:0;border-radius:0 5px;padding:3px 6px;}.break-lines + *:before{content:"||";font-size:12px;padding:0 2px;}.parensis:before{content:"("}.parensis:after{content:")"}.break-midot + *:before{content:"・";}\
@@ -3824,8 +4026,8 @@ var MagicStyle = '.hidout,.hide.icon,.view_,.edit_,.search_iqdb,.search_google,#
 #pb-HideBySets{background-image:url(/src/svg/1505/hide-menu-btn.svg);}#pb-GeneralSets{background-image:url(/src/png/1409/list4.png);}\
 #pb-UserStyle{background-image:url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4bWxuczpza2V0Y2g9Imh0dHA6Ly93d3cuYm9oZW1pYW5jb2RpbmcuY29tL3NrZXRjaC9ucyIgd2lkdGg9IjEwMnB4IiBoZWlnaHQ9IjUycHgiIHZpZXdCb3g9IjAgMCAxMDIgNTIiIHZlcnNpb249IjEuMSI+PGRlZnM+PGZpbHRlciB4PSItNTAlIiB5PSItNTAlIiB3aWR0aD0iMjAwJSIgaGVpZ2h0PSIyMDAlIiBmaWx0ZXJVbml0cz0ib2JqZWN0Qm91bmRpbmdCb3giIGlkPSJmaWx0ZXItMSI+PGZlT2Zmc2V0IGR4PSIwIiBkeT0iMSIgaW49IlNvdXJjZUFscGhhIiByZXN1bHQ9InNoYWRvd09mZnNldElubmVyMSIvPjxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjEiIGluPSJzaGFkb3dPZmZzZXRJbm5lcjEiIHJlc3VsdD0ic2hhZG93Qmx1cklubmVyMSIvPjxmZUNvbXBvc2l0ZSBpbj0ic2hhZG93Qmx1cklubmVyMSIgaW4yPSJTb3VyY2VBbHBoYSIgb3BlcmF0b3I9ImFyaXRobWV0aWMiIGsyPSItMSIgazM9IjEiIHJlc3VsdD0ic2hhZG93SW5uZXJJbm5lcjEiLz48ZmVDb2xvck1hdHJpeCB2YWx1ZXM9IjAgMCAwIDAgMCAgIDAgMCAwIDAgMCAgIDAgMCAwIDAgMCAgMCAwIDAgMSAwIiBpbj0ic2hhZG93SW5uZXJJbm5lcjEiIHR5cGU9Im1hdHJpeCIgcmVzdWx0PSJzaGFkb3dNYXRyaXhJbm5lcjEiLz48ZmVNZXJnZT48ZmVNZXJnZU5vZGUgaW49IlNvdXJjZUdyYXBoaWMiLz48ZmVNZXJnZU5vZGUgaW49InNoYWRvd01hdHJpeElubmVyMSIvPjwvZmVNZXJnZT48L2ZpbHRlcj48L2RlZnM+PGcgaWQ9IlBhZ2UtMSIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCIgc2tldGNoOnR5cGU9Ik1TUGFnZSI+PHBhdGggZD0iTTMxLDQ5LjQzNzUgQzI3LjM3NDk4MTksNTAuNzkxNjczNCAyNC4xMjUwMTQ0LDUxLjQ2ODc1IDIxLjI1LDUxLjQ2ODc1IEMxNy40NTgzMTQ0LDUxLjQ2ODc1IDEzLjk2ODc2NTksNTAuNDUzMTM1MiAxMC43ODEyNSw0OC40MjE4NzUgQzcuNTkzNzM0MDYsNDYuMzkwNjE0OCA1LjExNDU5MjE5LDQzLjM2OTgxMTcgMy4zNDM3NSwzOS4zNTkzNzUgQzEuNTcyOTA3ODEsMzUuMzQ4OTM4MyAwLjY4NzUsMzAuODEyNTI1MyAwLjY4NzUsMjUuNzUgQzAuNjg3NSwyMC43MjkxNDE2IDEuNTYyNDkxMjUsMTYuMjE4NzcgMy4zMTI1LDEyLjIxODc1IEM1LjA2MjUwODc1LDguMjE4NzMgNy41MzEyMzQwNiw1LjE4NzUxMDMxIDEwLjcxODc1LDMuMTI1IEMxMy45MDYyNjU5LDEuMDYyNDg5NjkgMTcuNDE2NjQ3NSwwLjAzMTI1IDIxLjI1LDAuMDMxMjUgQzI0LjEyNTAxNDQsMC4wMzEyNSAyNy4zNzQ5ODE5LDAuNzA4MzI2NTYyIDMxLDIuMDYyNSBMMzEsOC44MTI1IEMyNy42NDU4MTY2LDYuODc0OTkwMzEgMjQuMzEyNTE2Niw1LjkwNjI1IDIxLDUuOTA2MjUgQzE4LjQ5OTk4NzUsNS45MDYyNSAxNi4yMTM1NTIsNi43NjA0MDgxMiAxNC4xNDA2MjUsOC40Njg3NSBDMTIuMDY3Njk4LDEwLjE3NzA5MTkgMTAuMzk1ODM5NywxMi42ODIyNzUyIDkuMTI1LDE1Ljk4NDM3NSBDNy44NTQxNjAzMSwxOS4yODY0NzQ4IDcuMjE4NzUsMjEuODc0OTgwNiA3LjIxODc1LDI1Ljc1IEM3LjIxODc1LDI5LjY4NzUxOTcgNy44NzQ5OTM0NCwzMi4zMjI5IDkuMTg3NSwzNS42NTYyNSBDMTAuNTAwMDA2NiwzOC45ODk2IDEyLjE3NzA3MzEsNDEuNDg0MzY2NyAxNC4yMTg3NSw0My4xNDA2MjUgQzE2LjI2MDQyNjksNDQuNzk2ODgzMyAxOC41MjA4MjA5LDQ1LjYyNSAyMSw0NS42MjUgQzI0LjI5MTY4MzEsNDUuNjI1IDI3LjYyNDk4MzEsNDQuNjU2MjU5NyAzMSw0Mi43MTg3NSBMMzEsNDkuNDM3NSBaIE0zNy4zMTI1LDQ3Ljk2ODc1IEwzNy4zMTI1LDQyLjAzMTI1IEM0Mi4zMTI1MjUsNDQuNDA2MjYxOSA0Ni44NTQxNDYyLDQ1LjU5Mzc1IDUwLjkzNzUsNDUuNTkzNzUgQzUyLjY0NTg0MTksNDUuNTkzNzUgNTQuMjgxMjQyMiw0NS4yNjU2MjgzIDU1Ljg0Mzc1LDQ0LjYwOTM3NSBDNTcuNDA2MjU3OCw0My45NTMxMjE3IDU4LjkyNjMwMDgsNDIuNzI3MDA4MyA1OS41OTM3NSw0MC40NDgyNDIyIEM2MC4yNjExOTkyLDM4LjE2OTQ3NjEgNjAuMDQxNjcyMiwzNS41MTU2MzIzIDU4LjkzNzUsMzQuMDQ2ODc1IEM1Ny44MzMzMjc4LDMyLjU3ODExNzcgNTUuNzYwNDMxOSwzMC45NTgzNDIyIDUyLjcxODc1LDI5LjE4NzUgTDQ5LjUzMTI1LDI3LjM0Mzc1IEw0Ni4zMTI1LDI1LjUgQzQwLjY0NTgwNSwyMi4xNDU4MTY2IDM3LjgxMjUsMTcuOTc5MTkxNiAzNy44MTI1LDEzIEMzNy44MTI1LDkuMzU0MTQ4NDQgMzkuMDc4MTEyMyw2LjI4NjQ3MDc4IDQxLjYwOTM3NSwzLjc5Njg3NSBDNDQuMTQwNjM3NywxLjMwNzI3OTIyIDQ4LjA5MzcyMzEsMC4wNjI1IDUzLjQ2ODc1LDAuMDYyNSBDNTYuOTI3MTAwNiwwLjA2MjUgNjAuMjcwODE3MiwwLjU2MjQ5NSA2My41LDEuNTYyNSBMNjMuNSw3Ljk2ODc1IEM1OS45Mzc0ODIyLDYuNTkzNzQzMTMgNTYuNDY4NzY2OSw1LjkwNjI1IDUzLjA5Mzc1LDUuOTA2MjUgQzUwLjQwNjIzNjYsNS45MDYyNSA0OC42MDA4MzAxLDYuMzUxNTYyNSA0Ni45NTExNzE5LDcuNDY3Mjg1MTYgQzQ1LjMwMTUxMzcsOC41ODMwMDc4MSA0NC4wOTM3NSwxMC4xNTYyNCA0NC4wOTM3NSwxMi4xNTYyNSBDNDQuMDkzNzUsMTQuMTM1NDI2NiA0NC43MjkxNjAzLDE1Ljc4MTI0MzQgNDYsMTcuMDkzNzUgQzQ3LjI3MDgzOTcsMTguNDA2MjU2NiA0OC44OTU4MjM0LDE5LjYxNDU3NzggNTAuODc1LDIwLjcxODc1IEw1My4zMTI1LDIyLjE4NzUgTDU2LjM0Mzc1LDI0LjAzMTI1IEw1OC45MDYyNSwyNS41MzEyNSBDNjQuMjE4Nzc2NiwyOC43ODEyNjYyIDY2Ljg3NSwzMi44NjQ1NTg4IDY2Ljg3NSwzNy43ODEyNSBDNjYuODc1LDQxLjUzMTI2ODcgNjUuNTEwNDMwMyw0NC43NDk5ODY2IDYyLjc4MTI1LDQ3LjQzNzUgQzYwLjA1MjA2OTcsNTAuMTI1MDEzNCA1NS42NzcxMTM0LDUxLjQ2ODc1IDQ5LjY1NjI1LDUxLjQ2ODc1IEM0Ny43Mzk1NzM4LDUxLjQ2ODc1IDQ1LjkxMTQ2Nyw1MS4zMDcyOTMzIDQ0LjE3MTg3NSw1MC45ODQzNzUgQzQyLjQzMjI4Myw1MC42NjE0NTY3IDQwLjE0NTg0NzUsNDkuOTg5NTg4NCAzNy4zMTI1LDQ4Ljk2ODc1IEwzNy4zMTI1LDQ3Ljk2ODc1IFogTTcyLjMxMjUsNDcuOTY4NzUgTDcyLjMxMjUsNDIuMDMxMjUgQzc3LjMxMjUyNSw0NC40MDYyNjE5IDgxLjg1NDE0NjIsNDUuNTkzNzUgODUuOTM3NSw0NS41OTM3NSBDODcuNjQ1ODQxOSw0NS41OTM3NSA4OS4yODEyNDIyLDQ1LjI2NTYyODMgOTAuODQzNzUsNDQuNjA5Mzc1IEM5Mi40MDYyNTc4LDQzLjk1MzEyMTcgOTMuOTI2MzAwOCw0Mi43MjcwMDgzIDk0LjU5Mzc1LDQwLjQ0ODI0MjIgQzk1LjI2MTE5OTIsMzguMTY5NDc2MSA5NS4wNDE2NzIyLDM1LjUxNTYzMjMgOTMuOTM3NSwzNC4wNDY4NzUgQzkyLjgzMzMyNzgsMzIuNTc4MTE3NyA5MC43NjA0MzE5LDMwLjk1ODM0MjIgODcuNzE4NzUsMjkuMTg3NSBMODQuNTMxMjUsMjcuMzQzNzUgTDgxLjMxMjUsMjUuNSBDNzUuNjQ1ODA1LDIyLjE0NTgxNjYgNzIuODEyNSwxNy45NzkxOTE2IDcyLjgxMjUsMTMgQzcyLjgxMjUsOS4zNTQxNDg0NCA3NC4wNzgxMTIzLDYuMjg2NDcwNzggNzYuNjA5Mzc1LDMuNzk2ODc1IEM3OS4xNDA2Mzc3LDEuMzA3Mjc5MjIgODMuMDkzNzIzMSwwLjA2MjUgODguNDY4NzUsMC4wNjI1IEM5MS45MjcxMDA2LDAuMDYyNSA5NS4yNzA4MTcyLDAuNTYyNDk1IDk4LjUsMS41NjI1IEw5OC41LDcuOTY4NzUgQzk0LjkzNzQ4MjIsNi41OTM3NDMxMyA5MS40Njg3NjY5LDUuOTA2MjUgODguMDkzNzUsNS45MDYyNSBDODUuNDA2MjM2Niw1LjkwNjI1IDgzLjYwMDgzMDEsNi4zNTE1NjI1IDgxLjk1MTE3MTksNy40NjcyODUxNiBDODAuMzAxNTEzNyw4LjU4MzAwNzgxIDc5LjA5Mzc1LDEwLjE1NjI0IDc5LjA5Mzc1LDEyLjE1NjI1IEM3OS4wOTM3NSwxNC4xMzU0MjY2IDc5LjcyOTE2MDMsMTUuNzgxMjQzNCA4MSwxNy4wOTM3NSBDODIuMjcwODM5NywxOC40MDYyNTY2IDgzLjg5NTgyMzQsMTkuNjE0NTc3OCA4NS44NzUsMjAuNzE4NzUgTDg4LjMxMjUsMjIuMTg3NSBMOTEuMzQzNzUsMjQuMDMxMjUgTDkzLjkwNjI1LDI1LjUzMTI1IEM5OS4yMTg3NzY2LDI4Ljc4MTI2NjIgMTAxLjg3NSwzMi44NjQ1NTg4IDEwMS44NzUsMzcuNzgxMjUgQzEwMS44NzUsNDEuNTMxMjY4NyAxMDAuNTEwNDMsNDQuNzQ5OTg2NiA5Ny43ODEyNSw0Ny40Mzc1IEM5NS4wNTIwNjk3LDUwLjEyNTAxMzQgOTAuNjc3MTEzNCw1MS40Njg3NSA4NC42NTYyNSw1MS40Njg3NSBDODIuNzM5NTczOCw1MS40Njg3NSA4MC45MTE0NjcsNTEuMzA3MjkzMyA3OS4xNzE4NzUsNTAuOTg0Mzc1IEM3Ny40MzIyODMsNTAuNjYxNDU2NyA3NS4xNDU4NDc1LDQ5Ljk4OTU4ODQgNzIuMzEyNSw0OC45Njg3NSBMNzIuMzEyNSw0Ny45Njg3NSBaIiBpZD0iQ1NTIiBmaWxsPSIjN0VEMzIxIiBmaWx0ZXI9InVybCgjZmlsdGVyLTEpIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIi8+PC9nPjwvc3ZnPg==);}\
 #pb-MusicPlayer{background-image:url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4bWxuczpza2V0Y2g9Imh0dHA6Ly93d3cuYm9oZW1pYW5jb2RpbmcuY29tL3NrZXRjaC9ucyIgd2lkdGg9IjYzcHgiIGhlaWdodD0iNjlweCIgdmlld0JveD0iMCAwIDYzIDY5IiB2ZXJzaW9uPSIxLjEiPjxnIGlkPSJQYWdlLTEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHNrZXRjaDp0eXBlPSJNU1BhZ2UiPjxwYXRoIGQ9Ik01MC4wNTk5MDk4LDQ5LjYzMTU2MTMgTDQzLjA1MzI3NzgsNDkuNjMxNTYwMSBDNDMuMDUzMjc3OCw0OS42MzE1NjAxIDQzLjA1NzI5ODIsMjkuNDA3NTYyNCA0My4wNTE5Mzc5LDE2LjI5NTIyNDggQzMxLjMxMzk1NjMsMTkuMDMzNzkxOCA5LjI2NTY2MTgyLDI1LjA3MTEwMjcgNy45ODc4NzE1MiwyNS4zOTAxMzk0IEM3Ljk5MTg5MTgzLDM2LjMyMTM3NzIgNy45OTA1NTE5NSw1OS4yNDg3MTgzIDcuOTkwNTUxOTUsNTkuMjQ4NzE4MyBDNy45OTA1NTE5NSw1OS4yNDg3MTgzIDEuMDIwMTAxNTgsNTkuNTAyNzI5MyAxLjAwMTM0MDExLDU5LjI0ODcxOTQgQzEuMDAxMzQwMTEsNDIuMjk3MTA0NSAxLjAwMzM1MDI2LDI4LjM0NTQ4OTcgMSwxMS4zOTM4NzQ5IEMxNi4zMTMzODIsNy44Mzc3MzQxNiA0OS4wMTU5Njg5LDAuMjIyMTc0MTI1IDUwLjA1OTkxMDcsMCBDNTAuMDYzMjYxMiwxNS4yMDE5OTM2IDUwLjA1OTkwOTgsNDkuNjMxNTYxMyA1MC4wNTk5MDk4LDQ5LjYzMTU2MTMgWiIgaWQ9IlNoYXBlIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMC4wOTM3NSIgZmlsbC1vcGFjaXR5PSIwLjc3IiBmaWxsPSIjMDAwIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIi8+PHBhdGggZD0iTTUyLjk4OTk2NzksNTguNjI3OTI5NyBDNTguNTA3Mjc0OCw1OC42Mjc5Mjk3IDYyLjk3OTkzNTcsNTQuOTI4MTY2NiA2Mi45Nzk5MzU3LDUwLjEwMDUyMyBDNjIuOTc5OTM1Nyw0NS4yNzI4Nzk1IDU4LjUwNzI3NDgsNDAuNzk5MTUzNiA1Mi45ODk5Njc5LDQwLjc5OTE1MzYgQzQ3LjQ3MjY2MSw0MC43OTkxNTM2IDQzLDQ1LjI3Mjg3OTUgNDMsNTAuMTAwNTIzIEM0Myw1NC45MjgxNjY2IDQ3LjQ3MjY2MSw1OC42Mjc5Mjk3IDUyLjk4OTk2NzksNTguNjI3OTI5NyBaIiBpZD0iT3ZhbC0yIiBmaWxsPSIjM0IzQjNCIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIi8+PHBhdGggZD0iTTExLDY4LjcxMzU0MTcgQzE2LjUyMjg0NzUsNjguNzEzNTQxNyAyMSw2NC40MDM5ODAxIDIxLDU5LjUzMzA4MjMgQzIxLDU0LjY2MjE4NDUgMTYuNTIyODQ3NSw1MC43MTM1NDE3IDExLDUwLjcxMzU0MTcgQzUuNDc3MTUyNSw1MC43MTM1NDE3IDEsNTQuNjYyMTg0NSAxLDU5LjUzMzA4MjMgQzEsNjQuNDAzOTgwMSA1LjQ3NzE1MjUsNjguNzEzNTQxNyAxMSw2OC43MTM1NDE3IFoiIGlkPSJPdmFsLTEiIGZpbGw9IiMzQjNCM0IiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiLz48L2c+PC9zdmc+)}\
-.magic-audio{width:200px;height:200px;}.magic-audio-min,.magic-audio-min:after {width:100px;height:100px;text-align:left;}.magic-audio-min:after{content:"";background-image:url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSI1MCUiIHN0b3AtY29sb3I9InJnYmEoMjU1LCAyNTUsIDI1NSwgMC4xNSkiIC8+PHN0b3Agb2Zmc2V0PSI1MCUiIHN0b3AtY29sb3I9InJnYmEoMjU1LCAyNTUsIDI1NSwgMCkiIC8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgc3R5bGU9ImZpbGw6dXJsKCNncmFkKTsiIC8+PC9zdmc+);background-size:contain;position:absolute;box-shadow:0 1px 2px rgba(0,0,0,.4),1px 1px 1px rgba(255,255,255,.5) inset;}\
-.tracklist-scrollbox{width:350px;height:245px;overflow:auto;}.o-track-list{padding:0 2px;}.tracktime{float:right;}#magic-audio-player{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;}.o-track-list,.tracktime{color:rgba(0,0,0,.5);}.o-track-list a{color:#333;text-decoration:none;}\
+.magic-media{width:200px;height:200px;}.magic-media.video{background-color:black;}.magic-audio-min,.magic-audio-min:after {width:100px;height:100px;text-align:left;}.magic-audio-min:after{content:"";background-image:url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSI1MCUiIHN0b3AtY29sb3I9InJnYmEoMjU1LCAyNTUsIDI1NSwgMC4xNSkiIC8+PHN0b3Agb2Zmc2V0PSI1MCUiIHN0b3AtY29sb3I9InJnYmEoMjU1LCAyNTUsIDI1NSwgMCkiIC8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgc3R5bGU9ImZpbGw6dXJsKCNncmFkKTsiIC8+PC9zdmc+);background-size:contain;position:absolute;box-shadow:0 1px 2px rgba(0,0,0,.4),1px 1px 1px rgba(255,255,255,.5) inset;}\
+.tracklist-scrollbox{width:350px;height:245px;overflow:auto;}.o-track-list{padding:0 2px;}.tracktime,#chkx-del_selected{float:right;}#magic-audio-player{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;}.o-track-list,.tracktime{color:rgba(0,0,0,.5);}.o-track-list a{color:#333;text-decoration:none;}\
 .o-track-list li{cursor:pointer;border-bottom:1px solid #f0f0f0;line-height:24px;padding:0 3px;}\
 #now_playing{background-color: rgba(0,0,0,.5);border:none;color:#ddd;box-shadow:0 0 2px #000;}#now_playing > *{color:#fefefe;}#hp_progbar{background-color:white;width:22px;height:12px;position:relative;cursor:pointer;}\
 .forvardarrow{background:url(/src/svg/1601/forvard-button.svg)no-repeat scroll center / 40%;}.hp-controls{height:18px;width:20%;cursor:pointer;}\
@@ -3833,6 +4035,9 @@ var MagicStyle = '.hidout,.hide.icon,.view_,.edit_,.search_iqdb,.search_google,#
 .hp-info{text-overflow:ellipsis;max-width:210px;overflow:hidden;white-space:nowrap;margin:0 1%;}\
 .hp-play-btn{position:absolute;width:40px;height:40px;cursor:pointer;right:10px;filter:invert(30%);}.hp-inf-ctrl{height:100px;text-align:left;color:#777;}\
 #hp_dropbox_layer{position:absolute;width:100%;height:100%;color:#d2d2d2;font:small-caps 1.5em Arial;text-align:center;bottom:0;right:0;background:rgba(0,0,0,.8) url(/src/svg/1409/DropArrow.svg)no-repeat scroll center;filter:invert(80%);}\
+.rating-option{cursor:default;}.sfw:before{content:"SFW";color:green;}.r15:before{content:"R-15";color:#808000;}.r18:before{content:"R-18";color:#a25c18;}.r18g:before{content:"R-18G";color:darkred;}\
+.rating-option:hover:before{color:#fff!important;}.rating-option.sfw:hover{background-color:#3fa53f;}.rating-option.r15:hover{background-color:#a3ae36;}.rating-option.r18:hover{background-color:#d5802d;}.rating-option.r18g:hover{background-color:#cf2323;}\
+.modermenu{padding:2px 0;color:#5a989b;}.modermenu:before{content:"[ ";}.modermenu:after{content:" ]";}.active > .modermenu:before,.active > .modermenu:after{color:transparent;text-shadow:none;}\
 @-webkit-keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}@keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}\
 @keyframes onReady{50% {opacity:0;}} @-webkit-keyframes onReady{50% {opacity:0;}}'+ mesShadows + mesAnimations;
 	
