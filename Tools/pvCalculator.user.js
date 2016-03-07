@@ -1,7 +1,10 @@
 // ==UserScript==
 // @name        PV Calculator
-// @namespace   heartscripts
-// @description Подсчет голосов за выбираемый оп-пик.
+// @description Подсчет голосов за кандидатов на оп-пик.
+// @namespace   magicode
+// @homepage    https://github.com/OpenA/MagiCcode/Tools
+// @updateURL   https://github.com/OpenA/MagiCcode/raw/master/Tools/pvCalculator.user.js
+// @downloadURL https://github.com/OpenA/MagiCcode/raw/master/Tools/pvCalculator.user.js
 // @include     *ponyach.*/*
 // @include     *ponya.ch/*
 // @version     1.0
