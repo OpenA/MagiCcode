@@ -1,7 +1,10 @@
 // ==UserScript==
 // @name        Canvicon
-// @namespace   magicode
 // @description Динамическое изменение фавикона фкладки.
+// @namespace   magicode
+// @homepage    https://github.com/OpenA/MagiCcode/Tools
+// @updateURL   https://github.com/OpenA/MagiCcode/raw/master/Tools/Canvicon.user.js
+// @downloadURL https://github.com/OpenA/MagiCcode/raw/master/Tools/Canvicon.user.js
 // @include     http://*/*/*/*
 // @include     https://*/*/*/*
 // @exclude     *tumblr*
@@ -11,9 +14,11 @@
 // ==/UserScript==
 
 var eV = document.evaluate(
-		'//*[contains(@class, "oppost")]//img[contains(@class, "thumb") or contains(@class, "preview")]'
+		'//*[contains(@class, "oppost") or contains(@class, "thumbnail")]//img[contains(@class, "thumb") or contains(@class, "preview") or @src[contains(., "thumb")]]'
 	, document.body, null, 9, null);
-
+ console.log(document.evaluate(
+		'//*[contains(@class, "thumbnail")]'
+	, document.body, null, 7, null))
 if (!!eV.singleNodeValue) {
 	eV.singleNodeValue.onload = imageLoad;
 	imageLoad.bind(eV.singleNodeValue)();
