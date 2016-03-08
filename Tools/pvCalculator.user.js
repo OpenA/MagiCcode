@@ -5,13 +5,35 @@
 // @homepage    https://github.com/OpenA/MagiCcode/Tools
 // @updateURL   https://github.com/OpenA/MagiCcode/raw/master/Tools/pvCalculator.user.js
 // @downloadURL https://github.com/OpenA/MagiCcode/raw/master/Tools/pvCalculator.user.js
-// @include     *ponyach.*/*
-// @include     *ponya.ch/*
-// @version     1.0
+// @include     http://*/*/res/*
+// @include     https://*/*/res/*
+// @version     1.2
 // @run-at      document-end
 // @grant       none
 // ==/UserScript==
 
+var desk = location.host.match(/^dobrochan|^ponya\.?ch|^2ch/) || [null],
+	Clss = {
+		'prefix': 'reply',
+		'path'  : 'x',
+		'idx'   : '1'
+	};
+	switch (desk[0]) {
+		case null:
+			return;
+		case 'dobrochan':
+			Clss['path'] = '*[contains(@class, "replypost")]/descendant::*[@class="message"]';
+			break;
+		case 'ponya.ch':
+		case 'ponyach':
+			Clss['path'] = '*[@class="pstnode"]/descendant::*[@class="post-body"]/blockquote';
+			Clss['idx'] = '2';
+			break;
+		case '2ch':
+			Clss['prefix'] = 'post-body-';
+			Clss['path'] = '*[@class="post-wrapper"]/descendant::*[@class="post-message"]';
+	}
+	
 var VC = {
 	result: {},
 	calcVotes: function(nid, vals) {
@@ -19,8 +41,8 @@ var VC = {
 			this.result[nid] = _Zetup('tr', {'id': 'cvn-'+ nid, 'html': '<td style="padding-right: 2em;"><a id="tcallView_'+ nid +'" style="cursor: pointer;">\>\>'+ nid +'</a></td><td id="pv-1" style="padding-right: 9px;"></td><td id="pv-2" style="padding-right: 9px;"></td><td id="pv-3" style="padding-right: 9px;"></td><td id="pv-4" style="padding-right: 9px;"></td><td id="pv-5" style="padding-right: 9px;"></td>'});
 			for (var pv, i = 1; pv = this.result[nid].querySelector('#pv-'+ i); i++) {
 				Object.defineProperty(pv, 'value', {
-					get: function()  { return this['__value'] },
-					set: function(n) { this['__value'] = n; this.textContent = n; }
+					get: function()  { return this['__v'] },
+					set: function(n) { this['__v'] = n; this.textContent = n; }
 				});
 				this.result[nid][pv.id] = _Zetup(pv, {'value': 0});
 			}
@@ -35,10 +57,9 @@ var VC = {
 		for (var i = 0; i < oArrN.length; i++) {
 			if (!oArrN[i])
 				continue;
-			for (var j = 0, calls = document.evaluate(
-				'//*[@class="pstnode"]/descendant::*[@class="post-body"]/blockquote/a[substring(@href, string-length(@href) - string-length('+
-					oArrN[i] +') +1) = '+ oArrN[i] +']/following-sibling::text()[2]'
-				, document.body, null, 7, null); j < calls.snapshotLength; j++) {
+			for (var j = 0, calls = document.evaluate('//'+ Clss['path'] +
+				'/a[substring(@href, string-length(@href) - string-length('+ oArrN[i] +') +1) = '+ oArrN[i] +']/following-sibling::text()['+ Clss['idx'] +']'
+			, document.body, null, 7, null); j < calls.snapshotLength; j++) {
 				var mths = calls.snapshotItem(j).textContent.split(/\,?[\s]*/);
 				this.calcVotes(oArrN[i], mths);
 			}
@@ -49,8 +70,8 @@ var VC = {
 			var $id = btn.id.split('_');
 				switch ($id[0]) {
 					case 'tcallView':
-						if (document.getElementById('reply'+ $id[1]))
-							document.getElementById('reply'+ $id[1]).scrollIntoView({block: 'start', behavior: 'smooth'});
+						if (document.getElementById(Clss['prefix']+ $id[1]))
+							document.getElementById(Clss['prefix']+ $id[1]).scrollIntoView({block: 'start', behavior: 'smooth'});
 						break;
 					case 'calculateStart':
 						for (var nid in this.result) {
@@ -60,14 +81,16 @@ var VC = {
 						if (!!input.value) {
 							var ids = input.value.split(/[\s]+/);
 							this.matchVotes(ids.sort());
-						}
+							btn.value = 'Пересчитать'
+						} else
+							btn.value = 'Подсчитать'
 				}
 		} catch(err) {
 			console.error(err);
 		}
 	},
-	frontend: _Zetup('div', {'class': 'reply', 'style': 'position: fixed; left: 0; bottom: 0;',
-		'html': '<input type="text" style="width: 160px;">\n<input id="calculateStart_button" type="button" value="Пересчитать"><hr>\n<table style="font-family: monospace;"><tbody></tbody></table>'}, {
+	frontend: _Zetup('div', {'class': 'reply', 'style': 'position: fixed; left: 35%; bottom: 0; padding: 3px 9px ! important;',
+		'html': '<input type="text">\n<input id="calculateStart_button" type="button" value="Подсчитать"><hr>\n<table style="font-family: monospace;"><tbody></tbody></table>'}, {
 		'click': function(e) {
 			VC.voteProcess(e.target, e.target.previousElementSibling);
 		},
@@ -87,24 +110,15 @@ function _Zetup(el, attr, events) {
 		if (attr) {
 			for (var key in attr) {
 				attr[key] === undefined ? el.removeAttribute(key) :
-				key === 'id'      ? el.id          = attr[key] :
 				key === 'html'    ? el.innerHTML   = attr[key] :
 				key === 'text'    ? el.textContent = attr[key] :
-				key === 'value'   ? el.value       = attr[key] :
-				key === 'hidden'  ? el.hidden      = attr[key] :
-				key === 'checked' ? el.checked     = attr[key] :
+				key in el         ? el[key]        = attr[key] :
 				el.setAttribute(key, attr[key]);
 			}
 		}
 		if (events) {
 			for (var key in events) {
-				if (key === 'remove') {
-					for (var evr in events[key]) {
-						el.removeEventListener(evr, events[key][evr], false);
-					}
-				} else {
-					el.addEventListener(key, events[key], false);
-				}
+				el.addEventListener(key, events[key], false);
 			}
 		}
 	}
