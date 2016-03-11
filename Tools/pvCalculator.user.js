@@ -7,12 +7,12 @@
 // @downloadURL https://github.com/OpenA/MagiCcode/raw/master/Tools/pvCalculator.user.js
 // @include     http://*/*/res/*
 // @include     https://*/*/res/*
-// @version     1.2
+// @version     1.3
 // @run-at      document-end
 // @grant       none
 // ==/UserScript==
 
-var desk = location.host.match(/^dobrochan|^ponya\.?ch|^2ch/) || [null],
+var desk = location.host.match(/^dobrochan|^ponya\.?ch|^ponychan\.ru|^2ch/) || [null],
 	Clss = {
 		'prefix': 'reply',
 		'path'  : 'x',
@@ -24,6 +24,7 @@ var desk = location.host.match(/^dobrochan|^ponya\.?ch|^2ch/) || [null],
 		case 'dobrochan':
 			Clss['path'] = '*[contains(@class, "replypost")]/descendant::*[@class="message"]';
 			break;
+		case 'ponychan.ru':
 		case 'ponya.ch':
 		case 'ponyach':
 			Clss['path'] = '*[@class="pstnode"]/descendant::*[@class="post-body"]/blockquote';
@@ -58,7 +59,7 @@ var VC = {
 			if (!oArrN[i])
 				continue;
 			for (var j = 0, calls = document.evaluate('//'+ Clss['path'] +
-				'/a[substring(@href, string-length(@href) - string-length('+ oArrN[i] +') +1) = '+ oArrN[i] +']/following-sibling::text()['+ Clss['idx'] +']'
+				'/a[substring(@href, string-length(@href) - string-length("'+ oArrN[i] +'") +1) = "'+ oArrN[i] +'"]/following-sibling::text()['+ Clss['idx'] +']'
 			, document.body, null, 7, null); j < calls.snapshotLength; j++) {
 				var mths = calls.snapshotItem(j).textContent.split(/\,?[\s]*/);
 				this.calcVotes(oArrN[i], mths);
