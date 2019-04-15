@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns" width="23px" height="14px" viewBox="0 0 23 14" version="1.1">
+	<defs>
+		<filter x="-50%" y="-50%" width="200%" height="200%" filterUnits="objectBoundingBox" id="filter-1">
+			<feOffset dx="0" dy="0" in="SourceAlpha" result="shadowOffsetOuter1"/>
+			<feGaussianBlur stdDeviation="0.5" in="shadowOffsetOuter1" result="shadowBlurOuter1"/>
+			<feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.7 0" in="shadowBlurOuter1" type="matrix" result="shadowMatrixOuter1"/>
+			<feMerge>
+				<feMergeNode in="shadowMatrixOuter1"/>
+				<feMergeNode in="SourceGraphic"/>
+			</feMerge>
+		</filter>
+	</defs>
+	<g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+		<path d="M12.6588976,5.99167239 L11.4713976,8.29517943 L1.72070312,12.5979567 L3.01375868,8.86019059 L9.12278646,6.788483 L2.15611979,3.84752747 L5.4547309,2.25390625 L12.6588976,5.99167239 Z M20.9230179,5.99167239 L19.7355179,8.29517943 L9.9848235,12.5979567 L11.2778791,8.86019059 L17.3869068,6.788483 L10.4202402,3.84752747 L13.7188513,2.25390625 L20.9230179,5.99167239 Z" id="&gt;&gt;-copy" fill-opacity="0.4" fill="#000" filter="url(#filter-1)" sketch:type="MSShapeGroup"/>
+		<path d="M12.6588976,4.99167239 L11.4713976,7.29517943 L1.72070312,11.5979567 L3.01375868,7.86019059 L9.12278646,5.788483 L2.15611979,2.84752747 L5.4547309,1.25390625 L12.6588976,4.99167239 Z M20.9230179,4.99167239 L19.7355179,7.29517943 L9.9848235,11.5979567 L11.2778791,7.86019059 L17.3869068,5.788483 L10.4202402,2.84752747 L13.7188513,1.25390625 L20.9230179,4.99167239 Z" id="&gt;&gt;" stroke-opacity="0.4" stroke="#999" fill="#FFF" sketch:type="MSShapeGroup"/>
+	</g>
+</svg>

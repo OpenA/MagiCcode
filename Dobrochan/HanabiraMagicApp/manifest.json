@@ -1,0 +1,40 @@
+{
+	"name": "Hanabira MagicApp",
+	"version": "1.0.0",
+	"description": "MagicExtension for Dobrochan Imageboard",
+	"homepage_url": "https://github.com/OpenA/MagiCcode/tree/master/Dobrochan",
+	"applications": {
+		"gecko": {
+			"id": "charminghanabira@dobrochan.com"
+		}
+	},
+	"background": {
+		"page": "app.html"
+	},
+	"content_scripts": [ {
+		"all_frames": true,
+		"css": [
+			"css/base-min.css",
+			"css/pure-min.css",
+			"css/grids-responsive-min.css",
+			"css/hana-base.css" ],
+		"js": ["tinycon.min.js", "SpelzZ.js", "MagicApp.js"],
+		"matches": [ "*://dobrochan.com/*" ],
+		"run_at": "document_start"
+	} ],
+	"permissions": [
+		"tab",
+		"webRequest",
+		"http://*/*",
+		"https://*/*",
+		"storage",
+		"activeTab",
+		"contextMenus",
+		"unlimitedStorage",
+		"notifications"
+	],
+	"web_accessible_resources": [
+		"images/*.svg"
+	],
+	"manifest_version": 2
+}

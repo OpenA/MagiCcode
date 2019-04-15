@@ -2,39 +2,33 @@
 // @name    		Simple Magic Extension for Dobrochan Imageboard
 // @description 	Включает в себя: Ajax подгрузку постов, Ajax постинг и удаление, Превращение рейтингов в спойлеры, Умные кнопки разметки, а так же опции раскрытия текстовых спойлеров, звуковых уведомлений и перетаскиваемых превью.
 // @namespace   	magicode
-// @homepage		https://github.com/OpenA/MagiCcode/Dobrochan
-// @updateURL   	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraSimpleMagicExtension.user.js
-// @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraSimpleMagicExtension.user.js
+// @homepage		
+// @updateURL   	
+// @downloadURL 	
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.3.1
-// @grant   		none
+// @require         https://github.com/tommoor/tinycon/blob/master/tinycon.min.js?raw=true
+// @version 		1.4.1 (Dev)
+// @grant			none
 // ==/UserScript==
-
-/* Tinycon - A small library for manipulating the Favicon Tom Moor, http://tommoor.com */
-!function(){var a={},b=null,c=null,d=null,e=null,f={},g=window.devicePixelRatio||1,h=16*g,i={width:7,height:9,font:10*g+"px arial",colour:"#fff",background:"#F03D25",fallback:!0,crossOrigin:!0,abbreviate:!0},j=function(){var a=navigator.userAgent.toLowerCase();return function(b){return-1!==a.indexOf(b)}}(),k={ie:j("msie"),chrome:j("chrome"),webkit:j("chrome")||j("safari"),safari:j("safari")&&!j("chrome"),mozilla:j("mozilla")&&!j("chrome")&&!j("safari")},l=function(){for(var a=document.getElementsByTagName("link"),b=0,c=a.length;c>b;b++)if((a[b].getAttribute("rel")||"").match(/\bicon\b/))return a[b];return!1},m=function(){for(var a=document.getElementsByTagName("link"),b=document.getElementsByTagName("head")[0],c=0,d=a.length;d>c;c++){var e="undefined"!=typeof a[c];e&&(a[c].getAttribute("rel")||"").match(/\bicon\b/)&&b.removeChild(a[c])}},n=function(){if(!c||!b){var a=l();c=b=a?a.getAttribute("href"):"/favicon.ico"}return b},o=function(){return e||(e=document.createElement("canvas"),e.width=h,e.height=h),e},p=function(a){if(a){m();var b=document.createElement("link");b.type="image/x-icon",b.rel="icon",b.href=a,document.getElementsByTagName("head")[0].appendChild(b)}},q=function(a,b){if(!o().getContext||k.ie||k.safari||"force"===f.fallback)return r(a);var c=o().getContext("2d"),b=b||"#000",e=n();d=document.createElement("img"),d.onload=function(){c.clearRect(0,0,h,h),c.drawImage(d,0,0,d.width,d.height,0,0,h,h),(a+"").length>0&&s(c,a,b),t()},!e.match(/^data/)&&f.crossOrigin&&(d.crossOrigin="anonymous"),d.src=e},r=function(a){if(f.fallback){var b=document.title;"("===b[0]&&(b=b.slice(b.indexOf(" "))),(a+"").length>0?document.title="("+a+") "+b:document.title=b}},s=function(a,b,c){"number"==typeof b&&b>99&&f.abbreviate&&(b=u(b));var d=(b+"").length-1,e=f.width*g+6*g*d,i=f.height*g,j=h-i,l=h-e-g,m=16*g,n=16*g,o=2*g;a.font=(k.webkit?"bold ":"")+f.font,a.fillStyle=f.background,a.strokeStyle=f.background,a.lineWidth=g,a.beginPath(),a.moveTo(l+o,j),a.quadraticCurveTo(l,j,l,j+o),a.lineTo(l,m-o),a.quadraticCurveTo(l,m,l+o,m),a.lineTo(n-o,m),a.quadraticCurveTo(n,m,n,m-o),a.lineTo(n,j+o),a.quadraticCurveTo(n,j,n-o,j),a.closePath(),a.fill(),a.beginPath(),a.strokeStyle="rgba(0,0,0,.3)",a.moveTo(l+o/2,m),a.lineTo(n-o/2,m),a.stroke(),a.fillStyle=f.colour,a.textAlign="right",a.textBaseline="top",a.fillText(b,2===g?29:15,k.mozilla?7*g:6*g)},t=function(){o().getContext&&p(o().toDataURL())},u=function(a){for(var b=[["G",1e9],["M",1e6],["k",1e3]],c=0;c<b.length;++c)if(a>=b[c][1]){a=v(a/b[c][1])+b[c][0];break}return a},v=function(a,b){var c=new Number(a);return c.toFixed(b)};a.setOptions=function(a){f={};for(var b in i)f[b]=a.hasOwnProperty(b)?a[b]:i[b];return this},a.setImage=function(a){return b=a,t(),this},a.setBubble=function(a,b){return a=a||"",q(a,b),this},a.reset=function(){p(c)},a.setOptions(i),"function"==typeof define&&define.amd?define(a):"undefined"!=typeof module?module.exports=a:window.Tinycon=a}();
-//Copyright (c) 2015 Tom Moor @license MIT Licensed @version 0.6.4
 
 /* SpelzZ - a lightweight Node Work Tool */
 (function(){
 	var _z = {
-		each: $each, setup: $setup, route: $route, fall: fallback, dbg: $dbg,
+		each: $each, setup: $setup, route: $route, fall: fallback,
 		sessionS: $storeItem('session'), localS: $storeItem('local'),
-		append: function(el, nodes) { try { $nodeUtil('append', el, nodes) } catch(e) { $dbg(e) } },
-		prepend: function(el, nodes) { try { $nodeUtil('prepend', el, nodes) } catch(e) { $dbg(e) } },
-		after: function(el, nodes) { try { $nodeUtil('after', el, nodes) } catch(e) { $dbg(e) } },
-		before: function(el, nodes) { try { $nodeUtil('before', el, nodes) } catch(e) { $dbg(e) } },
-		replace: function(el, nodes) { try { $nodeUtil('replace', el, nodes) } catch(e) { $dbg(e) } },
-		remove: function(el, nodes) { try { $nodeUtil('remove', el, nodes) } catch(e) { $dbg(e) } }
+		append: function(el, nodes) { $nodeUtil('append', el, nodes) },
+		prepend: function(el, nodes) { $nodeUtil('prepend', el, nodes) },
+		after: function(el, nodes) { $nodeUtil('after', el, nodes) },
+		before: function(el, nodes) { $nodeUtil('before', el, nodes) },
+		replace: function(el, nodes) { $nodeUtil('replace', el, nodes) },
+		remove: function(el, nodes) { $nodeUtil('remove', el, nodes) }
 	}
-	function $dbg(e) {
-		if (e.stack)
-			e.stack = e.stack.replace(new RegExp(e.fileName, 'g'), '');
-		console.error(e)
-	}
-	function $each(obj, Fn) {
-		var el = typeof obj === 'string' ? document.querySelectorAll(obj) : obj;
-		Array.prototype.slice.call(el, 0).forEach(Fn)
+	function $each(arr, Fn) {
+		arr = typeof arr === 'string' ? document.querySelectorAll(arr) : arr;
+		Array.prototype.slice.call(arr, 0).forEach(function(el, i) {
+			Fn(el, (i + 1 === arr.length))
+		})
 	}
 	function $setup(el, attr, events) {
 		if (el) {
@@ -42,12 +36,9 @@
 			if (attr) {
 				for (var key in attr) {
 					attr[key] === undefined ? el.removeAttribute(key) :
-					key === 'id'      ? el.id          = attr[key] :
 					key === 'html'    ? el.innerHTML   = attr[key] :
 					key === 'text'    ? el.textContent = attr[key] :
-					key === 'value'   ? el.value       = attr[key] :
-					key === 'hidden'  ? el.hidden      = attr[key] :
-					key === 'checked' ? el.checked     = attr[key] :
+					key in el         ? el[key]        = attr[key] :
 					el.setAttribute(key, attr[key]);
 				}
 			}
@@ -55,7 +46,10 @@
 				for (var key in events) {
 					if (key === 'remove') {
 						for (var evr in events[key]) {
-							el.removeEventListener(evr, events[key][evr], false);
+							var rfs = !Array.isArray(events[key][evr]) ? [events[key][evr]] : events[key][evr];
+							for (var i = 0; i < rfs.length; i++) {
+								el.removeEventListener(evr, rfs[i], false);
+							}
 						}
 					} else {
 						el.addEventListener(key, events[key], false);
@@ -66,36 +60,40 @@
 		return el;
 	}
 	function $nodeUtil(p, el, nodes) {
-		if (typeof el === 'string')
-			el = document.querySelector(el);
-		if (nodes && !Array.isArray(nodes))
-			nodes = [nodes];
-		var i, node, meth = p.toLowerCase(), Child, Parent = el.parentNode;
-		switch (meth) {
-			case 'append':
-				for (i = 0; node = nodes[i++];) {
-					el.appendChild(node);
-				}
-				break;
-			case 'remove':
-				$each(el, function(child) {
-					child.parentNode.removeChild(child);
-				});
-				break;
-			case 'replace':
-				Parent.replaceChild(nodes[0], el);
-				break;
-			default:
-				switch (meth) {
-					case 'after': Child = el.nextSibling;
-						break;
-					case 'before': Child = el;
-						break;
-					case 'prepend': Child = el.childNodes[0], Parent = el;
-				}
-				for (i = 0; node = nodes[i++];) {
-					Parent.insertBefore(node, Child);
-				}
+		if (el) {
+			var i, node, meth = p.toLowerCase(), Child, Parent;
+			switch (meth) {
+				case 'remove':
+					$each(el, function(child) {
+						child.parentNode.removeChild(child);
+					});
+					break;
+				default:
+					el = typeof el === 'string' ? document.querySelector(el) : el;
+					nodes = nodes && !Array.isArray(nodes) ? [nodes] : nodes;
+					Parent = el.parentNode;
+					switch (meth) {
+						case 'append':
+							for (i = 0; node = nodes[i++];) {
+								el.appendChild(node);
+							}
+							break;
+						case 'replace':
+							Parent.replaceChild(nodes[0], el);
+							break;
+						default:
+							switch (meth) {
+								case 'after': Child = el.nextSibling;
+									break;
+								case 'before': Child = el;
+									break;
+								case 'prepend': Child = el.childNodes[0], Parent = el;
+							}
+							for (i = 0; node = nodes[i++];) {
+								Parent.insertBefore(node, Child);
+							}
+					}
+			}
 		}
 	}
 	function $route(el, Fn) {
@@ -152,24 +150,31 @@
 	window._z = _z;
 })();
 
-var GlobalStyle = _z.setup('style', {'text': '.hidout,.reply #yuki-newThread-create,.edit #yuki-newThread-create,#open-top-form + #postform_placeholder,#open-top-form + * + #postform_placeholder,form.edit ~ *:not(.abbrev){display:none!important;}\
+var GlobalStyle = _z.setup('style', {'text': '.hidout,.reply #yuki-newThread-create,.edit #yuki-newThread-create,#open-top-form + #postform_placeholder,#open-top-form + * + #postform_placeholder,form.edit ~ *:not(.abbrev),.dummy-line > .not-for-dummies{display:none!important;}\
 .cpop,.callpop{margin-left:8px;}.wmark-button,.sagearrow{vertical-align:middle;}.hideinfo{margin:5px;}.ta-inact::-moz-selection{background:rgba(99,99,99,.3);}.ta-inact::selection{background:rgba(99,99,99,.3);}\
 .unexpanded,.rated{max-width:200px!important;max-height:200px!important;}.expanded{width:100%;height:auto;}#hideinfodiv{margin:5px;}.sp-r.rate{color:darkred;}#music_player{right:5px;position:fixed;bottom:5px;}\
 .search_google{background-image:url(/src/png/1407/google_14_icon.png)!important;}.search_derpibooru{background-image:url(/src/png/1407/derpibooru_reverse_search_14_icon.png);}.search_saucenao{background-image:url(/src/png/1502/saucenao_favicon1.png);}\
-.yuki_clickable,.txt-btn,.wmark-button{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}\
-.replylinks{line-height:2em;font-size:75%;clear:both;}.hideinfo{text-align:center!important;}.etch-text,.txt-btn{color:#999;}.mapped,.mapped:hover,.sagearrow{cursor:default;color:#666!important;}.dpop{cursor:move;}\
-.footer:after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.dpop,.sp-r,.wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}.err-msg{color:#ff3428;}.postdeleted,.opaque{opacity:.6;}.new .reply{background:#ee9;}\
+.yuki_clickable,.txt-btn,.wmark-button,.options-menu-sect{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}\
+.replylinks{line-height:2em;font-size:75%;clear:both;}.hideinfo{text-align:center!important;}.etch-text,.txt-btn{color:#999;}.mapped,.mapped:hover,.sagearrow,.celrly:before{cursor:default;color:#666!important;}.dpop{cursor:move;}\
+.footer:after{content:"";-webkit-animation:onReady 1s linear 2;animation:onReady 1s linear 2;}.dpop,.sp-r,.wmark-buttons-panel,#yuki-close-form,#yuki-newThread-create{float:right;text-align:right;}.postdeleted,.opaque{opacity:.6;}.new .reply{background:#d7fff0;}\
 .font-s-a{font-size:12px;font-size-adjust:.8;}.oppost.highlighted,.highlighted .reply{border-style:dashed!important;border-width:2px!important;border-color:#F50!important;}\
 .dummy-line{position:absolute;text-align:center;width:100%;}.stat-line{margin-left:.2em;}\
 #yuki-captcha,#yuki-pass{width:295px;}#yuki-captcha-image,.reply-button{vertical-align:middle;margin:2px;}#yuki-dropBox{width:7em;height:18em;border:3px dashed rgba(99,99,99,.3);padding:2px;}\
 #convert-strike,.global #yuki-close-form{visibility:hidden;}.sagearrow{width:20px;height:20px;background:url(/src/svg/1409/Sage.svg)no-repeat center center;}\
 a:hover > .wmark-button{color:inherit;}.spoiler > .wmark-button{vertical-align:inherit;color:inherit;text-shadow:none;}\
 #yuki-errorMsg{text-align:center;color:#FFF;background-color:#E04000;}.wmark-button{color:#fefefe;text-shadow:0 1px 0 rgba(0,0,0,.4);}.inactive{opacity:.4;}\
-.rating_SFW{background:green;}.rating_R15{background:yellow;}.rating_R18{background:orange;}.rating_R18G{background:red;}.line-sect,.yukiFile,.postdeleted .doubledash{display:inline-block;}\
+.rating_SFW{background:green;}.rating_R15{background:yellow;}.rating_R18{background:orange;}.rating_R18G{background:red;}.line-sect,.yukiFile,.postdeleted .doubledash,.options-menu-sect{display:inline-block;}\
 .yukiFile,.yukiFileSets{font-size:66%;}.yukiFile{text-align:center;width:210px;background:#fefefe;-webkit-border-radius:5px;margin:5px;padding:2px;}img[src="#transparent"]{width:150px;opacity:0;}\
 #yuki-files-placeholder > *{vertical-align:top;}.yf_preview{max-width:150px;margin:5px 0;}.yf_info{padding:0 2px;word-wrap:break-word;}.yf_preview._text{border:1px inset #aaa;}\
 #yuki-replyForm{text-align:left;padding:4px 8px;}.selected:before{content:"✓ ";color:green;}\
 #yuki-dropBox tr{display:block;text-align:center!important;}.droparrow{background:url(/src/svg/1409/DropArrow.svg)no-repeat center;display:block;padding:9em 3em;}\
+.celrly + .celrly:before{content:", ";padding-right:2px;}.celrly{text-decoration:none;}.parensis:before{content:"("}.parensis:after{content:")"}.break-midot + *:before{content:"・";}\
+#allowed-posts a{font-size:14px;}#allowed-posts:before{content:" | ";}#warning-massage{color:#ff3428;}#timer-update-sets{color:#569856;}\
+.blink{-webkit-animation-name:blinker;-webkit-animation-duration:1s;-webkit-animation-timing-function:linear;-webkit-animation-iteration-count:infinite;animation-name:blinker;animation-duration:1s;animation-timing-function:linear;animation-iteration-count:infinite;}\
+.options-menu{padding-left:0;list-style:outside none none;text-align:left;min-width:140px;line-height:1.8;position:absolute;z-index:1;visibility:hidden;}\
+.option-select:hover{background-color:rgba(0,0,0,.1);}#int-val{width:50px;margin:0 4px;}.options-menu-sect{font-size:80%;}.options-label{padding:2px 4px;font-variant:small-caps;}\
+.active > * {visibility:visible!important;}.option-select{padding:0 10px;cursot:default;}.active > .options-label,.options-menu{background-color:#fefefe;box-shadow:0 1px 1px black;}\
+@-webkit-keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}@keyframes blinker{0%{opacity:1.0;}50%{opacity:0.0;}100%{opacity:1.0;}}\
 @keyframes onReady{50% {opacity:0;}} @-webkit-keyframes onReady{50% {opacity:0;}}'});
 
 (function initStore() {
@@ -191,16 +196,17 @@ a:hover > .wmark-button{color:inherit;}.spoiler > .wmark-button{vertical-align:i
 			SimpleMagicExtension();
 		}
 	} catch(e) {
-		_z.dbg(e);
+		console.error(e);
 	}
 })();
 
 function SimpleMagicExtension() {
 	var HM = {
-		UnreadCount: 0, zIndex: 1, RefTab: null,
+		UnreadCount: 0, zIndex: 1, DragableObj: null,
 		RepliesMap: {}, LoadedPosts: {}, ThreadListener: {}, 
 		RemoveExif: _z.localS.get('RemoveExif', true),
 		SoundNotify: _z.sessionS.get('SoundNotify', false),
+		AutoUpdate: _z.sessionS.get('AutoUpdate', true),
 		AttachPopups: _z.localS.get('AttachPopups', true),
 		RemoveFileName: _z.localS.get('RemoveFileName', false),
 		DiscloseTextSpoilers: _z.localS.get('DiscloseTextSpoilers', false),
@@ -256,7 +262,11 @@ function SimpleMagicExtension() {
 		file: ["File", "файл"],
 		repl: ["Reply", "Ответ"],
 		edit: ["Edit", "Изменить"],
+		newp: [" new ", " новых "],
+		allw: ["allowed", "раскрытых"],
 		omit: [" omited ", " ответов "],
+		delp: [" deleted ", " удаленных "],
+		pmod: [' pre-moderated', ' на премодерации'],
 		edit_post: ['Edit this post', 'Отредактировать'],
 		fnd_src_wth: ["Find source with", "Искать оригинал в"],
 		mrk_to_del: ["Mark to delete", "Отметить для удаления"],
@@ -264,6 +274,11 @@ function SimpleMagicExtension() {
 		clos: ["Remove", "Закрыть"],
 		all: [" All", " все"],
 		add: ["Add", "Добавить"],
+		tm: {
+			's': ['sec', 'cек'],
+			'm': ['min', 'мин'],
+			'h': ['hour', 'час']
+		},
 		few: {
 			'u-a': ["\'s", "а"],
 			'u-b': ["s", "ов"],
@@ -299,6 +314,12 @@ function SimpleMagicExtension() {
 	String.prototype.fext = function() {
 		return (this.match(/[^\.]+$/) || [''])[0].toLowerCase();
 	}
+	Array.prototype.move = function (old_index, new_index) {
+		if (new_index >= this.length) {
+			return;
+		} else
+			this.splice(new_index, 0, this.splice(old_index, 1)[0]);
+	};
 	function matchIndex(str) {
 		return this.indexOf(str) >= 0;
 	}
@@ -339,6 +360,19 @@ function SimpleMagicExtension() {
 	function _cid(pid) {
 		var n = /(\d+)/.exec(pid);
 		return Number((n[1] || 0));
+	}
+	function extractStringNumbers(str) {
+		var match_numbers = new Array(0), i,
+			m = str.match(/0x(?:[\dA-Fa-f]+)|-?\d+(?:\.\d+)?/g) || ["NaN"];
+		for (i = 0; i < m.length; i++) {
+			match_numbers.push(Number(m[i]))
+		}
+		return match_numbers;
+	}
+	
+	function getCoords(e, el) {
+		var box = el.getBoundingClientRect();
+		return [e.pageX - (box.left + pageXOffset), e.pageY - (box.top + pageYOffset)]
 	}
 	
 	/************************************************************************/
@@ -416,129 +450,339 @@ function SimpleMagicExtension() {
 		}
 	}
 	
+	function getRandomColor(str) {
+		var a = 0x4872d1e6 % 0x1f4b, color = ['#'];
+		function g() {
+			for (var j = 0, b; j < str.length; j++){
+				b = 0.02519603282416938 * (a += str.charCodeAt(j));
+				a =  b >>> 0;
+				b = (b - a) * a;
+				a =  b >>> 0;
+				a+= (b - a) * 0x100000000;
+			}
+			return (a >>> 0) * 2.3283064365386963e-10;
+		}
+		for (var i = 0; i < 6; i ++) {
+			color.push('0123456789abcdef'[g() * 16 | 0]);
+		}
+		return color.join('');
+	}
+	
 	/*** Magic Thread Listener ***/
-	function MagicThreadListener(Thread, N) {
-		var MListen = this, CiD = _cid(Thread.id), thread_updating, play_notify,
-			Autosage = Thread.querySelector('img[src="/images/autosage.gif"]'),
-			Posts = Thread.getElementsByClassName('post'), OP = Posts[0],
-			Timer = { id: 0, offset: 0 }, ExpCache = new Array(0),
-			WarningMsg = _z.setup('strong', {'class': 'err-msg'}),
-			SageIcon = '<span class="sagearrow line-sect opaque"></span>',
+	function MagicThreadListener(Thread, _OPTS) {
+		
+		Thread['CiD']       = _cid(Thread.id);
+		Thread['Posts']     = Thread.getElementsByClassName('post');
+		Thread['Replys']    = Thread.getElementsByClassName('replypost');
+		Thread['BumpLimit'] = !!Thread.querySelector('img[src="/images/autosage.gif"]');
+		Thread['OP']        = Thread['Posts'][0];
+		
+		var MListen = this,
+			ExpCache = new Array(0),
+			SageIcon = '<span class="sagearrow line-sect" style="right:6px;"></span>',
+			WarningMsg = _z.setup('strong', {'id': 'warning-massage', 'class': 'blink'}),
+			Timer = { id: 0, offset: 0, ql: UpdateInterval(0), update: function() {
+					clearTimeout(this.id);
+					if (HM.AutoUpdate) {
+						this.ql = UpdateInterval(this.offset);
+						this.id = setTimeout(timerSet, this.ql.int * 1000);
+					}
+				}},
+			Count = { dif: 0, new: 0, del: 0, mod: 0, update: function(new_count) {
+					var i = (new_count + this.mod) - Thread['Posts'].length - this.dif,
+						n = i > 0 ? i : 0, d = i < 0 ? i : 0;
+						this.dif += i; this.new += n; this.del += d;
+				}, set: function(values) {
+					for (var key in values) {
+						this[key] = values[key];
+					}
+				}},
 			Notif = _z.setup('audio', {'html': '<source src="/src/mp3/1406/musbox.mp3" type="audio/mpeg"><source src="/src/ogg/1404/musbox.ogg" type="audio/ogg">'}, {
-				'play' : function(e) { play_notify = true },
-				'ended': function(e) { play_notify = false }
-			}),
+				'play' : function(e) { this.played = true },
+				'ended': function(e) { this.played = false }}),
 			MLLC = {
+				snd_notify: ["Sound Notifications", "Звуковые уведомления"],
+				updauto: ["Autoupdate Thread", "Автообновление треда"],
 				loadnew: ["Load New Posts", "Подгрузить посты"],
 				updprog: ["Updating...", "Обновление..."],
 				unexpt: ["Truncate Thread", "Свернуть тред"],
 				expant: ["Expand Thread", "Развернуть тред"],
 				expdin: ["Expanding...", 'Разворачивается...'],
-				unexin: ["Truncating...", 'Сворачивается...']
-			}
-			this.updateThread = updateThread; this.updateTimer = updateTimer; this.expandThread = expandThread; this.truncatThread = truncatThread;
-			this['NewPostLoader'] = _z.setup('div', {'id': 'new-post-loader', 'class': (N ? 'dummy-line' : 'stat-line'), 'html': '<a id="'+ (N ? 'dummy-load' : 'load-new') +'">'+ MLLC.loadnew[lng] +'</a>'}, {
-				'click': function(e) {
-					switch (e.target.id) {
-						case 'dummy-load': updateThread(e, false); break;
-						case 'load-new': updateThread(e, true);
-					}
+				unexin: ["Truncating...", 'Сворачивается...'],
+				dsl: {
+					'quet': ['Quet Mode', 'Тихий режим'],
+					'autotimer': ['Аutotimer', 'Автотаймер'],
+					'manual': ['Manual', 'Вручную']
+				}}
+		function el$(child) { return MListen['NewPostLoader'].querySelector(child) }
+		this['NewPostLoader'] = _z.setup('div', {'id': 'new-post-loader', 'class': (_OPTS ? 'dummy-line' : 'stat-line'),
+			'html': '<a id="'+ (_OPTS ? 'dummy-load' : 'load-new') +'">'+ MLLC.loadnew[lng] +'</a><div class="not-for-dummies"><input id="AutoUpdate-session-chbx" type="checkbox"'+ (HM.AutoUpdate ? ' checked' : '') +'>\n'+ MLLC.updauto[lng] +'\n<div class="options-menu-sect"><label class="options-label parensis" id="timer-update-sets">'+
+				(MLLC.dsl[Timer.ql.value] || checkHTime(Timer.ql.value))[lng] +'</label><ul class="options-menu"><li class="option-select" id="quet-mode-set">'+
+				MLLC.dsl['quet'][lng] +'</li><li class="option-select" id="autotimer-set">'+ MLLC.dsl['autotimer'][lng] +'</li><li class="option-select" id="manual-int-set">'+
+				MLLC.dsl['manual'][lng] +':\n<input class="option-input" id="int-val" max="180" min="15" type="number"></li></ul></div></div>'}, {
+			'click': function(e) {
+				var val, txt;
+				switch (e.target.id) {
+					case 'dummy-load':
+					case 'load-new':
+						MListen.updateThread({
+							button: e.target,
+							reload_timer: (e.target.id === 'load-new')
+						});
+						break;
+					case 'timer-update-sets':
+						e.target.parentNode.classList.toggle('active');
+						break;
+					case 'manual-int-set':
+						val = this['setInterval'].value;
+						txt = checkHTime(val)[lng];
+					case 'quet-mode-set':
+					case 'autotimer-set':
+						_z.sessionS.set('UpdateMode', (val || e.target.id.split('-')[0]));
+						this['setMode'].textContent = (txt || e.target.textContent);
+						Timer.update();
 				}
-			});
-			this['PostsCount'] = _z.setup('label', {'id': 'post-count', 'class': 'etch-text break-lines', 'html': (Autosage ? SageIcon : '') + Posts.length + LC.omit[lng]});
-		function updateTimer() {
-			var t = 45 + (Timer.offset > 135 ? 135 : Timer.offset);
-			clearTimeout(Timer.id);
-			Timer.id = setTimeout(function() {
-				updateThread(15, true);
-			}, t * 1000);
+			}, 'change': function(e) {
+				switch (e.target.id) {
+					case 'AutoUpdate-session-chbx':
+						Timer.update();
+				}
+			}
+		});
+		this['NewPostLoader'].setMode = el$('#timer-update-sets');
+		this['NewPostLoader'].setInterval = _z.setup(el$('#int-val'), {'value': Timer.ql.int});
+		this['PostsCount'] = _z.setup('label', {'id': 'post-count', 'class': 'etch-text break-lines', 'html': (Thread['BumpLimit'] ? SageIcon : '') + Thread['Posts'].length + LC.omit[lng]});
+		this['AllowedPosts'] = _z.setup('label', {'id': 'allowed-posts', 'class': 'etch-text', 'html': '<span class="rl-inf">'+ LC.allw[lng] +':&nbsp;\n</span>'});
+		this.getArchive = getHanabiraArchiveThread;
+		this.updateTimer = function() {
+			timerSet(true);
 		}
-		function expandThread(e) {
+		this.expandThread = function(e) {
 			if (ExpCache.length === 0) {
-				statusButton(e.target, 0)
-				getDataResponse('/api/thread/expand/'+ HM.URL.board +'/'+ CiD, function(status, sText, xhtml, xhr) {
-					Thread.innerHTML = xhtml;
-					for (var i = 0; i < Posts.length; i++) {
-						ExpCache.push(Posts[i]);
-						handlePost(Posts[i]);
-					}
-					_z.setup(Thread.querySelector('.abbrev a[onclick^="Truncate"]'), {'class': 'excat-button', 'id': 'thread-truncat', 'onclick': undefined});
-					genReplyMap(Posts);
-					statusButton(e.target, 1);
+				var color = getRandomColor(Thread.id),
+					personalStyle =_z.setup('style', {'text': '#thread_'+Thread['CiD']+' > .post .reply{box-shadow:0 0 3px '+color+' inset!important;border-color:'+color+'!important;}'});
+					ExpCache.push(personalStyle);
+					statusButton(e.target, 0);
+					_z.after(Thread['OP'], personalStyle);
+				getHanabiraFullThread({
+					button: e.target,
+					expand: true
 				});
 			} else {
-				_z.remove(Posts);
-				_z.append(Thread, ExpCache);
+				_z.after(Thread['OP'], ExpCache);
+				e.target.textContent = MLLC.unexpt[lng];
 			}
 		}
-		function truncatThread(e) {
-			genReplyMap([OP]);
-			for (var i = 10, Nodes = [OP]; i > 0; i--) {
-				Nodes.push(ExpCache[ExpCache.length - i]);
-			}
+		this.truncatThread = function(e) {
 			_z.remove(ExpCache);
-			_z.append(Thread, Nodes);
+			e.target.textContent = MLLC.expant[lng];
+		}
+		
+		var default_update_options = {
+			button: MListen['NewPostLoader'].firstElementChild,
+			reload_timer: true,
+			int: 15
+		}
+		
+		this.updateThread = function(update_options) {
+			var UpdBtn = update_options.button || default_update_options.button;
+			if (Thread.updating)
+				return;
+			statusButton(UpdBtn, 0)
+			getDataResponse('/api/thread/'+ HM.URL.board +'/'+ Thread['CiD'] +'/new.json?new_format&post_html&last_post='+ _cid(Thread['Posts'].last().id),
+			function(status, sText, json, xhr) {
+				try {
+					var i, temp_post, el, posts_count, len, error;
+					if (status !== 200 || json.error) {
+						error = _z.setup(WarningMsg, {'text': (json.error ? json.error.message +' '+ json.error.code : status +' '+ sText)});
+						error.dozZe = function(e) {
+							if (this.iterations >= 8) {
+								_z.replace(this, UpdBtn);
+								if (update_options.reload_timer)
+									Timer.update();
+								this.iterations = 0;
+							}
+						}
+						_z.replace(UpdBtn, error);
+					} else {
+						Thread['BumpLimit'] = json.result.autosage;
+						posts_count = json.result.posts_count;
+						el = json.result.posts;
+						len = el ? el.length : 0;
+						Count.set({dif: 0, new: 0})
+						if (len > 0) {
+							Timer.offset = 0;
+							HM.UnreadCount += len;
+							if (HM.SoundNotify && !Notif.played)
+								Notif.play();
+							for (i = 0; i < len; i++) {
+								temp_post = _z.setup('div', {'html': el[i]}).firstElementChild
+								handlePost(temp_post, (i + 1 === len));
+								temp_post.classList.add('new');
+								if (Thread.lastElementChild === MListen['NewPostLoader']) {
+									_z.before(MListen['NewPostLoader'], temp_post);
+								} else 
+									Thread.appendChild(temp_post);
+							}
+							Tinycon.setBubble(HM.UnreadCount);
+						} else if (typeof update_options.int === 'number')
+							Timer.offset += update_options.int;
+						if (update_options.reload_timer) {
+							if (Thread['Posts'].length != posts_count + Count.mod) {
+								Count.update(posts_count);
+								return getHanabiraFullThread({
+									button: UpdBtn,
+									expand: false
+								});
+							}
+							MListen['PostsCount'].innerHTML = (Thread['BumpLimit'] ? SageIcon : '') + posts_count + LC.omit[lng] +
+								(Count.mod > 0 ? '<span class="parensis">\n+'+ Count.mod + LC.pmod[lng] +'\n</span>' : '');
+							Timer.update();
+						}
+					}
+				} catch(e) {
+					console.error(e);
+				} finally {
+					statusButton(UpdBtn, 1);
+				}
+			});
+		}
+		function getHanabiraFullThread(options) {
+			getDataResponse('/api/thread/'+ HM.URL.board +'/'+ Thread['CiD'] +'/new.json?new_format&post_html&last_post='+ Thread['CiD'],
+			function(status, sText, json, xhr) {
+				try {
+					var jsonPosts = json.result.posts,
+						posts_count = json.result.posts_count,
+						pnid = function (n) {
+							return !Thread['Replys'][n] ? Infinity : extractStringNumbers(Thread['Replys'][n].id)[0]},
+						jpid = function (n) {
+							return !jsonPosts[n] ? Infinity : extractStringNumbers(jsonPosts[n].slice(3, 50))[0]}
+					if (jsonPosts.length === Thread['Replys'].length) {
+						Count.set({dif: 0, del: 0, mod: Thread['Posts'].length - posts_count});
+					} else {
+						for (var i = 0; i < (Thread['Replys'].length + Count.new); i++) {
+							switch (true) {
+								case (pnid(i) < jpid(i)):
+									while (pnid(i) < jpid(i)) {
+										Thread['Replys'][i].delete_input.remove();
+										Thread['Replys'][i].className = 'postdeleted';
+									}
+									break;
+								case (pnid(i) > jpid(i)):
+									while (pnid(i) > jpid(i)) {
+										var derefl, temp_post = _z.setup('div', {'html': jsonPosts[i]}).firstElementChild;
+											handlePost(temp_post);
+										if (options.expand) {
+											ExpCache.push(temp_post);
+										} else {
+											HM.UnreadCount++;
+											if (HM.SoundNotify && !Notif.played)
+												Notif.play();
+											temp_post.classList.add('new');
+											
+											derefl = _z.setup('a', {'class': 'reply-link celrly', 'id': 'nrl-'+ HM.URL.board +'-'+ Thread['CiD'] +'-'+ jpid(i),
+												'href': '/'+ HM.URL.board +'/res/'+ Thread['CiD'] +'.xhtml#i'+ jpid(i), 'text': '>>'+ jpid(i)}, {
+													'click': Chanabira.MagicHighlight, 'mouseover': Chanabira.MagicPostView });
+											_z.after(MListen['PostsCount'], MListen['AllowedPosts']);
+											MListen['AllowedPosts'].appendChild(derefl);
+										}
+										if (!Thread['Replys'][i]) {
+											Thread.appendChild(temp_post);
+										} else
+											_z.before(Thread['Replys'][i], temp_post);
+									}
+								default: continue;
+							}
+						}
+						Tinycon.setBubble(HM.UnreadCount);
+						genReplyMap(Thread['Posts']);
+						Count.set({dif: 0, new: 0, del: 0, mod: (
+							posts_count !== Thread['Posts'].length && jsonPosts.length === Thread['Replys'].length ? Thread['Posts'].length - posts_count : 0
+						)});
+					}
+				} catch(e) {
+					console.error(e);
+				} finally {
+					if (!options.expand) {
+						MListen['PostsCount'].innerHTML = (Thread['BumpLimit'] ? SageIcon : '') + posts_count + LC.omit[lng] +
+							(Count.mod > 0 ? '<span class="parensis">\n+'+ Count.mod + LC.pmod[lng] +'\n</span>' : '');
+						Timer.update();
+					}
+					statusButton(options.button, 1);
+				}
+			});
+		}
+		function getHanabiraArchiveThread(center) {
+			_z.replace(center, _z.setup(WarningMsg, {
+				'text': ['Loading from Archive', 'Загружается из архива'][lng] +' ...',
+				'style': 'display:block;text-align:center;font-size:1.4em;'}));
+			getDataResponse('/api/thread/expand/'+ HM.URL.board +'/'+ Thread['CiD'], function(status, sText, xhtml, xhr) {
+				Thread.innerHTML = xhtml;
+				if (Thread['Posts'].length === 0) {
+					_z.setup(WarningMsg, {'class': undefined, 'text': xhtml});
+				} else {
+					_z.each(Thread['Posts'], handlePost);
+					_z.replace(WarningMsg, Thread);
+				}
+			});
+		}
+		function timerSet(first_time) {
+			if (first_time || Timer.ql.value === 'quet') {
+				getDataResponse('/api/thread/'+ HM.URL.board +'/'+ Thread['CiD'] +'.json?new_format',
+					function(status, sText, json, xhr) {
+						if (json.result) {
+							Thread['BumpLimit'] = json.result.autosage;
+							
+							var posts_stat, s_tab,
+								posts_count = json.result.posts_count;
+							if (first_time && Thread['Posts'].length > posts_count) {
+								Count.mod = Thread['Posts'].length - posts_count;
+							} else {
+								Count.update(posts_count);
+								Timer.offset += Count.new > 0 ? 0 : 15;
+							}
+							if (Timer.ql.value === 'quet') {
+								s_tab = (Count.new > 0 ? '<span class="break-midot">\n+'+ Count.new + LC.newp[lng] +'</span>' : '') + (Count.del < 0 ? '<span class="break-midot">\n'+
+										Count.del + LC.delp[lng] +'</span>' : '') + (Count.mod > 0 ? '<span class="break-midot">\n'+ Count.mod + LC.pmod[lng] +'</span>' : '');
+								posts_stat = Thread['Posts'].length + LC.omit[lng] + (s_tab ? '<span class="parensis">'+ s_tab +'</span>' : '');
+							} else {
+								posts_stat = posts_count + LC.omit[lng] + (Count.mod > 0 ? '<span class="parensis">\n+'+ Count.mod + LC.pmod[lng] +'\n</span>' : '');
+							}
+							MListen['PostsCount'].innerHTML = (Thread['BumpLimit'] ? SageIcon : '') + posts_stat;
+						}
+						Timer.update();
+					});
+			} else
+				MListen.updateThread(default_update_options);
+		}
+		function UpdateInterval(offset) {
+			var t, val = _z.sessionS.get('UpdateMode', 'autotimer');
+			if (isNaN(val))
+				t = 45 + (offset > 135 ? 135 : offset);
+			else
+				t = !val || val < 15 ? 45 : val;
+			return { value: val, int: t }
+		}
+		function checkHTime(x) {
+			var s, m, v = 's';
+			if (x > 59) {
+				s = (x % 60).toString();
+				m = (x / 60).toString().split('.')[0];
+				x = m + ':'+ (s.length < 2 ? '0'+ s : s);
+				v = 'm';
+			}
+			return ['every '+ x +' '+ LC.tm[v][0] +'.', 'каждые '+ x +' '+ LC.tm[v][1] +'.'];
 		}
 		function statusButton(btn, v) {
+			Thread.updating = !v;
 			switch (btn.id) {
-				case 'load-new':
+				case 'load-new': 
 				case 'dummy-load': btn.textContent = [MLLC.updprog[lng], MLLC.loadnew[lng]][v];
 					break;
 				case 'thread-expand': btn.textContent = [MLLC.expdin[lng], MLLC.expant[lng]][v];
 					break;
 				case 'thread-truncat': btn.textContent = [MLLC.unexin[lng], MLLC.unexpt[lng]][v];
 			}
-		}
-		function updateThread(e, rexk) {
-			var UpdBtn = typeof e === 'object' ? e.target : MListen['NewPostLoader'].firstElementChild;
-			if (thread_updating)
-				return;
-			thread_updating = true;
-			statusButton(UpdBtn, 0)
-			getDataResponse('/api/thread/'+ HM.URL.board +'/'+ CiD +'/new.json?new_format&post_html&last_post='+ _cid(Posts.last().id),
-			function(status, sText, json, xhr) {
-				try {
-					var i, temp_post, el, pCount, len, error;
-					if (status !== 200 || json.error) {
-						error = _z.setup(WarningMsg, {'text': (json.error ? json.error.message +' '+ json.error.code : status +' '+ sText)});
-						setTimeout(function() {
-							_z.replace(error, UpdBtn);
-							if (rexk)
-								updateTimer();
-						}, 8000);
-						_z.replace(UpdBtn, error);
-					} else {
-						Autosage = json.result.autosage;
-						pCount = json.result.posts_count;
-						el = json.result.posts;
-						len = el ? el.length : 0;
-						if (len > 0) {
-							Timer.offset = 0;
-							HM.UnreadCount += len;
-							if (rexk && HM.SoundNotify)
-								Notif.play();
-							_z.each(el, function(xhtml) {
-								var temp = _z.setup('div', {'html': xhtml}), post_node = temp.firstElementChild;
-								handlePost(post_node);
-								Thread.appendChild(_z.setup(post_node, {'class': post_node.className +' new'}));
-								if (ExpCache.length > 0 && ExpCache.indexOf(post_node) === -1)
-									ExpCache.push(post_node);
-							});
-							Tinycon.setBubble(HM.UnreadCount);
-							genReplyMap(Posts);
-							MListen['PostsCount'].innerHTML = (Autosage ? SageIcon : '') + pCount + LC.omit[lng];
-						} else if (typeof e === 'number')
-							Timer.offset += e;
-					}
-					if (rexk && !error)
-						updateTimer();
-				} catch(e) {
-					_z.dbg(e);
-				} finally {
-					statusButton(UpdBtn, 1);
-					thread_updating = false;
-				}
-			});
 		}
 	}
 	
@@ -554,6 +798,11 @@ function SimpleMagicExtension() {
 			Tinycon.setBubble(0);
 			HM.UnreadCount = 0;
 		}
+	}
+	
+	function stepZup(e) {
+		HM.zIndex++;
+		this.style['z-index'] = HM.zIndex;
 	}
 	
 	/*** Wakabamark Buttons Engine ***/
@@ -660,7 +909,7 @@ function SimpleMagicExtension() {
 				}
 			}
 		} catch(e) {
-			_z.dbg(e);
+			console.error(e);
 		}
 	}
 	
@@ -692,34 +941,32 @@ function SimpleMagicExtension() {
 	//* @ original code 	http://dobrochan.com/js/hanabira-0.5.1311-.js
 	//* @ copyright 		Dobrochan
 	function CharmingHanabira(h) {
-		var Chana = this, Popups = document.getElementsByClassName('popup'),
+		var Chana = this,
+			Popups = {
+				alive: document.getElementsByClassName('d--kk'),
+				durab: new Array(0)},
 			ChLC = {
 				wsec: ['Wait a Second...', 'Секунду...'],
-				postdel: ["Post is deleted.", "Пост удалён."]},
+				body: _z.setup('td', {'class': 'p-del stub', 'text': ["Post is deleted.", "Пост удалён."][lng]})},
 			Timrs = {
 				clear: function(name) {
-					clearTimeout(this[name]);
-				},
+					clearTimeout(this[name])},
 				set: function(name, Fn) {
 					this.clear(name);
-					this[name] = setTimeout(Fn, 300);
-				}},
-			post_stub = _z.setup('td', {'class': 'die stub', 'text': ChLC.postdel[lng]});
-			this.closeLastPopup = RemoveAllRefs;
-			this.MagicPostView  = MagicPostView;
-			this.MagicHighlight = MagicHighlight;
+					this[name] = setTimeout(Fn, 300)}
+			};
+		this.closeLastPopup = RemoveAllRefs;
+		this.MagicPostView  = MagicPostView;
+		this.MagicHighlight = MagicHighlight;
 		function MagicHighlight(e) {
 			Timrs.clear('PopupOpen');
-			var L = e.target.id.split('-'), tid = L[2], pid = L[3],
-				post = document.getElementById('post_'+ pid);
+			var L = e.target.id.split('-'),
+				post = document.getElementById('post_'+ L[3]);
 			if (post) {
 				if (!post.classList.contains('highlighted')) {
-					var prevhlight = document.getElementsByClassName('highlighted')[0],
-						hanalight = document.getElementsByClassName('highlight')[0];
-					if (prevhlight)
+					_z.each('.post.highlighted', function(prevhlight){
 						prevhlight.classList.remove('highlighted');
-					if (hanalight)
-						hanalight.className = 'reply';
+					});
 					post.classList.add('highlighted');
 				}
 				post.scrollIntoView({block: (L[0] === 'cvl' ? 'end' : 'start'), behavior: 'smooth'});
@@ -728,156 +975,172 @@ function SimpleMagicExtension() {
 			_z.fall(e);
 		}
 		function MagicPostView(e) {
-			if (e.target.classList[0] !== 'reply-link' || e.target.classList.contains('locked'))
+			var _a = e.target, _p = this;
+			if (_a.classList[0] !== 'reply-link' || _a.classList.contains('locked'))
 				return;
-			var a = e.target, np = this;
 			Timrs.set('PopupOpen', function() {
-				var L = a.id.split('-'), brd = L[1], tid = L[2], pid = L[3], op = tid === pid, patch_id = brd +'_'+ tid +'_'+ pid,
-					id = brd +'-'+ pid, map = np.getAttribute('patch-id').split('_'),
-					post = HM.LoadedPosts[patch_id] || document.getElementById('post_'+ pid), loading,
-					reftab = document.getElementById('ref-'+ id), binded = function (el) {
-						var load = (el.querySelector('.reply') || el).cloneNode(true);
-						_z.remove(load.querySelectorAll('form.edit'));
-						if (HM.AttachPopups && load.classList[1] !== 'stub') {
-							BindCloseRef(reftab);
-						} else {
-							BindRemoveRef(a, reftab);
-						}
-						_z.replace(loading, _z.setup(load, {'id': 'load-' + id, 'class': el.cast}));
-						_z.each(reftab.querySelectorAll('a[href="/'+ map[0] +'/res/'+map[1]+'.xhtml#i'+map[2]+'"]'), add_mapping);
-					}
-				if (reftab) {
-					_z.each(reftab.querySelectorAll('.locked, a[href="/'+ map[0] +'/res/'+map[1]+'.xhtml#i'+map[2]+'"]'), function(lnk) {
-						if (lnk.classList.contains('locked'))
-							lnk.className = 'reply-link';
-						else
-							add_mapping(lnk);
-					});
-				} else {
-					reftab = _z.setup('table', {'class': (op ? 'oppost popup' : 'popup'), 'id': 'ref-'+ id, 'patch-id': patch_id,
-						'html': '<tbody><tr><td class="loading"><span class="waiting'+ Math.floor(Math.random() * 3) +
-						' icon"><img src="/images/blank.png"></span>\n'+ ChLC.wsec[lng] +'</td></tr></tbody>'}, {
-						'click': PDownListener, 'mouseover': MagicPostView});
-					loading = reftab.querySelector('.loading');
-					if (post) {
-						binded(post);
-					} else if (HM.URL.thread == tid) {
-						binded(post_stub);
-					} else {
-						getDataResponse('/api/post/'+ brd +'/'+ tid +'/'+ pid +'.xhtml',
-						function(status, sText, xhtml, xhr, node) {
-							if (status !== 200) {
-								setTimeout(function() {
-									reftab.remove();
-								}, 7000)
-								return _z.replace(loading, _z.setup('strong', {'class': 'err-msg', 'text': status +' '+ sText}));
-							} else if (['Specified element does not exist.', 'Post is deleted.'].isThere(xhtml)) {
-								node = post_stub;
+				try {
+					var L = _a.id.split('-'), brd = L[1], tid = L[2], pid = L[3], op = tid === pid, patch_id = brd +'_'+ tid +'_'+ pid,
+						id = brd +'-'+ pid, map = (_p.getAttribute('patch-id')||'').split('_'),
+						lpth = '[href="/'+ map[0] +'/res/'+ map[1] +'.xhtml#i'+ map[2] +'"]', loading,
+						reftab = document.getElementById('ref-'+ id), binded = function (post, load_first) {
+							var load = post.stored ? post.body : post.body.cloneNode(true),
+								stub = load.classList.contains('stub');
+								_z.remove(load.querySelectorAll('form.edit'));
+							if (HM.AttachPopups && !stub) {
+								BindCloseRef(reftab);
 							} else {
-								node = _z.setup('td', {'id': 'load-'+ id, 'html': xhtml});
-								node.cast = 'stored';
-								handleLinks(node, {board: brd, thread: tid, pid: pid});
-								handleElements(node);
-								genReplyMap([node]);
+								BindRemoveRef(_a, reftab);
 							}
-							HM.LoadedPosts[patch_id] = node;
-							binded(node);
-							set_style(reftab);
-						});
+							_z.replace(loading, _z.setup(load, {'id': 'load-'+ id, 'class': post.stored}));
+							if (post.stored && load_first) {
+								//RepliesLinks.generate();
+								set_style(_a, reftab);
+								document.body.appendChild(reftab);
+							}
+							_z.each(load.querySelectorAll('.locked:not('+lpth+'), a'+lpth+':not(.locked)'), add_mapping);
+						}
+					if (reftab) {
+						if (reftab.attached) {
+							simulateMouseEvent(reftab, "mousedown");
+						} else {
+							document.body.appendChild(reftab);
+						}
+						_z.each(reftab.querySelectorAll('.locked:not('+lpth+'), a'+lpth+':not(.locked)'), add_mapping);
+					} else {
+						reftab = _z.setup('table', {'class': (op ? 'oppost popup' : 'popup'), 'id': 'ref-'+ id, 'patch-id': patch_id,
+							'html': '<tbody><tr><td class="loading"><span class="waiting'+ Math.floor(Math.random() * 3) +
+							' icon"><img src="/images/blank.png"></span>\n'+ ChLC.wsec[lng] +'</td></tr></tbody>'}, {
+							'click': PDownListener, 'mouseover': MagicPostView});
+						reftab.formBinding = function(el) {this.firstElementChild.firstElementChild.firstElementChild.appendChild(el)}
+						loading = reftab.querySelector('.loading');
+						if (HM.LoadedPosts[patch_id]) {
+							binded(HM.LoadedPosts[patch_id]);
+						//} else if (HM.URL.thread !== tid) {
+						//	binded(ChLC);
+						} else {
+							getDataResponse('/api/post/'+ brd +'/'+ tid +'/'+ pid +'.xhtml',
+							function(status, sText, xhtml, xhr) {
+								var temp_post, node, tstat, jpost, ErrorMSG;
+								if (status !== 200) {
+									ErrorMSG = _z.setup('strong', {'id': 'warning-massage', 'class': 'blink', 'text': status +' '+ sText});
+									ErrorMSG.dozZe = function(e) {
+										if (this.iterations >= 7)
+											reftab.remove();
+									}
+									return _z.replace(loading, ErrorMSG);
+								} else if (['Specified element does not exist.', 'Post is deleted.'].isThere(xhtml)) {
+									node = HM.LoadedPosts[patch_id] = ChLC;
+								} else {
+									node = _z.setup('td', {'patch-id': brd +'_'+ tid +'_'+ pid, 'html': xhtml});
+									node.stored = 'storedpost';
+									handlePost(node, true);
+								}
+								binded(node, true);
+							});
+						}
+						document.body.appendChild(reftab);
 					}
+					set_style(_a, reftab);
+				} catch(err) {
+					console.error(err)
 				}
-				document.body.appendChild(reftab);
-				set_style(reftab);
 			});
-			e.target.onmouseout = function(e) {
+			_a.onmouseleave = function(e) {
 				Timrs.clear('PopupOpen');
 			}
-			function add_mapping(mapp) {
-				if (mapp) {
-					mapp.classList.add('mapped');
-					mapp.classList.add('locked');
-				}
-			}
-			function set_style(r) {
-				var w = window.innerWidth, mw,
-					x = e.pageX, y = e.pageY + 30,
-					wx = w - x, y2 = y - r.offsetHeight - 45;
-				if (a.id.split('-')[0] !== 'cvl') {
-					if (y2 > 0)
-						y = y2;
-					if ((wx < 600 || wx < w / 2) && r.offsetWidth > wx) {
-						mw = w - 400;
-						x = null;
-					}
-				}
-				r.setAttribute('style', 'top:'+ y +'px;max-width:'+ (mw || wx) +'px;'+ (x == null ? 'right:0' : 'left:'+ x) +'px;z-index:'+ HM.zIndex);
-			}
+		}
+		function add_mapping(mapp) {
+			var fn = mapp.classList.contains('locked') ? 'remove' : 'add';
+				mapp.classList[fn]('mapped');
+				mapp.classList[fn]('locked');
+		}
+		function set_style(_lnk, _rtab) {
+			var clientR = _lnk.getBoundingClientRect(),
+				offsetX = clientR.left + pageXOffset + _lnk.offsetWidth / 2,
+				offsetY = clientR.top  + pageYOffset,
+				clientX = document.documentElement.clientWidth,
+				clientY = document.documentElement.clientHeight,
+				isLeft = offsetX < clientX / 3, Yd = _rtab.offsetHeight / 3,
+				isTop = Yd + clientR.top + _lnk.offsetHeight < clientY && _lnk.id.split('-')[0] === 'cvl' ||
+						Yd * -1 > clientR.top - _rtab.offsetHeight || pageYOffset === 0 && _rtab.offsetHeight > clientR.top,
+				left = isLeft ? offsetX : offsetX - Math.min(parseInt(_rtab.offsetWidth, 10), offsetX - 10),
+				top = isTop ? offsetY + _lnk.offsetHeight : offsetY - _rtab.offsetHeight,
+				mw = clientX - left - 10;
+			_rtab.style['top'] = top +'px';
+			_rtab.style['left'] = left +'px';
+			_rtab.style['z-index'] = HM.zIndex;
+			_rtab.style['max-width'] = mw +'px';
 		}
 		function BindCloseRef(reftab) {
-			var rtb = _z.setup('tbody', {'style': 'line-height:15px;', 'html': '<tr><td>'}),
-				drag = _z.setup('span', {'class': 'dpop txt-btn', 'text': '\n.:'}, {
-					'mousedown': function(e) {
-						reftab.style['z-index'] = HM.zIndex + 1;
-						HM.RefTab = reftab; 
-					}}),
-				close = _z.setup('span', {
-					'id': 'rf-cb-ty',
-					'class': 'cpop txt-btn font-s-a',
-					'title': LC.clos[lng],
-					'text': '\n✕'}),
-				closeAll = _z.setup('span', {
-					'id': 'rf-cb-all',
-					'class': 'callpop txt-btn',
-					'title': LC.clos[lng] + LC.all[lng],
-					'text': '\n☒'});
-				_z.setup(reftab, {}, {
-					'click': function(e) {
-						HM.zIndex++;
-						this.style['z-index'] = HM.zIndex;
-						switch (e.target.id) {
-							case 'rf-cb-ty': this.remove(); break;
-							case 'rf-cb-all': RemoveAllRefs(e);
-						}
+			Popups.durab.push(reftab);
+			reftab.attached = true;
+			var rtb = _z.setup('tbody', {'html': '<tr><td><span title="'+ LC.clos[lng] +'" class="cpop txt-btn font-s-a" id="rf-cb-ty">\n✕</span><span title="'+
+				LC.clos[lng] + LC.all[lng] +'" class="cpop txt-btn" id="rf-cb-all">\n☒</span><span id="rf-da-ty" class="dpop txt-btn">⣾⣿</span></td></tr>'});
+			_z.setup(reftab, {}, {
+				'mousedown': function(e) {
+					var idx = Popups.durab.indexOf(this);
+						stepZup.bind(this)(e);
+						Popups.durab.move(idx, Popups.durab.length -1);
+					switch (e.target.id) {
+						case 'rf-da-ty':
+							var coords = getCoords(e, this);
+								HM.DragableObj = {
+									el: this,
+									shift: coords,
+									layout: 'page'
+								}
 					}
-				}).appendChild(rtb).click();
-			_z.append(rtb.firstChild.firstChild, [close, closeAll, drag]);
+				}, 'click': function(e) {
+					switch (e.target.id) {
+						case 'rf-cb-all':
+							RemoveAllRefs(e);
+							break;
+						case 'rf-cb-ty':
+							var idx = Popups.durab.indexOf(this);
+							this.remove();
+							delete Popups.durab[idx];
+							Popups.durab.splice(idx, 1);
+					}
+				}
+			}).appendChild(rtb);
 		}
 		function BindRemoveRef(a, reftab) {
-			reftab.onmouseleave = RemoveAllRefs;
+			reftab.classList.add('d--kk');
+			reftab.onmouseleave = function(e) {
+				Timrs.set('PopupsClose', function() {
+					_z.remove(Popups.alive);
+				});
+			};
 			reftab.onmouseenter = function(e) {
 				var _this = this;
 				Timrs.set('PopupsClose', function() {
-					var i = Popups.length - 1;
-					while (Popups[i] !== _this) {
-						Popups[i].remove();
+					var i = Popups.alive.length - 1;
+					while (Popups.alive[i] !== _this) {
+						Popups.alive[i].remove();
 						i--;
 					}
 				});
 				Timrs.clear(a.href);
 			}
-			a.onmouseleave = function(e) {
+			a.onmouseout = function(e) {
 				Timrs.set(this.href, function() {
 					reftab.remove();
 				});
 			}
 		}
 		function RemoveAllRefs(e) {
-			var i = Popups.length - 1, _this = this;
-			if (Popups.length > 0) {
+			if (Popups.durab.length > 0) {
 				switch (e.type) {
-					case 'keydown':
-						if (i == 0)
-							HM.zIndex = 1;
-						Popups[i].remove();
-						break;
 					case 'click':
-						HM.zIndex = 1;
-						_z.remove(Popups);
+						_z.remove(Popups.durab);
+						Popups.durab = [];
 						break;
-					case 'mouseleave':
-						Timrs.set('PopupsClose', function() {
-							_z.remove(Popups);
-						})
+					case 'keydown':
+						var i = Popups.durab.length - 1;
+						Popups.durab[i].remove();
+						delete Popups.durab[i];
+						Popups.durab.splice(i, 1);
 				}
 			}
 		}
@@ -902,11 +1165,11 @@ function SimpleMagicExtension() {
 	}
 	function hRate(el, img) {
 		if (el.classList[2]) {
-			el.classList.remove('rate')
-			img.src = img.parentNode.href
+			el.classList.remove('rate');
+			img.src = img.parentNode.href;
 		} else {
-			el.classList.add('rate')
-			img.src = '/images/'+ img.alt +'.png'
+			el.classList.add('rate');
+			img.src = '/images/'+ img.alt +'.png';
 		}
 	}
 	function MagicSpoirate(el) {
@@ -929,14 +1192,17 @@ function SimpleMagicExtension() {
 		el.classList.toggle('expanded');
 	}
 	
-	function handlePost(post) {
+	function handlePost(post, last_n) {
 		var reflink = post.querySelector('.reflink > a[href*="/res/"]'),
 			url = ParseUrl(reflink.href),
 			patchId = url.board +'_'+ url.thread +'_'+ url.pid;
 		HM.LoadedPosts[patchId] = _z.setup(post, {'patch-id': patchId}, {'click': PDownListener, 'mouseover': Chanabira.MagicPostView});
+		HM.LoadedPosts[patchId].body = post.querySelector('#reply'+ url.pid) || post;
 		_z.setup(post.querySelector('.abbrev a[onclick^="GetFullText"]'), {'class': 'Get-Full-Text', 'onclick': undefined});
 		handleElements(post);
 		handleLinks(post, url);
+		if (last_n)
+			genReplyMap(document.getElementsByClassName('post'));
 	}
 	
 	function handleLinks(node, map) {
@@ -1460,7 +1726,7 @@ function SimpleMagicExtension() {
 					makeYukiFile(blob);
 				}
 			} catch(e) {
-				_z.dbg(e);
+				console.error(e);
 			}
 		}
 		function submitProcess(st) {
@@ -1512,10 +1778,10 @@ function SimpleMagicExtension() {
 										_z.sessionS.set('SafeText', JSON.stringify(Yu['ReplyText'].value));
 									if (HM.ThreadListener[Yum.tid]) {
 										if (fileList.length === 0) {
-											HM.ThreadListener[Yum.tid].updateThread(true, false);
+											HM.ThreadListener[Yum.tid].updateThread({reload_timer: !!HM.URL.thread});
 										} else {
 											setTimeout(function(){
-												HM.ThreadListener[Yum.tid].updateThread(true, false);
+												HM.ThreadListener[Yum.tid].updateThread({reload_timer: !!HM.URL.thread});
 											}, 1500);
 										}
 									}
@@ -1559,7 +1825,7 @@ function SimpleMagicExtension() {
 				ajaxPost.open('POST', action, true);
 				ajaxPost.send(fd);
 			} catch(e) {
-				_z.dbg(e)
+				console.error(e);
 			} finally {
 				return _z.fall(e);
 			}
@@ -1731,13 +1997,15 @@ function SimpleMagicExtension() {
 				true: function(style) { document.body.appendChild(this[style]) },
 				false: function(style) { this[style].remove() }
 			}
-		this['SmallSetsPanel'] = _z.setup('span', {'id': 'small-settings-panel', 'html': 
+		this['SmallSetsPanel'] = _z.setup('span', {'id': 'small-settings-panel', 'html':
 				'<div class="stat-line"><input id="SoundNotify-session-chbx" type="checkbox"'+ (HM.SoundNotify ? ' checked' : '') +'>\n'+ SsLC.snd_notify[lng] +
 				'</div><div class="stat-line"><input id="AttachPopups-local-chbx" type="checkbox"'+ (HM.AttachPopups ? ' checked' : '') +'>\n'+ SsLC.clipopup[lng] +
 				'</div><div class="stat-line"><input id="DiscloseTextSpoilers-local-chbx" type="checkbox"'+ (HM.DiscloseTextSpoilers ? ' checked' : '') +'>\n'+ SsLC.txtspoils[lng] +
 				'</div><form method="post" action="//derpibooru.org/search/reverse" target="_blank" enctype="multipart/form-data" hidden><input id="rs-url" name="url" type="text" value=""><input id="fuzziness" name="fuzziness" type="text" value="0.25"></form>'
 			}, {'change': function(e) {
 					switch (e.target.id) {
+						case 'int-val':
+							break;
 						case 'DiscloseTextSpoilers-local-chbx':
 							Ss['StyleSet'][e.target.checked]('spoiler');
 						default:
@@ -1754,7 +2022,6 @@ function SimpleMagicExtension() {
 			if (this.classList.contains('new'))
 				markAsRead(this);
 			switch (e.target.classList[0]) {
-				case 'reply-link': Chanabira.MagicHighlight(e); break;
 				case 'delete_checkbox':
 					if (this.classList.contains('popup')) {
 						confirm(['Want to delete this post ?', 'Удалить этот пост ?'][lng]) ? delPost(e.target) : null;
@@ -1792,26 +2059,29 @@ function SimpleMagicExtension() {
 						pbody.classList.toggle('alternate');
 					});
 					_z.setup(e.target, (_Params || {'class': 'Get-Full-Text', 'text': ['Full version', 'Полная версия'][lng]}));
-					_z.fall(e);
 					break;
 				case 'excat-button':
-					var eXcaT = e.target.id.split('-')[1]
+					var eXcaT = e.target.id.split('-')[1];
 					HM.ThreadListener[Map[1]][eXcaT +'Thread'](e);
-					_z.fall(e);
+					e.target.id = 'thread-'+ (eXcaT === 'expand' ? 'truncat' : 'expand');
 					break;
 				case 'sp-r':
 					hRate(e.target, e.target.parentNode.parentNode.querySelector('img.spr-image'));
 					break;
 				case 'spr-image':
 					MagicSpoirate(e.target);
-					_z.fall(e);
 					break;
 				case 'inj-refl':
 					wmarkText(Nagato['ReplyText'], '>>'+ (Map[0] !== HM.URL.board ? Map[0] +'/' : '') + Map[2], '\x20');
-					_z.fall(e);
+					break;
+				case 'reply-link': 
+					Chanabira.MagicHighlight(e);
+				default:
+					return;
 			}
-		} catch(e) {
-			_z.dbg(e)
+			_z.fall(e);
+		} catch(err) {
+			console.error(err);
 		}
 		function textSource(mNode) {
 			var	soucHTML = mNode.innerHTML, soucText, links = mNode.querySelectorAll('a:not(.reply-link)'),
@@ -1844,7 +2114,6 @@ function SimpleMagicExtension() {
 								posts = document.getElementsByClassName('post');
 								
 								_z.each(posts, handlePost);
-								genReplyMap(posts);
 							if (hideinfodiv) {
 								_z.after(hideinfodiv, Nagato['OpenTopForm']);
 								Nagato['BoardRulesSect'].appendChild(rules);
@@ -1856,21 +2125,8 @@ function SimpleMagicExtension() {
 								_z.after(locationThread, HM.ThreadListener[HM.URL.thread]['PostsCount']);
 								HM.ThreadListener[HM.URL.thread].updateTimer();
 							} else if (!locationThread && HM.URL.thread) {
-								var LoadingMsg = _z.setup('strong', {'class': 'err-msg', 'text':['Loading from Archive', 'Загружается из архива'][lng] +' ...', 'style': 'display:block;text-align:center;font-size:1.4em;'});
-								getDataResponse('/api/thread/expand/'+ HM.URL.board +'/'+ HM.URL.thread, function(status, sText, xhtml, xhr) {
-									var arcThr = _z.setup('div', {'id': 'thread_'+ HM.URL.thread, 'class': 'thread', 'html': xhtml}),
-										arcPsts = arcThr.getElementsByClassName('post');
-									if (arcPsts.length === 0) {
-										LoadingMsg.textContent = xhtml;
-									} else {
-										arcThr.querySelector('.abbrev a[onclick^="Truncate"]').parentNode.remove();
-										_z.each(arcPsts, handlePost);
-										genReplyMap(arcPsts);
-										_z.replace(LoadingMsg, arcThr);
-										_z.after(arcThr.nextElementSibling, SettingsPanel['SmallSetsPanel']);
-									}
-								});
-								_z.replace('center', LoadingMsg);
+								HM.ThreadListener[HM.URL.thread] = new MagicThreadListener(_z.setup('div', {'id': 'thread_'+ HM.URL.thread, 'class': 'thread'}))
+								HM.ThreadListener[HM.URL.thread].getArchive(document.getElementsByTagName('center')[0]);
 							} else {
 								if (hideinfodiv)
 									_z.before(delForm.querySelector('.pages'), [Nagato['OpenBottomForm'], SettingsPanel['SmallSetsPanel']]);
@@ -1878,7 +2134,7 @@ function SimpleMagicExtension() {
 									if (!thread.querySelector('img[src="/images/sticky.png"]')) {
 										var CiD = _cid(thread.id)
 										HM.ThreadListener[CiD] = new MagicThreadListener(thread, true);
-										_z.after(thread, HM.ThreadListener[CiD]['NewPostLoader']);
+										thread.appendChild(HM.ThreadListener[CiD]['NewPostLoader']);
 										_z.setup(thread.querySelector('.abbrev a[onclick^="ExpandThread"]'), {'class': 'excat-button', 'id': 'thread-expand', 'onclick': undefined});
 									}
 								});
@@ -1889,16 +2145,33 @@ function SimpleMagicExtension() {
 					}
 			}
 		} catch(e) {
-			_z.dbg(e);
+			console.error(e);
+		}
+	}
+	
+	function insertListenerI(event) {
+		switch (event.animationName) {
+			case 'blinker':
+				if (!event.target.iterations)
+					event.target.iterations = 0;
+				event.target.iterations++;
+				if (event.target.dozZe)
+					event.target.dozZe();
 		}
 	}
 	
 	_z.setup(window, {}, {
 		'keypress': keyMarks,
-		'mousemove': function(e) {
-			if (HM.RefTab) {
-				HM.RefTab.style.top = 9 + e.pageY - HM.RefTab.offsetHeight +'px';
-				HM.RefTab.style.left = 9 + e.pageX - HM.RefTab.offsetWidth +'px';
+		'mousemove': function(e, pc) {
+			if (HM.DragableObj) {
+				switch (HM.DragableObj.layout) {
+					case 'custom':
+						HM.DragableObj.callback(e);
+						break;
+					default:
+						HM.DragableObj.el.style['left'] = e[HM.DragableObj.layout +'X'] - HM.DragableObj.shift[0] +'px';
+						HM.DragableObj.el.style['top']  = e[HM.DragableObj.layout +'Y'] - HM.DragableObj.shift[1] +'px';
+				}
 				_z.fall(e);
 			}
 		},
@@ -1907,7 +2180,13 @@ function SimpleMagicExtension() {
 				markAsRead();
 		},
 		'mouseup': function(e) {
-			HM.RefTab = null; },
+			HM.DragableObj = null;
+			switch (e.button) {
+				case 0:
+					if (!e.target.classList.contains('options-label') && !e.target.classList.contains('option-input'))
+						_z.each('.options-menu-sect.active', function(dt_a){ dt_a.classList.remove('active')} );
+			}
+		},
 		'keydown': function(e) {
 			switch (e.keyCode) {
 				case 27:
@@ -1926,9 +2205,16 @@ function SimpleMagicExtension() {
 		}
 	});
 	
+	// simulate mouse button events
+	function simulateMouseEvent(node, eventType) {
+		var clickEvent = document.createEvent('MouseEvents');
+		clickEvent.initEvent(eventType, true, true);
+		node.dispatchEvent(clickEvent);
+	}
+	
 	// animation listener events
 	PrefixedEvent("AnimationStart", insertListenerS);
-	//PrefixedEvent("AnimationIteration", insertListenerI);
+	PrefixedEvent("AnimationIteration", insertListenerI);
 	//PrefixedEvent("AnimationEnd", insertListenerE);
 	// apply prefixed event handlers
 	function PrefixedEvent(type, callback) {

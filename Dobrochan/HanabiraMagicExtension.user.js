@@ -2,18 +2,15 @@
 // @name    		MagicScript Extension for Dobrochan Imageboard
 // @description 	Включает в себя: Ajax подгрузку и отправку постов, Превращение рейтингов в спойлеры, Умные кнопки разметки и автокомплит, Поддержку встраивания медиа со множества ресурсов, а так же HTML5 Audio/Video/Image файлов по прямым ссылкам и много чего еще.
 // @namespace   	magicode
-// @homepage		https://github.com/OpenA/MagiCcode/Dobrochan
-// @updateURL   	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
-// @downloadURL 	https://github.com/OpenA/MagiCcode/raw/master/Dobrochan/HanabiraMagicExtension.user.js
+// @homepage		
+// @updateURL   	
+// @downloadURL 	
 // @include 		*dobrochan.*
 // @run-at  		document-start
-// @version 		1.8.0
-// @grant   		none
+// @require         https://github.com/tommoor/tinycon/blob/master/tinycon.min.js?raw=true
+// @version 		2.0.0 (Dev)
+// @grant			none
 // ==/UserScript==
-
-/* Tinycon - A small library for manipulating the Favicon Tom Moor, http://tommoor.com */
-!function(){var a={},b=null,c=null,d=null,e=null,f={},g=window.devicePixelRatio||1,h=16*g,i={width:7,height:9,font:10*g+"px arial",colour:"#fff",background:"#F03D25",fallback:!0,crossOrigin:!0,abbreviate:!0},j=function(){var a=navigator.userAgent.toLowerCase();return function(b){return-1!==a.indexOf(b)}}(),k={ie:j("msie"),chrome:j("chrome"),webkit:j("chrome")||j("safari"),safari:j("safari")&&!j("chrome"),mozilla:j("mozilla")&&!j("chrome")&&!j("safari")},l=function(){for(var a=document.getElementsByTagName("link"),b=0,c=a.length;c>b;b++)if((a[b].getAttribute("rel")||"").match(/\bicon\b/))return a[b];return!1},m=function(){for(var a=document.getElementsByTagName("link"),b=document.getElementsByTagName("head")[0],c=0,d=a.length;d>c;c++){var e="undefined"!=typeof a[c];e&&(a[c].getAttribute("rel")||"").match(/\bicon\b/)&&b.removeChild(a[c])}},n=function(){if(!c||!b){var a=l();c=b=a?a.getAttribute("href"):"/favicon.ico"}return b},o=function(){return e||(e=document.createElement("canvas"),e.width=h,e.height=h),e},p=function(a){if(a){m();var b=document.createElement("link");b.type="image/x-icon",b.rel="icon",b.href=a,document.getElementsByTagName("head")[0].appendChild(b)}},q=function(a,b){if(!o().getContext||k.ie||k.safari||"force"===f.fallback)return r(a);var c=o().getContext("2d"),b=b||"#000",e=n();d=document.createElement("img"),d.onload=function(){c.clearRect(0,0,h,h),c.drawImage(d,0,0,d.width,d.height,0,0,h,h),(a+"").length>0&&s(c,a,b),t()},!e.match(/^data/)&&f.crossOrigin&&(d.crossOrigin="anonymous"),d.src=e},r=function(a){if(f.fallback){var b=document.title;"("===b[0]&&(b=b.slice(b.indexOf(" "))),(a+"").length>0?document.title="("+a+") "+b:document.title=b}},s=function(a,b,c){"number"==typeof b&&b>99&&f.abbreviate&&(b=u(b));var d=(b+"").length-1,e=f.width*g+6*g*d,i=f.height*g,j=h-i,l=h-e-g,m=16*g,n=16*g,o=2*g;a.font=(k.webkit?"bold ":"")+f.font,a.fillStyle=f.background,a.strokeStyle=f.background,a.lineWidth=g,a.beginPath(),a.moveTo(l+o,j),a.quadraticCurveTo(l,j,l,j+o),a.lineTo(l,m-o),a.quadraticCurveTo(l,m,l+o,m),a.lineTo(n-o,m),a.quadraticCurveTo(n,m,n,m-o),a.lineTo(n,j+o),a.quadraticCurveTo(n,j,n-o,j),a.closePath(),a.fill(),a.beginPath(),a.strokeStyle="rgba(0,0,0,.3)",a.moveTo(l+o/2,m),a.lineTo(n-o/2,m),a.stroke(),a.fillStyle=f.colour,a.textAlign="right",a.textBaseline="top",a.fillText(b,2===g?29:15,k.mozilla?7*g:6*g)},t=function(){o().getContext&&p(o().toDataURL())},u=function(a){for(var b=[["G",1e9],["M",1e6],["k",1e3]],c=0;c<b.length;++c)if(a>=b[c][1]){a=v(a/b[c][1])+b[c][0];break}return a},v=function(a,b){var c=new Number(a);return c.toFixed(b)};a.setOptions=function(a){f={};for(var b in i)f[b]=a.hasOwnProperty(b)?a[b]:i[b];return this},a.setImage=function(a){return b=a,t(),this},a.setBubble=function(a,b){return a=a||"",q(a,b),this},a.reset=function(){p(c)},a.setOptions(i),"function"==typeof define&&define.amd?define(a):"undefined"!=typeof module?module.exports=a:window.Tinycon=a}();
-//Copyright (c) 2015 Tom Moor @license MIT Licensed @version 0.6.4
 
 /* SpelzZ - a lightweight Node Work Tool */
 (function(){
@@ -39,12 +36,9 @@
 			if (attr) {
 				for (var key in attr) {
 					attr[key] === undefined ? el.removeAttribute(key) :
-					key === 'id'      ? el.id          = attr[key] :
 					key === 'html'    ? el.innerHTML   = attr[key] :
 					key === 'text'    ? el.textContent = attr[key] :
-					key === 'value'   ? el.value       = attr[key] :
-					key === 'hidden'  ? el.hidden      = attr[key] :
-					key === 'checked' ? el.checked     = attr[key] :
+					key in el         ? el[key]        = attr[key] :
 					el.setAttribute(key, attr[key]);
 				}
 			}
@@ -52,7 +46,10 @@
 				for (var key in events) {
 					if (key === 'remove') {
 						for (var evr in events[key]) {
-							el.removeEventListener(evr, events[key][evr], false);
+							var rfs = !Array.isArray(events[key][evr]) ? [events[key][evr]] : events[key][evr];
+							for (var i = 0; i < rfs.length; i++) {
+								el.removeEventListener(evr, rfs[i], false);
+							}
 						}
 					} else {
 						el.addEventListener(key, events[key], false);
@@ -837,6 +834,7 @@ function MagicExtension() {
 		Thread['Posts']     = Thread.getElementsByClassName('post');
 		Thread['Replys']    = Thread.getElementsByClassName('replypost');
 		Thread['BumpLimit'] = !!Thread.querySelector('img[src="/images/autosage.gif"]');
+		Thread['OP']        = Thread['Posts'][0];
 		
 		var MListen = this,
 			ExpCache = new Array(0),
@@ -997,15 +995,15 @@ function MagicExtension() {
 		function expandThread(e) {
 			if (ExpCache.length === 0) {
 				var personalStyle =_z.setup('style', {'text': '#thread_'+ Thread['CiD'] +' > .post:not(.new) .reply{box-shadow:0 1px 50px -25px '+getRandomColor(Thread['CiD'])+' inset,0 2px 2px rgba(0,0,0,.2),2px 0 3px -1px rgba(0,0,0,.1);!important}'});
+					ExpCache.push(personalStyle);
 				statusButton(e.target, 0);
 				getHanabiraFullThread({
 					button: e.target,
 					expand: true
 				});
-				Thread.appendChild(personalStyle)
-				ExpCache.push(personalStyle)
+				_z.after(Thread['OP'], personalStyle);
 			} else {
-				_z.after(Thread.firstElementChild, ExpCache);
+				_z.after(Thread['OP'], ExpCache);
 				e.target.textContent = MLLC.unexpt[lng];
 			}
 		}
@@ -1059,7 +1057,10 @@ function MagicExtension() {
 								temp_post = _z.setup('div', {'html': el[i]}).firstElementChild
 								handlePost(temp_post);
 								temp_post.classList.add('new');
-								_z.after(Thread['Posts'].last(), temp_post);
+								if (Thread.lastElementChild === MListen['DummyLine']) {
+									_z.before(MListen['DummyLine'], temp_post);
+								} else 
+									Thread.appendChild(temp_post);
 							}
 							Tinycon.setBubble(HM.UnreadCount);
 							MListen['SpeedCount'].innerHTML = speedMether(Thread['Posts'])[0];
@@ -2402,12 +2403,11 @@ function MagicExtension() {
 				iw = captchaImg.width;
 				ctx.drawImage(captchaImg, 0, 0);
 			while (iw) {
-				var pixel = ctx.getImageData(iw - 1, 4, 1, 1),
+				var pixel = ctx.getImageData(iw - 1, 13, 1, 1),
 					data = pixel.data;
 					if (data[0] + data[1] + data[2] !== 765) {
 						canvas.width = iw + 2;
-						canvas.height = 15;
-						ctx.drawImage(captchaImg, 0, 0, iw + 2, 15, 0, 0, iw + 2, 15);
+						ctx.drawImage(captchaImg, 0, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
 						break;
 					}
 				iw--;
@@ -3732,6 +3732,18 @@ function MagicExtension() {
 			}
 		};
 		this['Gallery'] = document.getElementsByClassName('iview');
+		var jHolder = _z.setup('div', {'class': 'full-size', 'style': 'background-color: rgba(0, 0, 0, 0.7);', 'html': '<div style="position: absolute; z-index: 300; width: 321px; height: 241px; top: 0px; left: 0px;"><div style="width: 100%; height: 100%; z-index: 310; position: absolute; overflow: hidden;"><img style="position: absolute; width: 650px; height: 241px; top: 0px; left: 0px;" src="/src/jpg/1511/60978ffaa9e581c7b73ef227423231b6.jpg"><div class="jcrop-hline" style="position: absolute; opacity: 0.4; top: 0px;"></div><div class="jcrop-hline" style="position: absolute; opacity: 0.4; top: 240px;"></div><div class="jcrop-vline" style="position: absolute; opacity: 0.4;"></div><div class="jcrop-vline" style="position: absolute; opacity: 0.4; left: 320px;"></div><div style="cursor: move; position: absolute; z-index: 360;" class="jcrop-tracker"></div><canvas id="text-layer" class="full-size"><input id="ml-bottom-text" class="macro-text" type="text"><input id="ml-top-text" class="macro-text" type="text"></canvas></div><div style="width: 100%; height: 100%; z-index: 320; display: block;"><div style="cursor: n-resize; position: absolute; z-index: 370; width: 100%; height: 9px; top: -4px; left: -4px;"></div><div style="cursor: s-resize; position: absolute; z-index: 371; width: 100%; height: 9px; top: 236px; left: -4px;"></div><div style="cursor: e-resize; position: absolute; z-index: 372; width: 9px; height: 100%; top: -4px; left: 316px;"></div><div style="cursor: w-resize; position: absolute; z-index: 373; width: 9px; height: 100%; top: -4px; left: -4px;"></div><div class="jcrop-handle" style="cursor: n-resize; position: absolute; z-index: 374; top: -4px; left: 156px; opacity: 0.5;"></div><div class="jcrop-handle" style="cursor: s-resize; position: absolute; z-index: 375; top: 236px; left: 156px; opacity: 0.5;"></div><div class="jcrop-handle" style="cursor: e-resize; position: absolute; z-index: 376; top: 116px; left: 316px; opacity: 0.5;"></div><div class="jcrop-handle" style="cursor: w-resize; position: absolute; z-index: 377; top: 116px; left: -4px; opacity: 0.5;"></div><div class="jcrop-handle" style="cursor: sw-resize; position: absolute; z-index: 378; top: 236px; left: -4px; opacity: 0.5;"></div><div class="jcrop-handle" style="cursor: nw-resize; position: absolute; z-index: 379; top: -4px; left: -4px; opacity: 0.5;"></div><div class="jcrop-handle" style="cursor: ne-resize; position: absolute; z-index: 380; top: -4px; left: 316px; opacity: 0.5;"></div><div class="jcrop-handle" style="cursor: se-resize; position: absolute; z-index: 381; top: 236px; left: 316px; opacity: 0.5;"></div></div></div><div style="width: 666px; height: 257px; position: absolute; top: -8px; left: -8px; z-index: 290; cursor: crosshair;" class="jcrop-tracker"></div><div style="position: absolute; overflow: hidden;"><input style="position: absolute; left: -30px; display: none;" type="radio"></div>'})
+		this['MacroLayer'] = _z.setup(jHolder.querySelector('#text-layer'), {}, {
+			'mousedown': function(e) {
+				
+			},
+			'click': function(e){
+				var Tx = e.offsetY > this.height / 2 ? 'Bottom' : 'Top';
+				this['Text'+ Tx].focus();
+			}
+		});
+		this['MacroLayer']['TextBottom'] = _z.setup(jHolder.querySelector('#ml-bottom-text'), {}, {'input': drawProgress});
+		this['MacroLayer']['TextTop'] = _z.setup(jHolder.querySelector('#ml-top-text'), {}, {'input': drawProgress});
 		this['Picture'] = _z.setup('picture', {'class': 'magic-picture', 'contextmenu': 'image-context'}, {
 				'wheel': function(e) {
 					if (this.classList[1] === 'gallery-qview') {
@@ -3741,6 +3753,12 @@ function MagicExtension() {
 							Size.get(this, parseInt(D < 0 ? R * 1.25 : R / 1.25, 10));
 							this.style['left'] = parseInt(e.clientX - (D < 0 ? (e.clientX - Y[1]) * 1.25 : (e.clientX - Y[1]) / 1.25), 10) +'px';
 							this.style['top'] = parseInt(e.clientY - (D < 0 ? (e.clientY - Y[0]) * 1.25 : (e.clientY - Y[0]) / 1.25), 10) +'px';
+						_z.fall(e);
+					}
+				},
+				'dblclick': function(e) {
+					if (this.classList[1] === 'gallery-qview') {
+						MP['Picture'].appendChild(jHolder)
 						_z.fall(e);
 					}
 				},
@@ -3841,6 +3859,21 @@ function MagicExtension() {
 			}
 				whOut.push(Math.floor(ratio))
 			return whOut;
+		}
+		function drawProgress(e) { try {
+			if (tt.value.length * fSz > c.width || bt.value.length * fSz > c.width){
+				fSz -= 5;
+			} else if (tt.value.length * fSz < c.width || bt.value.length * fSz < c.width)
+				fSz += 5
+			ctx.font = 'normal bold '+fSz+'px verdana';
+			x = c.width /2
+			y = c.height - fSz / 2
+			ctx.clearRect(0, 0, c.width, c.height);
+			ctx.fillText(tt.value,x,fSz);
+			ctx.strokeText(tt.value,x,fSz);
+			ctx.fillText(bt.value,x,y);
+			ctx.strokeText(bt.value,x,y);
+		} catch(e){console.error(e)}
 		}
 	}
 	
