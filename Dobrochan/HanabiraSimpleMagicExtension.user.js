@@ -293,7 +293,7 @@ function SimpleMagicExtension() {
 	Nagato = new Yuki(true),
 	Chanabira = new CharmingHanabira(),
 	SettingsPanel = new SimpleSets();
-	document.head.appendChild(GlobalStyle);
+	document.documentElement.appendChild(GlobalStyle);
 	
 	/***--[ Utilites ]--***/
 	Array.prototype.isThere = matchIndex;
