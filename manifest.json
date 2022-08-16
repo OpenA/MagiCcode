@@ -1,0 +1,62 @@
+{
+	"manifest_version": 2,
+	"name": "HanaChan",
+	"description": " ---------------------------   ",
+	"version": "0.1",
+	"background": {
+		"scripts": ["src/js/background.js", "src/js/blocklist.js"]
+	},
+	"web_accessible_resources": [
+		"images/*", "src/*"
+	],
+	"content_scripts": [{
+		"all_frames": true,
+		"run_at": "document_start",
+		"matches": [
+			"*://dobrochan.ru/*/*",
+			"*://dobrochan.com/*/*",
+			"*://dobrochan.net/*/*"
+		],
+		"exclude_matches": [
+			"*://dobrochan.ru/src/*",
+			"*://dobrochan.com/src/*",
+			"*://dobrochan.net/src/*"
+		],
+		"css": [
+		],
+		"js": [
+			"Dobrochan/js/hana-dc.js",
+			"src/js/content_script.js"
+		]
+	}, {
+		"all_frames": false,
+		"run_at": "document_start",
+		"matches": [
+			"*://2ch.hk/*/*",
+			"*://2ch.life/*/*"
+		],
+		"exclude_matches": [
+			"*://2ch.hk/*/src/*",
+			"*://2ch.life/*/src/*"
+		],
+		"css": [
+
+		],
+		"js": [
+
+		]
+	}],
+	"permissions": [
+		"webRequestBlocking",
+		"contextMenus",
+		"webRequest",
+		"<all_urls>",
+		"storage",
+		"tabs"
+	],
+	"icons": {
+		"24" : "images/24-hana.png",
+		"48" : "images/48-hana.png",
+		"64" : "images/64-hana.png"
+	}
+}
