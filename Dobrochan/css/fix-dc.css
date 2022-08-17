@@ -1,0 +1,13 @@
+
+/* global form buttons action */
+.glob-fct .glob-btn:before {
+	content: attr(show_txt);
+}
+.glob-fct.fm-opened .glob-btn:before {
+	content: attr(hide_txt);
+}
+
+/* hidden */
+*:not(.fm-opened) > .postarea {
+	display: none!important;
+}

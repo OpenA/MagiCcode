@@ -7,7 +7,7 @@
 		"scripts": ["src/js/background.js", "src/js/blocklist.js"]
 	},
 	"web_accessible_resources": [
-		"images/*", "src/*"
+		"images/*", "src/*", "Tools/*", "Dobrochan/*"
 	],
 	"content_scripts": [{
 		"all_frames": true,
@@ -23,6 +23,7 @@
 			"*://dobrochan.net/src/*"
 		],
 		"css": [
+			"Dobrochan/css/fix-dc.css"
 		],
 		"js": [
 			"Dobrochan/js/hana-dc.js",
@@ -43,7 +44,7 @@
 
 		],
 		"js": [
-
+			"src/js/content_script.js"
 		]
 	}],
 	"permissions": [
