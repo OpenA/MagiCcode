@@ -1,0 +1,123 @@
+
+*[habe-text]:before {
+	content: attr(habe-text);
+}
+
+/* reply-map */
+.hana-refmap-list {
+	display: block;
+	font-size: small;
+	padding: 5px 0;
+}
+.hana-refmap-lnk {
+	margin-left: 4px;
+	text-decoration: none;
+}
+
+/* stat-counter */
+.hana-stat-counter {
+	top: -5px;
+	left: 100%;
+	position: absolute;
+	font: italic 8px serif;
+	white-space: nowrap;
+}
+.hana-stat-bubble {
+	color: white;
+	vertical-align: middle;
+	padding: 3px 5px;
+	border: solid 1px;
+	border-radius: 5px;
+}
+.hana-stat-bubble:after {
+	content: attr(bubble-cnt);
+}
+#Hstat_add { background-color: #4a7453; } #Hstat_add:before { content: '+'; }
+#Hstat_del { background-color: #945c3c; } #Hstat_del:before { content: '-'; }
+#Hstat_mod { background-color: #305e85; } #Hstat_mod:before { content: '*'; }
+
+/* thread-observer */
+.TOb-load-btn {
+	cursor: pointer;
+	padding: 20px;
+	border: solid 2px white;
+	border-radius: 50%;
+	background-color: rgba(211, 211, 211, 0.8);
+	position: relative;
+	overflow: hidden;
+}
+.TOb-load-btn.dummy {
+	border-width: 0 0 2px 2px;
+}
+
+
+.ha-popView {
+	animation-duration: .3s;
+	margin: 0;
+}
+.ha-popView:before {
+	content: '';
+}
+.ha-overView {
+	left:0;top:0;right:0;bottom:0;
+	position: fixed;
+	z-index: 900;
+}
+.ha-backLight {
+	background: #fff8de !important; /* cornsilk */
+	color: #546b2e !important; /* darkolivegreen */
+}
+
+/* popup control buttons */
+.ha-pop-ctrl {
+	margin-top: 4px;
+	clear: both;
+}
+.ha-pop-close, .ha-pop-clear {
+	width: 14px;
+	height: 14px;
+	margin: 0 3px;
+	display: inline-block;
+	text-align: center;
+	vertical-align: middle;
+	position: relative;
+	cursor: pointer;
+}
+.ha-pop-close:before, .ha-pop-clear:before,
+.ha-pop-close:after , .ha-pop-clear:after {
+	position: absolute;
+	right: 0; left: 0;
+}
+.ha-pop-close:before {
+	content: '✖';
+	font-size: 14px;
+	line-height: 14px;
+}
+.ha-pop-clear:before {
+	content: '●';
+	font-size: 16px;
+	line-height: 11px;
+}
+.ha-pop-clear:after {
+	content: '✖';
+	font-size: 10px;
+	line-height: 14px;
+	filter: invert(100%);
+}
+
+.naa-disapp .ha-pop-ctrl {
+	display: none;
+}
+
+
+@-webkit-keyframes toShow { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes toShow { from { opacity: 0; } to { opacity: 1; } }
+
+@-webkit-keyframes popUp {
+	from { transform: scale(0,0); opacity: 0; }
+	to   { transform: scale(1,1); opacity: 1; }
+}
+@keyframes popUp {
+	from { transform: scale(0,0); opacity: 0; }
+	to   { transform: scale(1,1); opacity: 1; }
+}

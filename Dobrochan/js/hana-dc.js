@@ -8,11 +8,63 @@ const Hana = {
 		
 	},
 
+	postHandling: (post, post_uid, title) => new Promise(resolve => {
+
+		const re_lnks = post.querySelectorAll('.message a[href*="/res/"]');
+	
+		if (re_lnks.length) {
+			let map_arr = [];
+			for (let a of re_lnks) {
+				const to = parseAibAnchor(a),
+				   navid = to.board +'-'+ to.thrid +'-'+ to.pid;
+	
+				map_arr.push( navid );
+				_setup(a, { 'ha-nav-to': navid, onmouseover: undefined, onclick: undefined });
+			}
+			resolve( new ReplySetTo(post_uid, map_arr) );
+		} else 
+			resolve( null );
+	
+		post.setAttribute('hana-uid', post_uid);
+	}),
+
+	addRefmaps: (refsets, post_coll) => {
+
+		const reply_map = new ReplyMap(refsets);
+
+		for (let uid of reply_map.keys()) {
+
+			if (!(uid in post_coll))
+				continue;
+
+			let refmap = post_coll[uid].querySelector('.hana-refmap-list');
+			if(!refmap) {
+				refmap = post_coll[uid].querySelector('.abbrev').appendChild(
+					_setup('div', { class: 'hana-refmap-list', 'habe-text': 'Ответы:'})
+				);
+			}
+			const refarr = reply_map.extract(uid),
+			      lnkarr = [];
+
+			for (let from_uid of refarr) {
+				let pid = from_uid.substring(from_uid.lastIndexOf('-') + 1);
+				lnkarr.push(
+					_setup('a', {
+						class: 'hana-refmap-lnk',
+						href: '#i'+ pid,
+						text: '>>'+ pid,
+						'ha-nav-to': from_uid +'-und'
+					})
+				);
+			}
+			Element.prototype.append.apply(refmap, lnkarr);
+		}
+	},
+
 	init() {
 
-		const { path, board, page, thrid, pid } = (this.nav = parseAibUrl(location.href));
-
-		const { postform, delete_form } = document.forms;
+		const { board, page, thrid, pid } = (this.nav = parseAibAnchor(location));
+		const { postform, delete_form   } = document.forms;
 
 		if (postform) {
 
@@ -60,29 +112,31 @@ const Hana = {
 				delete_form.querySelector('.pages').before(gBotPlace);
 			}
 		}
+		let thread_list, post_work = [], post_coll = Object.create(null);
 
 		if (thrid) {
-			let locThread = document.getElementById('thread_'+ thrid);
+			let thread = document.getElementById('thread_'+ thrid);
 
-			if (!locThread) {
-				locThread = _setup('div', { id: 'thread_'+ thrid, class: 'thread' });
+			if (!thread) {
+				thread = _setup('div', { id: 'thread_'+ thrid, class: 'thread' });
 			}
+			thread_list = [thread];
 		} else {
-
+			thread_list = document.getElementsByClassName('thread');
 		}
-		const posts = document.getElementsByClassName('post');
+
+		for (let thread of thread_list) {
+
+			let posts = thread.getElementsByClassName('post'), op = posts[0],
+			   thr_id = thread.id.substring('thread_'.length),
+			    title = op.querySelector('.replytitle').innerText;
+
+			for (let post of posts) {
+				const post_uid = board +'-'+ thr_id +'-'+ post.id.substring('post_'.length);
+				post_work.push(this.postHandling(post, post_uid, title));
+				post_coll[post_uid] = post;
+			}
+		}
+		Promise.all(post_work).then(refsets => this.addRefmaps(refsets, post_coll));
 	}
 };
-
-function parseAibUrl(url = '') {
-	const out = Object.create(null);
-	var m = url.match(/(?:https?:\/\/[^\/]+)?(\/([^\/]+)\/(?:(\d+)|res\/(\d+)|(\w+))(?:\.x?html)?)(?:#i?(\d+))?/);
-	if (m) {
-		out.path  = m[1];
-		out.board = m[2];
-		out.page  = Number(m[3]) || 0;
-		out.thrid = m[4];
-		out.pid   = m[5];
-	}
-	return out;
-}

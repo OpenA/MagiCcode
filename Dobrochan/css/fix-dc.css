@@ -11,3 +11,7 @@
 *:not(.fm-opened) > .postarea {
 	display: none!important;
 }
+
+.reply > .hana-refmap-list {
+	padding-left: 20px;
+}

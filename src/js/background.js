@@ -9,21 +9,33 @@ const openPorts = new Set;
 
 browser.runtime.onConnect.addListener(port => {
 
-	const tab_id = port.sender.tab.id;
+	const tab_id = port.sender.tab.id,
+	    { tabs } = browser,
+	    js_ready = [];
 
 	port.onMessage.addListener(messageHandler);
 	port.onDisconnect.addListener(() => {
 		openPorts.delete(port);
 	});
 	openPorts.add(port);
-	browser.tabs.executeScript(tab_id, {
-		allFrames: false, file: '/Tools/pasL/pasL.js'
-	}, () => {
+
+	for (const js of [
+		'/Tools/pasL/pasL.js', 'src/js/hana-stuff.js'
+	]) {
+		js_ready.push(
+			new Promise(ok => {
+				tabs.executeScript(tab_id, { allFrames: false, file: js }, () => ok())
+			})
+		);
+	}
+	Promise.all(js_ready).then(() => {
 		port.postMessage({ msg: 'bg-connected', data: null });
 	});
-	//browser.tabs.insertCSS(details.tabId, {
-	//	allFrames: false, file: '/js/pasL/pasL.css'
-	//});
+	for (const css of [
+		'src/css/hana-stuff.css'
+	]) {
+		tabs.insertCSS(tab_id, { allFrames: false, file: css });
+	}
 });
 
 function messageHandler({ msg, data }, port) {
