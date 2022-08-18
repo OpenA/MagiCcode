@@ -3,6 +3,7 @@ const Hana = {
 	name: 'DC',
 
 	nav: null,
+	popctrl: null,
 
 	get form() {
 		
@@ -124,6 +125,7 @@ const Hana = {
 		} else {
 			thread_list = document.getElementsByClassName('thread');
 		}
+		let popctrl = new PopupControl('post_%d', ['reply']);
 
 		for (let thread of thread_list) {
 
@@ -135,6 +137,7 @@ const Hana = {
 				const post_uid = board +'-'+ thr_id +'-'+ post.id.substring('post_'.length);
 				post_work.push(this.postHandling(post, post_uid, title));
 				post_coll[post_uid] = post;
+				post.addEventListener('mouseover', popctrl);
 			}
 		}
 		Promise.all(post_work).then(refsets => this.addRefmaps(refsets, post_coll));

@@ -104,6 +104,16 @@
 	line-height: 14px;
 	filter: invert(100%);
 }
+.ha-pop-move {
+	float: right;
+	text-align: right;
+}
+.ha-pop-move:before {
+	content: '';
+}
+.ha-pop-move:after {
+	content: '.::';
+}
 
 .naa-disapp .ha-pop-ctrl {
 	display: none;
