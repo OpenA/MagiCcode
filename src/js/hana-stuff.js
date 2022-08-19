@@ -91,7 +91,7 @@ const Delay = {
 			delete ids[name];
 		}
 	},
-	new: (name = '', ms = 100) => new Promise(_end => {
+	add: (name = '', ms = 100) => new Promise(_end => {
 		const ids = Delay.tim;
 		if (name in ids) window.clearTimeout(ids[name]);
 		ids[name] =      window.setTimeout(_end, ms);
@@ -156,14 +156,37 @@ const DragableObj = {
 		window.addEventListener('mousemove', onMove);
 		window.addEventListener('mouseup', onEnd);
 	},
+}
 
-	popup(el, {
-		X: pointX = 0, marginX = 0, revertX = false,
-		Y: pointY = 0, marginY = 0, revertY = false,
-		fixed = false,
-		animName = ''
+const PROP_FROM_TO     = 'popfromto';
+const CNAME_LNK_REPLY  = 'ha-reply-lnk';
+const CNAME_LNK_REFMAP = 'ha-refmap-lnk';
+
+class PopupControl {
+
+	constructor({
+		post_d = 'post_%d',
+		exclass = '',
+		useHighlightOnScreen = false,
+		usePopupCtrl = true
 	}) {
-		const { style }   = el;
+		this._last_skip = 0;
+		this.post_d = post_d;
+		this.useHighlightOnScreen = useHighlightOnScreen;
+		this.usePopupCtrl = usePopupCtrl;
+		this.exclass = exclass;
+
+		Object.defineProperties(this, {
+			NODE_POP_STACK: { value: _setup('div', { class: 'ha-popStack' }) }
+		})
+	}
+
+	popShow(pop_el, {
+		x: pointX = 0, marginX = 0, revertX = false,
+		y: pointY = 0, marginY = 0, revertY = false,
+		fixed = false, animName = ''
+	}) {
+		const { style }   = pop_el;
 		const spaceRight  = window.innerWidth  * 0.5;
 		const spaceBottom = window.innerHeight * 0.75;
 		const offsetX     = fixed ? 0 : window.pageXOffset;
@@ -175,14 +198,14 @@ const DragableObj = {
 		style.animationName = null;
 		style.visibility = 'hidden';
 		style.position = fixed ? 'fixed' : 'absolute';
-		style.zIndex = this.zIndex;
+		style.zIndex = DragableObj.zIndex;
 		style.left = (revertX ? offsetX : pointX + offsetX + marginX) +'px';
 		style.top = (revertY ? pointY + offsetY + marginY : offsetY) +'px';
 
-		document.body.append(el);
+		this.NODE_POP_STACK.append(pop_el);
 
 		if (revertX) {
-			let { width } = el.getBoundingClientRect();
+			let { width } = pop_el.getBoundingClientRect();
 			let left = pointX - width - Math.abs(marginX);
 			if (left < 0) {
 				left = 0;
@@ -191,7 +214,7 @@ const DragableObj = {
 			style.left = (left + offsetX) +'px';
 		}
 		if (!revertY) {
-			let { height } = el.getBoundingClientRect();
+			let { height } = pop_el.getBoundingClientRect();
 			let top = pointY - height - Math.abs(marginY);
 			if (top < -10)
 				top = pointY + marginY ;
@@ -200,29 +223,12 @@ const DragableObj = {
 		style.animationName = animName;
 		style.visibility = 'visible';
 	}
-}
-
-const PROP_NAV_TO = 'ha-nav-to';
-
-class PopupControl {
-
-	constructor(post_d = 'post_%d', class_list = []) {
-		this._last_skip = 0;
-		this._post_d = post_d;
-		this.onScreenHighlight = false;
-		this.popControls = true;
-
-		Object.defineProperties(this, {
-			_exClass  : { value: ['ha-popView'].concat(class_list) },
-			_tmpClass : { value: 'naa-disapp' }
-		})
-	}
 
 	popCloseDelay(p_vid = '') {
-		const list = document.getElementsByClassName(this._tmpClass),
+		const list = this.NODE_POP_STACK.getElementsByClassName('na-kk'),
 		     pview = list[p_vid];
 		Delay.del(p_vid);
-		Delay.new('Pop View Hide', 700).then(() => {
+		Delay.add('Pop View Hide', 700).then(() => {
 			let c = list.length - this._last_skip - 1;
 			while (list[c] !== pview)
 				list[c--].remove();
@@ -230,23 +236,24 @@ class PopupControl {
 	}
 
 	popClear() {
-		const list = document.getElementsByClassName(this._exClass[0]);
+		const list = this.NODE_POP_STACK.children;
 		for (let c = list.length - 1; c >= 0; c--)
 			list[c].remove();
 	}
 
-	popOpenDelay(trig, [bid, tid, pid, lower]) {
+	popOpenDelay(lnk, [ from_brd, from_pid, to_brd, to_pid ]) {
 
-		const { popControls, onScreenHighlight } = this;
+		const { usePopupCtrl, useHighlightOnScreen, post_d, exclass } = this;
 
-		const post  = document.getElementById(this._post_d.replace('%d', pid));
-		const p_vid = 'popView_'+ bid +'_'+ pid;
+		const stack = this.NODE_POP_STACK.children;
+		const post  = document.getElementById(post_d.replace('%d', to_pid));
+		const p_vid = 'popView_'+ to_brd +'_'+ to_pid;
 
 		let onMouseOut = null;
 
 		Delay.del(p_vid);
 
-		if (post && onScreenHighlight) {
+		if (post && useHighlightOnScreen) {
 
 			const { height, y } = post.getBoundingClientRect();
 			/*const isNotOutScrn = !(
@@ -262,41 +269,52 @@ class PopupControl {
 			}
 		}
 		if (!onMouseOut) {
-			let pop_view = document.getElementById(p_vid),
+			let pop_view = stack[p_vid],
 			    doRemove = () => pop_view.remove();
 
 			onMouseOut = ({ target }) => {
 				this._last_skip = 0;
 				Delay.del('Pop View Show');
-				if (!popControls && pop_view) {
-					Delay.new(700, p_vid).then(doRemove);
+				if (!usePopupCtrl && pop_view) {
+					Delay.add(p_vid, 700).then(doRemove);
 				}
 				target.removeEventListener('mouseout', onMouseOut);
 			};
-			Delay.new('Pop View Show', 500).then(() => {
+			Delay.add('Pop View Show', 500).then(() => {
 				this._last_skip = 1;
 
-				let anim = 'popUp',
-				    need_cts = popControls,
-				    mouse_fn = need_cts ? '' : 'add';
+				let animName = 'popUp',
+				    ctrl_add = usePopupCtrl,
+				    revertY  = lnk.classList.contains('ha-popUnd');
 
 				if(!pop_view) {
-					pop_view = _setup('div', { id: p_vid, class: this._exClass.join(' ') }, { mouseover: this });
+					let events = { mouseover: this },
+					    cnames = `ha-popView ${exclass} na-${ctrl_add ? 's' : 'k' }k`;
+					if (ctrl_add) {
+						events.mouseleave = events.mouseenter = this;
+					}
+					pop_view = _setup('div', { id: p_vid, class: cnames }, events);
 					if (post) {
 						for (let node of post.children)
 							pop_view.append(node.cloneNode(true));
 					} else {
 						pop_view.textContent = 'loading...';
 					}
-				} else if (need_cts) {
-					mouse_fn = (
-						need_cts = !pop_view.querySelector('.ha-pop-ctrl')
-					) ? 'remove' : '';
+				} else {
+					if ((ctrl_add &&= pop_view.classList.contains('na-kk'))) {
+						pop_view.removeEventListener('mouseleave', this);
+						pop_view.removeEventListener('mouseenter', this);
+						pop_view.classList.remove('na-kk');
+					}
+					for (let { classList } of pop_view.querySelectorAll('.na-mlock'))
+						classList.remove('na-mlock');
 				}
-				if (need_cts) {
-					const ha_pop_close = _setup('span', { class: 'ha-pop-close' }, { click: doRemove });
-					const ha_pop_clear = _setup('span', { class: 'ha-pop-clear' }, { click: () => this.popClear() });
-					const ha_pop_move  = _setup('span', { class: 'ha-pop-move'  }, { mousedown: e  => {
+				for (let { classList } of pop_view.querySelectorAll(`[${PROP_FROM_TO}$="${from_brd +'-'+ from_pid}"]`))
+					classList.add('na-mlock');
+				if (ctrl_add) {
+					const ha_pop_close = _setup('span', { class: 'ha-popClose' }, { click: doRemove });
+					const ha_pop_clear = _setup('span', { class: 'ha-popClear' }, { click: () => this.popClear() });
+					const ha_pop_move  = _setup('span', { class: 'ha-popMove'  }, { mousedown: e  => {
 						if (e.button === 0) {
 							e.preventDefault();
 							DragableObj.drag(pop_view,{ X: e.clientX, Y: e.clientY, fixed: false });
@@ -310,28 +328,19 @@ class PopupControl {
 						ha_pop_move
 					);
 				}
-				if (mouse_fn) {
-					pop_view[mouse_fn+'EventListener']('mouseleave', this);
-					pop_view[mouse_fn+'EventListener']('mouseenter', this);
-					pop_view.classList[mouse_fn](this._tmpClass);
-				}
-				let { x, y, width, height } = trig.getBoundingClientRect();
+				let { x, y, width, height } = lnk.getBoundingClientRect();
 
-				DragableObj.popup(pop_view, {
-					X: x + width  * .5, marginX: 0,
-					Y: y + height * .5, marginY: height,
-					revertY: !!lower,
-					fixed: false,
-					animName: anim
+				this.popShow(pop_view, {
+					x: x + width  / 2, marginX: 0,
+					y: y + height / 2, marginY: height,
+					animName, revertY, fixed: false
 				});
 			});
 		}
-		trig.addEventListener('mouseout', onMouseOut);
+		lnk.addEventListener('mouseout', onMouseOut);
 	}
 
-	touchOpen([bid, tid, pid]) {
-		const p_vid = 'popup_post_'+ bid + pid;
-		const post = document.getElementById(this.post_id_pat + pid);
+	touchOpen([ from_brd, from_pid, to_brd, to_pid ]) {
 
 	}
 
@@ -339,14 +348,14 @@ class PopupControl {
 		let arg, el = e.target;
 		switch (e.type) {
 		case 'touchstart':
-			if (el.hasAttribute(PROP_NAV_TO)) {
-				this.touchOpen(el.getAttribute(PROP_NAV_TO).split(/\s+|-|_/));
+			if (el.hasAttribute(PROP_FROM_TO)) {
+				this.touchOpen(el.getAttribute(PROP_FROM_TO).split(/\s|\-/));
 				e.preventDefault();
 			}
 			break;
 		case 'mouseover':
-			if (el.hasAttribute(PROP_NAV_TO)) {
-				this.popOpenDelay(el, el.getAttribute(PROP_NAV_TO).split(/\s+|-|_/));
+			if (el.hasAttribute(PROP_FROM_TO) && !el.classList.contains('na-mlock')) {
+				this.popOpenDelay(el, el.getAttribute(PROP_FROM_TO).split(/\s|\-/));
 				e.preventDefault();
 			}
 			break;

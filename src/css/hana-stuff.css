@@ -4,13 +4,15 @@
 }
 
 /* reply-map */
-.hana-refmap-list {
+.ha-refmap-list {
 	display: block;
 	font-size: small;
 	padding: 5px 0;
 }
-.hana-refmap-lnk {
+.ha-refmap-lnk {
 	margin-left: 4px;
+}
+.ha-refmap-lnk, .ha-reply-lnk {
 	text-decoration: none;
 }
 
@@ -50,7 +52,7 @@
 	border-width: 0 0 2px 2px;
 }
 
-
+/* popup element */
 .ha-popView {
 	animation-duration: .3s;
 	margin: 0;
@@ -67,13 +69,17 @@
 	background: #fff8de !important; /* cornsilk */
 	color: #546b2e !important; /* darkolivegreen */
 }
+.na-mlock {
+	cursor: default;
+	color: #666!important;
+}
 
 /* popup control buttons */
 .ha-pop-ctrl {
 	margin-top: 4px;
 	clear: both;
 }
-.ha-pop-close, .ha-pop-clear {
+.ha-popClose, .ha-popClear {
 	width: 14px;
 	height: 14px;
 	margin: 0 3px;
@@ -83,39 +89,39 @@
 	position: relative;
 	cursor: pointer;
 }
-.ha-pop-close:before, .ha-pop-clear:before,
-.ha-pop-close:after , .ha-pop-clear:after {
+.ha-popClose:before, .ha-popClear:before,
+.ha-popClose:after , .ha-popClear:after {
 	position: absolute;
 	right: 0; left: 0;
 }
-.ha-pop-close:before {
+.ha-popClose:before {
 	content: '✖';
 	font-size: 14px;
 	line-height: 14px;
 }
-.ha-pop-clear:before {
+.ha-popClear:before {
 	content: '●';
 	font-size: 16px;
 	line-height: 11px;
 }
-.ha-pop-clear:after {
+.ha-popClear:after {
 	content: '✖';
 	font-size: 10px;
 	line-height: 14px;
 	filter: invert(100%);
 }
-.ha-pop-move {
+.ha-popMove {
 	float: right;
 	text-align: right;
 }
-.ha-pop-move:before {
+.ha-popMove:before {
 	content: '';
 }
-.ha-pop-move:after {
+.ha-popMove:after {
 	content: '.::';
 }
 
-.naa-disapp .ha-pop-ctrl {
+.na-kk .ha-pop-ctrl {
 	display: none;
 }
 

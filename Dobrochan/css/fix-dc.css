@@ -8,8 +8,14 @@
 }
 
 /* hidden */
-*:not(.fm-opened) > .postarea {
+*:not(.fm-opened) > .postarea, .popup .doubledash
+{
 	display: none!important;
+}
+
+.popup
+{
+	border: none!important;
 }
 
 .reply > .hana-refmap-list {

@@ -9,7 +9,7 @@ const Hana = {
 		
 	},
 
-	postHandling: (post, post_uid, title) => new Promise(resolve => {
+	postHandling: (post, from_uid, title) => new Promise(resolve => {
 
 		const re_lnks = post.querySelectorAll('.message a[href*="/res/"]');
 	
@@ -17,46 +17,53 @@ const Hana = {
 			let map_arr = [];
 			for (let a of re_lnks) {
 				const to = parseAibAnchor(a),
-				   navid = to.board +'-'+ to.thrid +'-'+ to.pid;
-	
-				map_arr.push( navid );
-				_setup(a, { 'ha-nav-to': navid, onmouseover: undefined, onclick: undefined });
+				  to_uid = to.thrid +'-'+ to.board +'-'+ to.pid;
+
+				_setup(a, { class: CNAME_LNK_REPLY, onmouseover: undefined, onclick: undefined })
+				.setAttribute(PROP_FROM_TO,
+					from_uid.substring(1 + from_uid.indexOf('-')) +' '+ to.board +'-'+ to.pid
+				);
+				map_arr.push( to_uid );
 			}
-			resolve( new ReplySetTo(post_uid, map_arr) );
+			resolve( new ReplySetTo(from_uid, map_arr) );
 		} else 
 			resolve( null );
-	
-		post.setAttribute('hana-uid', post_uid);
 	}),
 
 	addRefmaps: (refsets, post_coll) => {
 
 		const reply_map = new ReplyMap(refsets);
+		const { board, thrid } = Hana.nav;
 
-		for (let uid of reply_map.keys()) {
+		for (let from_uid of reply_map.keys()) {
 
-			if (!(uid in post_coll))
+			if (!(from_uid in post_coll))
 				continue;
 
-			let refmap = post_coll[uid].querySelector('.hana-refmap-list');
+			let refmap = post_coll[from_uid].querySelector('.hana-refmap-list');
 			if(!refmap) {
-				refmap = post_coll[uid].querySelector('.abbrev').appendChild(
-					_setup('div', { class: 'hana-refmap-list', 'habe-text': 'Ответы:'})
+				refmap = post_coll[from_uid].querySelector('.abbrev').appendChild(
+					_setup('div', { class: 'ha-refmap-list', 'habe-text': 'Ответы:'})
 				);
 			}
-			const refarr = reply_map.extract(uid),
+			const refarr = reply_map.extract(from_uid),
 			      lnkarr = [];
 
-			for (let from_uid of refarr) {
-				let pid = from_uid.substring(from_uid.lastIndexOf('-') + 1);
-				lnkarr.push(
-					_setup('a', {
-						class: 'hana-refmap-lnk',
-						href: '#i'+ pid,
-						text: '>>'+ pid,
-						'ha-nav-to': from_uid +'-und'
-					})
+			for (let to_uid of refarr) {
+				const [ to_tid, to_brd, to_pid ] = to_uid.split('-');
+
+				const dif_brd = board !== to_brd,
+				      dif_thr = thrid !== to_tid;
+
+				let lnk = _setup('a', {
+					class: CNAME_LNK_REFMAP +' ha-popUnd',
+					href: (dif_brd || dif_thr ? `/${to_brd}/res/${to_tid}.xhtml#i` : '#i') + to_pid,
+					text: (dif_brd ? `>>${to_brd}/` : '>>') + to_pid
+				});
+				lnk.setAttribute(PROP_FROM_TO,
+					from_uid.substring(1 + from_uid.indexOf('-')) +' '+ to_brd +'-'+ to_pid
 				);
+				lnkarr.push(lnk);
 			}
 			Element.prototype.append.apply(refmap, lnkarr);
 		}
@@ -125,7 +132,7 @@ const Hana = {
 		} else {
 			thread_list = document.getElementsByClassName('thread');
 		}
-		let popctrl = new PopupControl('post_%d', ['reply']);
+		let popctrl = new PopupControl({ exclass: 'popup' });
 
 		for (let thread of thread_list) {
 
@@ -134,12 +141,13 @@ const Hana = {
 			    title = op.querySelector('.replytitle').innerText;
 
 			for (let post of posts) {
-				const post_uid = board +'-'+ thr_id +'-'+ post.id.substring('post_'.length);
+				const post_uid = thr_id +'-'+ board +'-'+ post.id.substring('post_'.length);
 				post_work.push(this.postHandling(post, post_uid, title));
 				post_coll[post_uid] = post;
 				post.addEventListener('mouseover', popctrl);
 			}
 		}
 		Promise.all(post_work).then(refsets => this.addRefmaps(refsets, post_coll));
+		document.body.append(popctrl.NODE_POP_STACK);
 	}
 };
