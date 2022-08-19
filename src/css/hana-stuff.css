@@ -6,8 +6,6 @@
 /* reply-map */
 .ha-refmap-list {
 	display: block;
-	font-size: small;
-	padding: 5px 0;
 }
 .ha-refmap-lnk {
 	margin-left: 4px;
@@ -56,9 +54,6 @@
 .ha-popView {
 	animation-duration: .3s;
 	margin: 0;
-}
-.ha-popView:before {
-	content: '';
 }
 .ha-overView {
 	left:0;top:0;right:0;bottom:0;

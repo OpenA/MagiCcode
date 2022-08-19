@@ -40,7 +40,7 @@ const Hana = {
 			if (!(from_uid in post_coll))
 				continue;
 
-			let refmap = post_coll[from_uid].querySelector('.hana-refmap-list');
+			let refmap = post_coll[from_uid].querySelector('.ha-refmap-list');
 			if(!refmap) {
 				refmap = post_coll[from_uid].querySelector('.abbrev').appendChild(
 					_setup('div', { class: 'ha-refmap-list', 'habe-text': 'Ответы:'})
@@ -132,7 +132,11 @@ const Hana = {
 		} else {
 			thread_list = document.getElementsByClassName('thread');
 		}
-		let popctrl = new PopupControl({ exclass: 'popup' });
+		const pop_ctrl = new PopupControl({ exclass: 'popup', 
+			getPostElement: (brd = '', pid = '') => {
+				return document.getElementById('reply'+ pid) || document.getElementById('post_'+ pid);
+			}
+		});
 
 		for (let thread of thread_list) {
 
@@ -144,10 +148,10 @@ const Hana = {
 				const post_uid = thr_id +'-'+ board +'-'+ post.id.substring('post_'.length);
 				post_work.push(this.postHandling(post, post_uid, title));
 				post_coll[post_uid] = post;
-				post.addEventListener('mouseover', popctrl);
+				post.addEventListener('mouseover', pop_ctrl);
 			}
 		}
 		Promise.all(post_work).then(refsets => this.addRefmaps(refsets, post_coll));
-		document.body.append(popctrl.NODE_POP_STACK);
+		document.body.append(pop_ctrl.NODE_POP_STACK);
 	}
 };

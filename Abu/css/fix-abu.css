@@ -1,0 +1,28 @@
+
+/* global form buttons action */
+.newpost__wrapper .newpost__label:before {
+	content: attr(show_txt);
+}
+.newpost__wrapper.fm-opened .newpost__label:before {
+	content: attr(hide_txt);
+}
+
+/* hidden */
+.newpost__wrapper:not(.fm-opened) + *
+{
+	display: none!important;
+}
+
+/* post previews */
+.post_preview {
+	border-width: 1px;
+	border-color: #444;
+}
+.post_preview:before {
+	content: '';
+}
+
+/* refmap list and links */
+.ha-refmap-list {
+	font-size: smaller;
+}

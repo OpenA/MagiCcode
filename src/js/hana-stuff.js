@@ -165,20 +165,20 @@ const CNAME_LNK_REFMAP = 'ha-refmap-lnk';
 class PopupControl {
 
 	constructor({
-		post_d = 'post_%d',
+		getPostElement = () => null,
 		exclass = '',
 		useHighlightOnScreen = false,
 		usePopupCtrl = true
 	}) {
 		this._last_skip = 0;
-		this.post_d = post_d;
+		this.getPostElement = getPostElement;
 		this.useHighlightOnScreen = useHighlightOnScreen;
 		this.usePopupCtrl = usePopupCtrl;
 		this.exclass = exclass;
 
 		Object.defineProperties(this, {
 			NODE_POP_STACK: { value: _setup('div', { class: 'ha-popStack' }) }
-		})
+		});
 	}
 
 	popShow(pop_el, {
@@ -243,10 +243,10 @@ class PopupControl {
 
 	popOpenDelay(lnk, [ from_brd, from_pid, to_brd, to_pid ]) {
 
-		const { usePopupCtrl, useHighlightOnScreen, post_d, exclass } = this;
+		const { usePopupCtrl, useHighlightOnScreen, exclass } = this;
 
 		const stack = this.NODE_POP_STACK.children;
-		const post  = document.getElementById(post_d.replace('%d', to_pid));
+		const post  = this.getPostElement(to_brd, to_pid, lnk.href);
 		const p_vid = 'popView_'+ to_brd +'_'+ to_pid;
 
 		let onMouseOut = null;

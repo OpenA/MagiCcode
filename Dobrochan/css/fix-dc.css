@@ -13,11 +13,17 @@
 	display: none!important;
 }
 
+/* post previews */
 .popup
 {
 	border: none!important;
 }
 
+/* refmap list and links */
+.ha-refmap-list {
+	font-size: small;
+	padding: 5px 0;
+}
 .reply > .hana-refmap-list {
 	padding-left: 20px;
 }

@@ -41,9 +41,10 @@
 			"*://2ch.life/*/src/*"
 		],
 		"css": [
-
+			"Abu/css/fix-abu.css"
 		],
 		"js": [
+			"Abu/js/hana-abu.js",
 			"src/js/content_script.js"
 		]
 	}],

@@ -10,7 +10,7 @@ const blockList = [
 		hosts: [
 			'2ch.hk', '2ch.life'
 		],
-		block_js : false,
+		block_js : true,
 		block_css: false
 	},
 	{ // Доброчан
