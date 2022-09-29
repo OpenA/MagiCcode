@@ -13,6 +13,7 @@ const Hana = {
 	init() {
 
 		const { board, page, thrid, pid } = (this.nav = parseAibAnchor(location));
+		const { postform } = document.forms;
 
 		const thr_lst = document.getElementsByClassName('thread'),
 		   posts_coll = (this.posts_coll = new Map);
@@ -42,7 +43,6 @@ const Hana = {
 			abuThreadHandling(thr_lst, board);
 			document.body.append(popups_ct.NODE_POP_STACK);
 		}
-		const { postform } = document.forms;
 
 		if (postform) {
 

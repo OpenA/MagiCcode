@@ -3,76 +3,50 @@ const Hana = {
 	name: 'DC',
 
 	nav: null,
-	popctrl: null,
+	popups_ct: null,
+	posts_coll: null,
 
 	get form() {
 		
-	},
-
-	postHandling: (post, from_uid, title) => new Promise(resolve => {
-
-		const re_lnks = post.querySelectorAll('.message a[href*="/res/"]');
-	
-		if (re_lnks.length) {
-			let map_arr = [];
-			for (let a of re_lnks) {
-				const to = parseAibAnchor(a),
-				  to_uid = to.thrid +'-'+ to.board +'-'+ to.pid;
-
-				_setup(a, { class: CNAME_LNK_REPLY, onmouseover: undefined, onclick: undefined })
-				.setAttribute(PROP_FROM_TO,
-					from_uid.substring(1 + from_uid.indexOf('-')) +' '+ to.board +'-'+ to.pid
-				);
-				map_arr.push( to_uid );
-			}
-			resolve( new ReplySetTo(from_uid, map_arr) );
-		} else 
-			resolve( null );
-	}),
-
-	addRefmaps: (refsets, post_coll) => {
-
-		const reply_map = new ReplyMap(refsets);
-		const { board, thrid } = Hana.nav;
-
-		for (let from_uid of reply_map.keys()) {
-
-			if (!(from_uid in post_coll))
-				continue;
-
-			let refmap = post_coll[from_uid].querySelector('.ha-refmap-list');
-			if(!refmap) {
-				refmap = post_coll[from_uid].querySelector('.abbrev').appendChild(
-					_setup('div', { class: 'ha-refmap-list', 'habe-text': 'Ответы:'})
-				);
-			}
-			const refarr = reply_map.extract(from_uid),
-			      lnkarr = [];
-
-			for (let to_uid of refarr) {
-				const [ to_tid, to_brd, to_pid ] = to_uid.split('-');
-
-				const dif_brd = board !== to_brd,
-				      dif_thr = thrid !== to_tid;
-
-				let lnk = _setup('a', {
-					class: CNAME_LNK_REFMAP +' ha-popUnd',
-					href: (dif_brd || dif_thr ? `/${to_brd}/res/${to_tid}.xhtml#i` : '#i') + to_pid,
-					text: (dif_brd ? `>>${to_brd}/` : '>>') + to_pid
-				});
-				lnk.setAttribute(PROP_FROM_TO,
-					from_uid.substring(1 + from_uid.indexOf('-')) +' '+ to_brd +'-'+ to_pid
-				);
-				lnkarr.push(lnk);
-			}
-			Element.prototype.append.apply(refmap, lnkarr);
-		}
 	},
 
 	init() {
 
 		const { board, page, thrid, pid } = (this.nav = parseAibAnchor(location));
 		const { postform, delete_form   } = document.forms;
+
+		const thr_lst = document.getElementsByClassName('thread'),
+		   posts_coll = (this.posts_coll = new Map);
+
+		if (thr_lst.length) {
+			const popups_ct = (this.popups_ct = new PopupControl({
+				exclass: 'popup',
+				useHighlightOnScreen: false,
+				getReplyElement: (brd, pid) => {
+					let post = posts_coll.get(brd +'-'+ pid);
+					if (post && !post.classList.contains('oppost'))
+						post = post.querySelector('#reply'+ pid);
+					return post;
+				},
+				reqHttpReply: (url, brd, pid) => aibDataRequest(url, { cache: 'force-cache' }).then(doc => {
+
+					let thr_lst = doc.getElementsByClassName('thread'),
+					       post = doc.getElementById('reply'+ pid) || doc.getElementById('post_'+ pid),
+					    thr_wrk = thr_lst.length ? dcThreadHandling(thr_lst, brd).then(() => post) : null;
+
+					if (!post) {
+						(post = document.createElement('div')).append(
+							_setup('i', { class: 'postername', text: '№'+ pid }),
+							_setup('b', { class: 'abbrev', style: 'padding: 0;', text: '\n-\nНе найден.'})
+						);
+						return post;
+					} else 
+						return thr_wrk;
+				})
+			}));
+			dcThreadHandling(thr_lst, board);
+			document.body.append(popups_ct.NODE_POP_STACK);
+		}
 
 		if (postform) {
 
@@ -120,38 +94,94 @@ const Hana = {
 				delete_form.querySelector('.pages').before(gBotPlace);
 			}
 		}
-		let thread_list, post_work = [], post_coll = Object.create(null);
-
-		if (thrid) {
-			let thread = document.getElementById('thread_'+ thrid);
-
-			if (!thread) {
-				thread = _setup('div', { id: 'thread_'+ thrid, class: 'thread' });
-			}
-			thread_list = [thread];
-		} else {
-			thread_list = document.getElementsByClassName('thread');
-		}
-		const pop_ctrl = new PopupControl({ exclass: 'popup', 
-			getPostElement: (brd = '', pid = '') => {
-				return document.getElementById('reply'+ pid) || document.getElementById('post_'+ pid);
-			}
-		});
-
-		for (let thread of thread_list) {
-
-			let posts = thread.getElementsByClassName('post'), op = posts[0],
-			   thr_id = thread.id.substring('thread_'.length),
-			    title = op.querySelector('.replytitle').innerText;
-
-			for (let post of posts) {
-				const post_uid = thr_id +'-'+ board +'-'+ post.id.substring('post_'.length);
-				post_work.push(this.postHandling(post, post_uid, title));
-				post_coll[post_uid] = post;
-				post.addEventListener('mouseover', pop_ctrl);
-			}
-		}
-		Promise.all(post_work).then(refsets => this.addRefmaps(refsets, post_coll));
-		document.body.append(pop_ctrl.NODE_POP_STACK);
 	}
 };
+
+const dcPostHandling = (post, from_uid, title) => new Promise(resolve => {
+
+	const re_lnks = post.querySelectorAll('.message a[href*="/res/"]');
+	
+	if (re_lnks.length) {
+		let map_arr = [];
+		for (let a of re_lnks) {
+			const to = parseAibAnchor(a),
+			  to_uid = to.thrid +'-'+ to.board +'-'+ to.pid;
+
+			_setup(a, { class: CNAME_LNK_REPLY, onmouseover: undefined, onclick: undefined })
+			.setAttribute(PROP_FROM_TO,
+				from_uid.substring(1 + from_uid.indexOf('-')) +' '+ to.board +'-'+ to.pid
+			);
+			map_arr.push( to_uid );
+		}
+		resolve( new ReplySetTo(from_uid, map_arr) );
+	} else 
+		resolve( null );
+
+	post.addEventListener('mouseover', Hana.popups_ct);
+});
+
+let _refmapex_;
+
+const dcUpdRefmaps = (refsets) => {
+
+	const { posts_coll   } = Hana;
+	const { board, thrid } = Hana.nav;
+
+	const reply_map = new ReplyMap(refsets, _refmapex_);
+
+	for (let to_uid of reply_map.keys()) {
+
+		const post_uid = to_uid.substring(1 + to_uid.indexOf('-')),
+		      post_id  = to_uid.substring(to_uid.lastIndexOf('-'))
+
+		if (!posts_coll.has(post_uid))
+			continue;
+
+		let refmap = posts_coll.get(post_uid).querySelector('.ha-refmap-list');
+		if(!refmap) {
+			refmap = posts_coll.get(post_uid).querySelector('.abbrev').appendChild(
+				_setup('div', { class: 'ha-refmap-list', 'habe-text': 'Ответы:'})
+			);
+		}
+		const lnkarr = reply_map.extract(to_uid, from_uid => {
+			const [ fm_tid, fm_brd, fm_pid ] = from_uid.split('-');
+
+			const dif_brd = board !== fm_brd,
+				  dif_thr = thrid !== fm_tid || dif_brd;
+
+			let lnk = _setup('a', {
+				class: CNAME_LNK_REFMAP +' ha-popUnd',
+				href: (dif_thr ? `/${fm_brd}/res/${fm_tid}.xhtml#i` : '#i') + fm_pid,
+				text: (dif_brd ? `>>${fm_brd}/` : '>>') + fm_pid + (dif_thr ? '→' : '')
+			});
+			lnk.setAttribute(PROP_FROM_TO, post_uid +' '+ fm_brd +'-'+ fm_pid);
+			return lnk;
+		});
+		Element.prototype.append.apply(refmap, lnkarr);
+
+		let popmap = document.querySelector('.ha-popView #refmap'+ post_id);
+		if (popmap)
+			popmap.replaceWith(refmap.cloneNode(true));
+	}
+	_refmapex_ = reply_map.toArray();
+}
+
+const dcThreadHandling = async (thr_lst, brd_id = '') => {
+
+	const { posts_coll } = Hana;
+	const post_work = [];
+
+	for (let thread of thr_lst) {
+
+		let posts = thread.getElementsByClassName('post'), op = posts[0],
+		   thr_id = thread.id.substring('thread_'.length),
+			title = op.querySelector('.replytitle');
+
+		for (let post of posts) {
+			const post_uid = brd_id +'-'+ post.id.substring('post_'.length);
+			post_work.push(dcPostHandling(post, thr_id +'-'+ post_uid));
+			posts_coll.set(post_uid, post);
+		}
+	}
+	Promise.all(post_work).then(dcUpdRefmaps);
+}
