@@ -9,9 +9,9 @@ class ReplySetTo extends Set {
 }
 class ReplyMap extends Map {
 
-	constructor(set_to_list = [/* ReplySetTo, ... */]) {
+	constructor(set_to_list = [/* ReplySetTo, ... */], map_ext_list = []) {
 		
-		let arr_set = [], arr_map = [];
+		let arr_set = [], arr_map = [].concat(map_ext_list || []);
 
 		for (const set_to of set_to_list)
 		{
@@ -42,17 +42,24 @@ class ReplyMap extends Map {
 			super.set(to_uid, new Set([from_uid]));
 	}
 
-	extract(to_uid = '') {
+	extract(to_uid = '', funct = s => s) {
 
-		let links_list = [];
+		const list = [];
 
-		if (super.has(to_uid)) {
-			for (let from_uid of super.get(to_uid)) {
-				links_list.push( from_uid );
-			}
-			super.delete(to_uid);
+		for (let from_uid of super.get(to_uid)) {
+			list.push( funct(from_uid) );
 		}
-		return links_list;
+		super.delete(to_uid);
+		return list;
+	}
+
+	toArray() {
+		const arr = [];
+
+		for (let o of super.entries()) {
+			arr.push(o);
+		}
+		return arr;
 	}
 }
 
@@ -81,6 +88,17 @@ const parseAibUrl = (url = '') => {
 	}
 	return out;
 }
+
+const aibDataRequest = (url, params = {}, json = false) => (
+	fetch(url, params).then(
+		json ? res => res.ok ? res.json() : { error: res.status, msg: res.statusText, url: res.url }
+		     : res => res.ok ? res.text().then(
+		       str => (new DOMParser().parseFromString(str, 'text/html'))
+		) : Promise.reject(
+			res.url +' ['+ res.status +' '+ res.statusText +']'
+		)
+	)
+);
 
 const Delay = {
 	tim: Object.create(null),
@@ -165,13 +183,15 @@ const CNAME_LNK_REFMAP = 'ha-refmap-lnk';
 class PopupControl {
 
 	constructor({
-		getPostElement = () => null,
+		getReplyElement = () => void 0,
+		reqHttpReply    = async () => void 0,
 		exclass = '',
 		useHighlightOnScreen = false,
 		usePopupCtrl = true
 	}) {
 		this._last_skip = 0;
-		this.getPostElement = getPostElement;
+		this.getReplyElement = getReplyElement;
+		this.reqHttpReply    = reqHttpReply;
 		this.useHighlightOnScreen = useHighlightOnScreen;
 		this.usePopupCtrl = usePopupCtrl;
 		this.exclass = exclass;
@@ -246,30 +266,31 @@ class PopupControl {
 		const { usePopupCtrl, useHighlightOnScreen, exclass } = this;
 
 		const stack = this.NODE_POP_STACK.children;
-		const post  = this.getPostElement(to_brd, to_pid, lnk.href);
+		const reply = this.getReplyElement(to_brd, to_pid);
 		const p_vid = 'popView_'+ to_brd +'_'+ to_pid;
 
 		let onMouseOut = null;
 
 		Delay.del(p_vid);
 
-		if (post && useHighlightOnScreen) {
+		if (reply && useHighlightOnScreen) {
 
-			const { height, y } = post.getBoundingClientRect();
+			const { height, y } = reply.getBoundingClientRect();
 			/*const isNotOutScrn = !(
 				(x + width) < 0 || (y - height * 0.75) < 0 ||
 				(x > window.innerWidth || (y + height * 0.75) > window.innerHeight)
 			);*/
 			if (y + height > 60 && y < window.innerHeight - 60) {
-				post.classList.add('ha-backLight');
+				reply.classList.add('ha-backLight');
 				onMouseOut = ({ target }) => {
-					post.classList.remove('ha-backLight');
+					reply.classList.remove('ha-backLight');
 					target.removeEventListener('mouseout', onMouseOut);
 				};
 			}
 		}
 		if (!onMouseOut) {
 			let pop_view = stack[p_vid],
+			    waiting  = Delay.add('Pop View Show', 500),
 			    doRemove = () => pop_view.remove();
 
 			onMouseOut = ({ target }) => {
@@ -280,12 +301,18 @@ class PopupControl {
 				}
 				target.removeEventListener('mouseout', onMouseOut);
 			};
-			Delay.add('Pop View Show', 500).then(() => {
+
+			let { x, y, width, height } = lnk.getBoundingClientRect();
+			let { href } = lnk, revertY = lnk.classList.contains('ha-popUnd')
+
+			x += width  / 2;
+			y += height / 2;
+
+			waiting.then(() => {
 				this._last_skip = 1;
 
 				let animName = 'popUp',
-				    ctrl_add = usePopupCtrl,
-				    revertY  = lnk.classList.contains('ha-popUnd');
+				    ctrl_add = usePopupCtrl;
 
 				if(!pop_view) {
 					let events = { mouseover: this },
@@ -293,18 +320,39 @@ class PopupControl {
 					if (ctrl_add) {
 						events.mouseleave = events.mouseenter = this;
 					}
-					pop_view = _setup('div', { id: p_vid, class: cnames }, events);
-					if (post) {
-						for (let node of post.children)
-							pop_view.append(node.cloneNode(true));
+					const pop_cont = (
+						pop_view = _setup('div', { id: p_vid, class: cnames }, events)
+					).appendChild(
+						_setup('div', { class: 'ha-pop-cont' })
+					);
+					if (reply) {
+						for (let node of reply.children)
+							pop_cont.append(node.cloneNode(true));
 					} else {
-						pop_view.textContent = 'loading...';
+						const promise = this.reqHttpReply(href, to_brd, to_pid);
+						                pop_cont.classList.add('na-ldd');
+
+						promise.then(reply => {
+							pop_view.style.visibility = 'hidden';
+							pop_cont.classList.remove('na-ldd');
+
+							for (let node of reply.children)
+								pop_cont.append(node.cloneNode(true));
+
+							this.popShow(pop_view, {
+								x, y, marginY: height, revertY, animName
+							});
+						});
+						promise.catch(err => {
+							pop_cont.classList.replace('na-ldd', 'na-err');
+							pop_cont.textContent = err.substring(err.indexOf('[') + 1, err.indexOf(']'));
+						});
 					}
 				} else {
 					if ((ctrl_add &&= pop_view.classList.contains('na-kk'))) {
 						pop_view.removeEventListener('mouseleave', this);
 						pop_view.removeEventListener('mouseenter', this);
-						pop_view.classList.remove('na-kk');
+						pop_view.classList.replace('na-kk', 'na-sk');
 					}
 					for (let { classList } of pop_view.querySelectorAll('.na-mlock'))
 						classList.remove('na-mlock');
@@ -312,28 +360,21 @@ class PopupControl {
 				for (let { classList } of pop_view.querySelectorAll(`[${PROP_FROM_TO}$="${from_brd +'-'+ from_pid}"]`))
 					classList.add('na-mlock');
 				if (ctrl_add) {
-					const ha_pop_close = _setup('span', { class: 'ha-popClose' }, { click: doRemove });
-					const ha_pop_clear = _setup('span', { class: 'ha-popClear' }, { click: () => this.popClear() });
-					const ha_pop_move  = _setup('span', { class: 'ha-popMove'  }, { mousedown: e  => {
-						if (e.button === 0) {
-							e.preventDefault();
-							DragableObj.drag(pop_view,{ X: e.clientX, Y: e.clientY, fixed: false });
-						}
-					}});
 					pop_view.appendChild(
-						_setup('div', { class: 'ha-pop-ctrl' })
+						_setup('div' , { class: 'ha-pop-ctrl' })
 					).append(
-						ha_pop_close,
-						ha_pop_clear,
-						ha_pop_move
+						_setup('span', { class: 'ha-popClose' }, { click: doRemove }),
+						_setup('span', { class: 'ha-popClear' }, { click: () => this.popClear() }),
+						_setup('span', { class: 'ha-popMove'  }, { mousedown: e  => {
+							if (e.button === 0) {
+								e.preventDefault();
+								DragableObj.drag(pop_view,{ X: e.clientX, Y: e.clientY, fixed: false });
+							}
+						}})
 					);
 				}
-				let { x, y, width, height } = lnk.getBoundingClientRect();
-
 				this.popShow(pop_view, {
-					x: x + width  / 2, marginX: 0,
-					y: y + height / 2, marginY: height,
-					animName, revertY, fixed: false
+					x, y, marginY: height, revertY, animName
 				});
 			});
 		}

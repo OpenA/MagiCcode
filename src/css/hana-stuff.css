@@ -115,14 +115,29 @@
 .ha-popMove:after {
 	content: '.::';
 }
+.na-ldd {
+	width: 184px;
+	height: 58px;
+	animation: 2s linear infinite alternate blinking;
+	background: url('chrome-extension://__MSG_@@extension_id__/images/comment-stb.svg') no-repeat scroll center / 100%;
+	opacity: .3;
+}
+.na-err {
+	color: #f82121;
+}
 
 .na-kk .ha-pop-ctrl {
 	display: none;
 }
 
+@-moz-document url-prefix() {
+	.na-ldd {
+		background-image: url('moz-extension://__MSG_@@extension_id__/images/comment-stb.svg');
+	}
+}
 
-@-webkit-keyframes toShow { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes toShow { from { opacity: 0; } to { opacity: 1; } }
+@-webkit-keyframes blinking { from { opacity: .3; } to { opacity: .1; } }
+        @keyframes blinking { from { opacity: .3; } to { opacity: .1; } }
 
 @-webkit-keyframes popUp {
 	from { transform: scale(0,0); opacity: 0; }
